@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-Plugin · AI 工作台</title><link rel="stylesheet" href="/app.css"></head><body>
+<header><div><h1>AI 工作台</h1><p>AI-Plugin · 聊天、能力与运行记录</p></div><span id="status" role="status">正在连接</span></header>
+<main><nav aria-label="工作台页面"><button data-page="chat">聊天</button><button data-page="capabilities">功能状态</button><button data-page="logs">运行记录</button><button data-page="settings">配置与维护</button></nav>
+<section id="login" hidden><h2>登录工作台</h2><p>主人私聊机器人发送 <code>#AI登录</code>，打开三分钟内有效的一次性链接。</p></section>
+<section id="chat"><h2>聊天</h2><label for="preset">角色预设</label><select id="preset"></select><div id="messages" aria-live="polite"></div><form id="chat-form"><label for="question">消息</label><textarea id="question" rows="4" placeholder="输入问题" required></textarea><button id="send" type="submit">发送</button><button id="reset" type="button">开始新会话</button></form></section>
+<section id="capabilities" hidden><h2>功能状态</h2><p>待实现的能力已保留扩展分类，不会显示为可用功能。</p><div id="capability-list"></div></section>
+<section id="logs" hidden><h2>运行记录</h2><button id="refresh-logs">刷新记录</button><div id="log-list"></div></section>
+<section id="settings" hidden><h2>配置与维护</h2><p>OrangeJuice-Plugin 可识别全部配置分类及中文字段。渠道密钥和角色提示词保存在实例配置中，不进入公开仓库。</p><div id="config-summary"></div><button id="backup">创建配置与数据库备份</button><button id="cleanup">执行保留期清理</button><pre id="maintenance-result"></pre></section>
+<p id="error" role="alert"></p></main><footer><a href="https://github.com/719083594/AI-Plugin" target="_blank" rel="noreferrer">项目与说明</a></footer><script src="/app.js"></script></body></html>

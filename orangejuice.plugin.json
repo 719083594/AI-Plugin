@@ -1,0 +1,832 @@
+{
+  "schemaVersion": 1,
+  "title": "AI-Plugin",
+  "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
+  "author": "719083594",
+  "version": "1.0.0",
+  "repository": "https://github.com/719083594/AI-Plugin",
+  "homepage": "https://github.com/719083594/AI-Plugin",
+  "commands": [
+    "#AI帮助",
+    "#AI预设列表",
+    "#AI切换预设 名称",
+    "#AI结束对话",
+    "#AI登录"
+  ],
+  "managementPanel": "ai-plugin",
+  "capabilities": "capabilities.json",
+  "configs": [
+    {
+      "id": "settings",
+      "title": "AI 运行设置",
+      "file": "config/local.json",
+      "example": "config/example.json",
+      "reload": "restart",
+      "ownerOnly": true,
+      "fields": [
+        {
+          "path": "basic",
+          "label": "基础与触发方式",
+          "type": "object"
+        },
+        {
+          "path": "basic.enabled",
+          "label": "启用 AI 插件",
+          "type": "boolean"
+        },
+        {
+          "path": "basic.debug",
+          "label": "调试日志（预留）",
+          "type": "boolean",
+          "description": "本版尚未绑定独立调试日志策略。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "basic.commandPrefix",
+          "label": "管理命令前缀",
+          "type": "string"
+        },
+        {
+          "path": "basic.defaultPresetId",
+          "label": "默认角色标识",
+          "type": "string",
+          "description": "填写已启用角色的固定标识。初始为 default。"
+        },
+        {
+          "path": "basic.triggerMode",
+          "label": "群聊触发方式",
+          "type": "string",
+          "description": "仅影响群聊；私聊由私聊开关控制。",
+          "enum": [
+            "at",
+            "prefix",
+            "both"
+          ],
+          "enumLabels": {
+            "at": "群聊 @ 机器人",
+            "prefix": "群聊前缀",
+            "both": "@ 或前缀"
+          }
+        },
+        {
+          "path": "basic.triggerPrefix",
+          "label": "群聊提问前缀",
+          "type": "string"
+        },
+        {
+          "path": "channels",
+          "label": "模型渠道",
+          "type": "array",
+          "description": "每项保留唯一 id；填写协议、模型地址和密钥。模型是否支持视觉、工具由服务决定。",
+          "itemDefaults": {
+            "id": "",
+            "name": "新渠道",
+            "type": "openai",
+            "baseUrl": "",
+            "apiKey": "",
+            "models": [],
+            "enabled": true,
+            "priority": 0,
+            "weight": 1,
+            "timeoutMs": 25000
+          }
+        },
+        {
+          "path": "presets",
+          "label": "角色预设",
+          "type": "array",
+          "description": "角色使用固定 id，按名称或别名切换；修改模型及提示词在下一轮读取。",
+          "itemDefaults": {
+            "id": "",
+            "name": "新角色",
+            "prefix": "",
+            "model": "",
+            "channelId": "",
+            "systemPrompt": "你是一个可靠的中文助手。需要时使用工具；搜索答案附真实来源链接，不编造事实。",
+            "temperature": 0.7,
+            "maxTokens": 2048,
+            "historyLength": 20,
+            "tools": [
+              "web_search",
+              "ask_about_image",
+              "look_at_image",
+              "resolve_image_ref",
+              "GetQQAvatar"
+            ],
+            "showReasoning": false,
+            "stream": false,
+            "enabled": true,
+            "aliases": [],
+            "geminiBuiltinTools": [],
+            "responseModalities": [
+              "TEXT"
+            ]
+          }
+        },
+        {
+          "path": "chat",
+          "label": "聊天与任务限制",
+          "type": "object"
+        },
+        {
+          "path": "chat.privateEnabled",
+          "label": "允许私聊问答",
+          "type": "boolean"
+        },
+        {
+          "path": "chat.groupEnabled",
+          "label": "允许群聊问答",
+          "type": "boolean"
+        },
+        {
+          "path": "chat.enableRoleSwitch",
+          "label": "允许用户切换角色",
+          "type": "boolean"
+        },
+        {
+          "path": "chat.userRoleWhitelist",
+          "label": "可切换角色的用户白名单",
+          "type": "array",
+          "description": "空列表表示不额外限定可切换用户；黑名单优先。"
+        },
+        {
+          "path": "chat.userRoleBlacklist",
+          "label": "禁止切换角色的用户名单",
+          "type": "array"
+        },
+        {
+          "path": "chat.maxConcurrent",
+          "label": "同时处理的请求数",
+          "type": "integer",
+          "description": "运行时队列参数，修改后重启。",
+          "min": 1,
+          "max": 20
+        },
+        {
+          "path": "chat.maxQueue",
+          "label": "最多排队请求数",
+          "type": "integer",
+          "description": "运行时队列参数，修改后重启。",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "path": "chat.timeoutMs",
+          "label": "普通请求等待上限（毫秒）",
+          "type": "integer",
+          "description": "从请求开始计时，包括排队；超时取消任务。",
+          "min": 1000,
+          "max": 300000
+        },
+        {
+          "path": "chat.toolTimeoutMs",
+          "label": "工具请求总等待上限（毫秒）",
+          "type": "integer",
+          "description": "实际调用工具后延长总等待上限，仍从请求开始计时。",
+          "min": 1000,
+          "max": 600000
+        },
+        {
+          "path": "chat.maxToolRounds",
+          "label": "最多工具调用轮数",
+          "type": "integer",
+          "description": "达到轮数后停止继续提供工具；不是每个工具的独立调用次数。",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "path": "chat.maxReplyLength",
+          "label": "回答最多字符数",
+          "type": "integer"
+        },
+        {
+          "path": "group",
+          "label": "群上下文与主动接话",
+          "type": "object"
+        },
+        {
+          "path": "group.enableContext",
+          "label": "使用近期群聊背景",
+          "type": "boolean"
+        },
+        {
+          "path": "group.contextLength",
+          "label": "近期群消息条数",
+          "type": "integer",
+          "min": 0,
+          "max": 100
+        },
+        {
+          "path": "group.contextImages",
+          "label": "使用近期群图片作为背景",
+          "type": "boolean",
+          "description": "可选云崽适配器在提及图片且当前无图时读取最近群图片。"
+        },
+        {
+          "path": "group.proactiveEnabled",
+          "label": "启用主动接话",
+          "type": "boolean",
+          "description": "默认关闭。仅群消息参与；指令、@提问、冷却和排队会阻止主动触发。"
+        },
+        {
+          "path": "group.probability",
+          "label": "随机主动接话概率",
+          "type": "number",
+          "description": "0 到 1；0.03 表示符合触发条件时有 3% 概率。",
+          "min": 0,
+          "max": 1
+        },
+        {
+          "path": "group.keywords",
+          "label": "主动接话关键词",
+          "type": "array"
+        },
+        {
+          "path": "group.keywordPresets",
+          "label": "关键词与角色对应关系",
+          "type": "array",
+          "description": "按关键词选择预设；本版未实现正则与复杂事件规则。",
+          "itemDefaults": {
+            "keyword": "",
+            "presetId": "default"
+          }
+        },
+        {
+          "path": "group.defaultPresetId",
+          "label": "主动接话默认角色",
+          "type": "string",
+          "description": "留空使用基础设置中的默认角色。"
+        },
+        {
+          "path": "group.prompt",
+          "label": "主动接话补充提示词",
+          "type": "string",
+          "multiline": true
+        },
+        {
+          "path": "group.maxTokens",
+          "label": "主动接话最多输出 Token",
+          "type": "integer"
+        },
+        {
+          "path": "group.cooldownMs",
+          "label": "群主动接话冷却时间（毫秒）",
+          "type": "integer"
+        },
+        {
+          "path": "group.recallSeconds",
+          "label": "主动回复撤回时间（秒）",
+          "type": "integer",
+          "description": "0 不撤回；依赖机器人协议端支持。"
+        },
+        {
+          "path": "memory",
+          "label": "长期记忆与文本资料",
+          "type": "object"
+        },
+        {
+          "path": "memory.userEnabled",
+          "label": "使用个人长期记忆",
+          "type": "boolean",
+          "description": "读取手工记录的个人事实；自动提取未实现。"
+        },
+        {
+          "path": "memory.groupEnabled",
+          "label": "使用群长期记忆",
+          "type": "boolean",
+          "description": "读取管理 API 手工记录的群事实；自动提取未实现。"
+        },
+        {
+          "path": "memory.maxItems",
+          "label": "每次最多读取的记忆条数",
+          "type": "integer",
+          "min": 1,
+          "max": 1000
+        },
+        {
+          "path": "memory.autoExtract",
+          "label": "自动提取记忆（待实现）",
+          "type": "boolean",
+          "description": "本版未实现自动事实提取，不提供可生效开关。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "memory.knowledgeEnabled",
+          "label": "使用纯文本知识检索",
+          "type": "boolean",
+          "description": "仅纯文本关键词匹配，不是向量 Embedding/RAG，也不解析文档。"
+        },
+        {
+          "path": "memory.knowledgeLimit",
+          "label": "每次最多读取的资料条数",
+          "type": "integer",
+          "min": 1,
+          "max": 1000
+        },
+        {
+          "path": "tools",
+          "label": "联网搜索与工具",
+          "type": "object"
+        },
+        {
+          "path": "tools.searchEnabled",
+          "label": "允许联网搜索",
+          "type": "boolean"
+        },
+        {
+          "path": "tools.searchEndpoint",
+          "label": "搜索服务接口地址",
+          "type": "string",
+          "description": "POST 搜索接口。配置本地模块时优先使用模块。"
+        },
+        {
+          "path": "tools.searchToken",
+          "label": "搜索服务认证密钥",
+          "type": "string",
+          "description": "按 x-search-secret 请求头发送；保持圆点保留原密钥。",
+          "secret": true
+        },
+        {
+          "path": "tools.searchModule",
+          "label": "本地搜索模块路径",
+          "type": "string",
+          "description": "可指向相邻 WebSearch-Plugin 的 api.mjs；模块只允许由部署者指定。"
+        },
+        {
+          "path": "tools.searchConfigFile",
+          "label": "本地搜索实例配置路径",
+          "type": "string",
+          "description": "本地模块需专属配置时填写；为空使用配套插件默认路径。"
+        },
+        {
+          "path": "tools.searchTimeoutMs",
+          "label": "搜索独立等待上限（预留）",
+          "type": "integer",
+          "description": "本版独立搜索计时尚未绑定；实际由工具请求总等待上限控制。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "tools.maxSearchResults",
+          "label": "最多搜索结果数",
+          "type": "integer"
+        },
+        {
+          "path": "tools.customDirectory",
+          "label": "自定义工具目录",
+          "type": "string",
+          "description": "目录内 .mjs 模块在启动时加载；添加或修改代码需重启。"
+        },
+        {
+          "path": "tools.skillsDirectory",
+          "label": "Skills 技能目录（待实现）",
+          "type": "string",
+          "description": "目录预留；本版不加载 SKILL.md。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "media",
+          "label": "图片与视觉",
+          "type": "object"
+        },
+        {
+          "path": "media.imagesEnabled",
+          "label": "图片总开关（预留）",
+          "type": "boolean",
+          "description": "本版尚未接入统一的图片禁用策略。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "media.maxImageBytes",
+          "label": "图片最大字节数",
+          "type": "integer",
+          "description": "运行时图片服务参数，修改后重启。"
+        },
+        {
+          "path": "media.visionChannelId",
+          "label": "视觉渠道标识",
+          "type": "string",
+          "description": "留空使用当前角色渠道。"
+        },
+        {
+          "path": "media.visionModel",
+          "label": "视觉模型名称",
+          "type": "string",
+          "description": "留空使用当前角色模型；必须支持看图。"
+        },
+        {
+          "path": "media.imageRetentionHours",
+          "label": "图片缓存保留小时数",
+          "type": "integer",
+          "description": "0 永久；运行时图片缓存参数，修改后重启。"
+        },
+        {
+          "path": "security",
+          "label": "使用权限与内容过滤",
+          "type": "object"
+        },
+        {
+          "path": "security.userWhitelist",
+          "label": "用户白名单",
+          "type": "array",
+          "description": "空列表不额外限定；主人不受普通用户黑白名单和频率限制。"
+        },
+        {
+          "path": "security.userBlacklist",
+          "label": "用户黑名单",
+          "type": "array"
+        },
+        {
+          "path": "security.groupWhitelist",
+          "label": "群白名单",
+          "type": "array",
+          "description": "空列表不额外限定；黑名单优先。"
+        },
+        {
+          "path": "security.groupBlacklist",
+          "label": "群黑名单",
+          "type": "array"
+        },
+        {
+          "path": "security.inputBlockedWords",
+          "label": "输入屏蔽词",
+          "type": "array"
+        },
+        {
+          "path": "security.outputBlockedWords",
+          "label": "输出屏蔽词",
+          "type": "array"
+        },
+        {
+          "path": "security.blockStrategy",
+          "label": "输出内容屏蔽方式",
+          "type": "string",
+          "description": "full 拦截整个回答；replace 替换输出中的命中词。",
+          "enum": [
+            "full",
+            "replace"
+          ],
+          "enumLabels": {
+            "full": "拦截整个回答",
+            "replace": "替换命中内容"
+          }
+        },
+        {
+          "path": "security.replacement",
+          "label": "屏蔽词替换文字",
+          "type": "string"
+        },
+        {
+          "path": "security.rateWindowMs",
+          "label": "频率限制统计周期（毫秒）",
+          "type": "integer"
+        },
+        {
+          "path": "security.maxRequestsPerWindow",
+          "label": "每周期最多请求数",
+          "type": "integer",
+          "min": 1,
+          "max": 10000
+        },
+        {
+          "path": "management",
+          "label": "AI 网页工作台",
+          "type": "object"
+        },
+        {
+          "path": "management.enabled",
+          "label": "启用管理服务",
+          "type": "boolean",
+          "description": "独立 CLI serve 会启动工作台；机器人适配器按此开关启动。"
+        },
+        {
+          "path": "management.host",
+          "label": "管理服务监听地址",
+          "type": "string",
+          "description": "默认仅本机；修改后重启管理服务。"
+        },
+        {
+          "path": "management.port",
+          "label": "管理服务端口",
+          "type": "integer",
+          "description": "默认 48371；修改后重启管理服务。",
+          "min": 1,
+          "max": 65535
+        },
+        {
+          "path": "management.publicUrl",
+          "label": "管理面板访问地址",
+          "type": "string",
+          "description": "用于生成主人登录链接；修改后重启管理服务。"
+        },
+        {
+          "path": "management.apiToken",
+          "label": "管理 API 访问密钥",
+          "type": "string",
+          "description": "CLI init 自动生成。API 使用 Bearer 认证，不要上传实例密钥。修改后重启。",
+          "secret": true
+        },
+        {
+          "path": "management.ticketSeconds",
+          "label": "主人登录链接有效秒数",
+          "type": "integer",
+          "description": "一次性登录链接默认 180 秒；修改后重启。"
+        },
+        {
+          "path": "management.sessionSeconds",
+          "label": "网页登录会话有效秒数",
+          "type": "integer",
+          "description": "管理会话默认 3600 秒；修改后重启。"
+        },
+        {
+          "path": "management.webChatEnabled",
+          "label": "允许主人网页聊天",
+          "type": "boolean"
+        },
+        {
+          "path": "retention",
+          "label": "数据保留与清理",
+          "type": "object"
+        },
+        {
+          "path": "retention.historyDays",
+          "label": "普通聊天历史保留天数",
+          "type": "integer",
+          "description": "0 永久；默认保留 30 天，不改变当前会话标识。",
+          "min": 0,
+          "max": 36500
+        },
+        {
+          "path": "retention.proactiveHistoryDays",
+          "label": "主动接话历史保留天数",
+          "type": "integer",
+          "description": "0 永久；默认保留 30 天。",
+          "min": 0,
+          "max": 36500
+        },
+        {
+          "path": "retention.logLimit",
+          "label": "最多保留的调用日志条数",
+          "type": "integer",
+          "description": "清理时保留最近这些记录，最少保留一条。",
+          "min": 1,
+          "max": 1000000
+        },
+        {
+          "path": "retention.cleanupIntervalHours",
+          "label": "自动清理检查周期（小时）",
+          "type": "integer",
+          "description": "管理服务或适配器启动时运行清理，然后按周期检查；修改周期需重启。",
+          "min": 0.01,
+          "max": 8760
+        },
+        {
+          "path": "retention.backupCount",
+          "label": "自动管理备份保留份数",
+          "type": "integer",
+          "description": "仅自动管理接口创建的时间戳备份按此数量轮换；CLI 备份和恢复前备份不会自动删除。",
+          "min": 1,
+          "max": 1000
+        },
+        {
+          "path": "extensions",
+          "label": "高级扩展路线",
+          "type": "object",
+          "description": "仅保留扩展配置位置和能力路线，本版不会执行尚未实现的任务。"
+        },
+        {
+          "path": "extensions.mcp",
+          "label": "MCP 工具接入（待实现）",
+          "type": "array",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "extensions.schedules",
+          "label": "定时与事件任务（待实现）",
+          "type": "array",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "extensions.workflows",
+          "label": "多步工作流（待实现）",
+          "type": "array",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "extensions.processors",
+          "label": "自定义前后处理器（待实现）",
+          "type": "array",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "extensions.pricing",
+          "label": "费用与预算（待实现）",
+          "type": "array",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "channels.*.id",
+          "label": "渠道固定标识",
+          "type": "string",
+          "description": "需唯一且持久；不要更改已保存渠道标识。",
+          "required": true,
+          "readonly": true
+        },
+        {
+          "path": "channels.*.name",
+          "label": "渠道名称",
+          "type": "string"
+        },
+        {
+          "path": "channels.*.type",
+          "label": "模型接口协议",
+          "type": "string",
+          "enum": [
+            "openai",
+            "gemini",
+            "claude"
+          ],
+          "enumLabels": {
+            "openai": "OpenAI 兼容",
+            "gemini": "Gemini 原生",
+            "claude": "Claude 原生"
+          }
+        },
+        {
+          "path": "channels.*.baseUrl",
+          "label": "模型 API 基础地址",
+          "type": "string",
+          "description": "留空使用该协议官方地址；OpenAI 兼容服务通常填写含 /v1 的基础地址。"
+        },
+        {
+          "path": "channels.*.apiKey",
+          "label": "模型接口密钥",
+          "type": "string",
+          "description": "保持圆点保留原密钥；新增渠道需填写实际密钥。",
+          "secret": true
+        },
+        {
+          "path": "channels.*.models",
+          "label": "该渠道允许的模型",
+          "type": "array",
+          "description": "空数组不限制模型；填写模型名称字符串。"
+        },
+        {
+          "path": "channels.*.enabled",
+          "label": "启用此渠道",
+          "type": "boolean"
+        },
+        {
+          "path": "channels.*.priority",
+          "label": "渠道优先级",
+          "type": "integer",
+          "description": "数值较大的优先，随后按权重选择。"
+        },
+        {
+          "path": "channels.*.weight",
+          "label": "同优先级选择权重",
+          "type": "number",
+          "min": 1
+        },
+        {
+          "path": "channels.*.timeoutMs",
+          "label": "渠道单次请求等待上限（毫秒）",
+          "type": "integer",
+          "description": "单次模型请求上限，同时受整轮请求上限约束。",
+          "min": 1000,
+          "max": 600000
+        },
+        {
+          "path": "presets.*.id",
+          "label": "角色固定标识",
+          "type": "string",
+          "description": "需唯一且持久；个人选择按该标识保存。",
+          "required": true,
+          "readonly": true
+        },
+        {
+          "path": "presets.*.name",
+          "label": "角色名称",
+          "type": "string"
+        },
+        {
+          "path": "presets.*.prefix",
+          "label": "角色专用提问前缀",
+          "type": "string",
+          "description": "非空时可直接用该前缀调用角色。"
+        },
+        {
+          "path": "presets.*.model",
+          "label": "模型名称",
+          "type": "string",
+          "description": "必须填写渠道可用模型；不会自动发现模型。"
+        },
+        {
+          "path": "presets.*.channelId",
+          "label": "固定渠道标识",
+          "type": "string",
+          "description": "留空按渠道优先级和权重选择；填写后仅使用指定渠道。"
+        },
+        {
+          "path": "presets.*.systemPrompt",
+          "label": "角色系统提示词",
+          "type": "string",
+          "multiline": true
+        },
+        {
+          "path": "presets.*.temperature",
+          "label": "回答随机度",
+          "type": "number",
+          "description": "以所用模型支持的参数范围为准。"
+        },
+        {
+          "path": "presets.*.maxTokens",
+          "label": "最多输出 Token",
+          "type": "integer",
+          "min": 1,
+          "max": 131072
+        },
+        {
+          "path": "presets.*.historyLength",
+          "label": "读取历史消息条数",
+          "type": "integer",
+          "min": 0,
+          "max": 1000
+        },
+        {
+          "path": "presets.*.tools",
+          "label": "可调用的工具标识",
+          "type": "array",
+          "description": "本版五个内置 ID 保持兼容；空数组禁止调用工具。"
+        },
+        {
+          "path": "presets.*.showReasoning",
+          "label": "展示接口返回的思考内容",
+          "type": "boolean",
+          "description": "仅展示服务已返回的结构化思考，不会自动为模型启用额外思考预算。"
+        },
+        {
+          "path": "presets.*.stream",
+          "label": "聊天流式输出（待实现）",
+          "type": "boolean",
+          "description": "底层协议支持 SSE；QQ、网页和兼容聊天目前均等待完整回答。",
+          "readonly": true,
+          "status": "planned"
+        },
+        {
+          "path": "presets.*.enabled",
+          "label": "启用此角色",
+          "type": "boolean"
+        },
+        {
+          "path": "presets.*.aliases",
+          "label": "角色切换别名",
+          "type": "array",
+          "description": "可按别名切换，不用于消息提问前缀。"
+        },
+        {
+          "path": "group.keywordPresets.*.keyword",
+          "label": "主动接话关键词",
+          "type": "string",
+          "description": "使用文字包含匹配。"
+        },
+        {
+          "path": "group.keywordPresets.*.presetId",
+          "label": "关键词对应角色标识",
+          "type": "string",
+          "description": "填写已启用预设的固定标识。"
+        },
+        {
+          "path": "channels.*.apiKeys",
+          "label": "保留的多个接口密钥",
+          "type": "array",
+          "secret": true,
+          "readonly": true,
+          "status": "planned",
+          "description": "用于完整保留旧渠道密钥列表；当前请求只使用 apiKey，自动多密钥轮换尚未实现。"
+        },
+        {
+          "path": "presets.*.geminiBuiltinTools",
+          "label": "Gemini 原生工具",
+          "type": "array",
+          "description": "仅 Gemini：googleSearch、googleMaps、codeExecution、urlContext。模型不支持与自定义工具同时使用时，请将角色 tools 设为空数组。"
+        },
+        {
+          "path": "presets.*.responseModalities",
+          "label": "Gemini 返回内容类型",
+          "type": "array",
+          "description": "如 [\"TEXT\"] 或支持生图模型的 [\"TEXT\",\"IMAGE\"]。生成与编辑效果必须由对应模型提供，不能仅靠设置得到能力。"
+        }
+      ]
+    }
+  ]
+}

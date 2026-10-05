@@ -1,0 +1,114 @@
+# AI-Plugin
+
+AI-Plugin 提供独立 AI 聊天核心、中文网页工作台、模型接口、联网搜索工具和会话存储。核心可以由 CLI、HTTP 或其他应用调用；只有显式启用适配器时才依赖机器人框架。
+
+本版完成文字聊天、角色切换、聊天历史、群上下文、权限限制、搜索与图片工具、主人工作台和数据清理。57 项功能保留在 [功能范围与路线](docs/FEATURES.md) 中；自动提取记忆、向量知识库、MCP、Skills、工作流、语音、视频、完整文档解析、Cloud、PostgreSQL 等尚未实现。网页和 Orange 会显示真实状态。
+
+## 独立使用
+
+需要 **Node.js ≥ 22.13** 和可用的外部模型 API。项目使用 Node 内置 SQLite、HTTP 和 fetch，没有 npm 运行依赖。
+
+```bash
+git clone https://github.com/719083594/AI-Plugin.git
+cd AI-Plugin
+node cli.mjs init
+node cli.mjs diagnose
+```
+
+`init` 创建 `config/local.json` 和随机管理 API 密钥，不覆盖已有实例配置。示例 `config/example.json` 不含模型渠道或私人密钥。先在 Orange 中为 AI-Plugin 添加渠道，填写接口协议、地址和密钥，再为默认角色填写模型。也可直接编辑实例 JSON。
+
+渠道支持 `openai`、`gemini`、`claude`；它们分别使用 Chat Completions、Gemini 原生接口和 Claude Messages。`baseUrl` 留空使用对应协议默认地址。OpenAI 兼容服务通常提供含 `/v1` 的基础地址。模型、视觉和工具支持范围以实际服务为准。
+
+```bash
+node cli.mjs chat --text "你好"
+node cli.mjs chat --text "解释这个问题" --preset default
+node cli.mjs serve
+```
+
+独立工作台默认监听 `127.0.0.1:48371`。`serve` 在控制台提供主人一次性登录链接。登录后可选角色聊天、查看功能状态和记录、重置会话、备份与清理。页面等待完整回答，不提供逐字输出或文件上传。
+
+实例位置可指定：
+
+```bash
+node cli.mjs diagnose --root /srv/AI-Plugin --config /srv/AI-Plugin/config/local.json
+```
+
+## OrangeJuice 配置接入
+
+将 AI-Plugin 放入 Orange 的插件目录即可读取 `orangejuice.plugin.json`。完整中文声明覆盖基础、渠道、预设、聊天、群聊、记忆、工具、图片、权限、工作台、保留策略和扩展。
+
+- 渠道和预设逐项编辑；对象数组使用稳定 `id`，密钥遮罩按标识保留。
+- 主配置标记 `ownerOnly:true`，管理员和观察员只读，修改需主人。
+- 未实现字段显示路线说明，不显示无效开关。
+- `managementPanel: "ai-plugin"` 关联部署者登记的独立 AI 工作台入口；未登记时不显示空链接。
+
+协议见 [适配说明](docs/ADAPTERS.md)。新版字段表单需要 OrangeJuice-Plugin 1.2.1 或更高版本。
+
+## 可选云崽 / TRSS 适配
+
+把仓库放在框架 `plugins/AI-Plugin`，先运行 `node cli.mjs init` 配置渠道，然后创建 **实例文件** `config/integration.json`：
+
+```json
+{"adapter":"yunzai"}
+```
+
+重启机器人。未创建该文件或设为 `{"adapter":"none"}` 时，根入口的 `apps` 为空，独立核心不会导入云崽。不要同时对同一实例启动机器人适配器与 CLI `serve`。
+
+默认命令如下，前缀可以配置：
+
+| 命令 | 用途 |
+| --- | --- |
+| `#AI帮助` | 查看帮助 |
+| `#AI预设列表` | 查看已启用角色 |
+| `#AI切换预设 名称` | 切换角色并开始新会话 |
+| `#AI当前预设` | 查看个人当前角色 |
+| `#AI结束对话` | 开始新会话，保留旧历史 |
+| `#AI记忆 列表` | 查看个人手工记忆 |
+| `#AI记忆 添加 内容` | 添加个人事实 |
+| `#AI记忆 删除 标识` | 删除自己的记忆 |
+| `#AI登录` | 主人私聊获取工作台入口 |
+| `#AI状态`、`#AI备份`、`#AI清理` | 主人维护 |
+| `#AI主动接话 开` / `关` | 主人控制主动接话 |
+| `#AI结束全部对话` | 主人重置全部会话 |
+
+私聊与群聊 @、群聊前缀、角色前缀、引用消息及图片由适配器处理。主动接话默认关闭。撤回、群历史和图片的实际效果取决于协议端支持。
+
+## 搜索与图片
+
+保留五个内置工具 ID：`web_search`、`ask_about_image`、`look_at_image`、`resolve_image_ref`、`GetQQAvatar`。
+
+搜索可设置 `tools.searchModule` 指向相邻 WebSearch-Plugin 的 `api.mjs`，或设置 `tools.searchEndpoint` 使用 HTTP 后端。认证按 `x-search-secret` 发送。每个角色通过 `tools` 数组选择允许调用的工具；搜索须在实例中配置，插件本身不提供搜索引擎。
+
+看图使用支持视觉的模型；`media.visionChannelId` 和 `media.visionModel` 可指定单独渠道。QQ 头像由云崽适配器提供，其他平台需实现 `getAvatar`。Gemini 可设置预设 `responseModalities` 为 `["TEXT","IMAGE"]`，由兼容模型生成或编辑图片。代码已接通请求和返回转送，具体模型与渠道仍需实例验收。
+
+Gemini 预设还可配置 `geminiBuiltinTools`，选择 `googleSearch`、`googleMaps`、`codeExecution`、`urlContext`。部分模型不支持同时使用原生工具与自定义函数工具，需要将预设 `tools` 设为空数组。保留的 `channels[].apiKeys` 只用于迁移旧密钥列表，当前请求使用单个 `apiKey`，没有自动轮换。
+
+## 记忆、知识与维护
+
+个人和群事实当前由手工命令或管理 API 录入，启用后加入回答背景。知识资料只支持纯文本关键词匹配，尚无自动提取、向量检索、文档分块或 PDF/Office 解析。
+
+数据保存在 `data/ai.db`，图片缓存单独存放于 `data/images`。默认普通/主动历史保留30天、日志5000条、图片永久。主人可配置保留策略或手动清理。
+
+```bash
+node cli.mjs backup
+# 先停止使用同一数据目录的机器人或 AI 服务
+node cli.mjs restore --backup /path/to/backup-directory
+```
+
+备份使用一致性 SQLite 快照并保存配置；恢复前再保存当前数据库和配置。当前备份不包含图片、自定义工具和所有外部资源，完整打包导出/导入仍待实现。CLI 备份和恢复前备份不会按自动管理备份数量轮换。
+
+普通渠道、角色、权限、提示词和保留策略在下一轮请求读取。监听地址、端口、认证/登录周期、队列大小、图片大小/TTL、清理周期和自定义工具代码需重启后生效。
+
+## 开发与验证
+
+```bash
+node --test
+node --check cli.mjs
+node --check index.js
+```
+
+测试使用模拟模型请求和临时数据，不需要模型密钥、不发送 QQ 消息。`diagnose` 检查本地服务和配置，不验证真实模型可达性。CI 覆盖 Node 22.13 与 24 的 Linux/Windows 环境。
+
+## 来源与许可
+
+本项目采用 **GPL-3.0-or-later**。ChatGPT-Plugin 与 Chaite 用于原有功能及协议调研，没有复用其实现代码、前端资源或运行依赖。来源、配套项目和模型官方协议见 [致谢](docs/CREDITS.md)。本项目没有包含其他项目的云服务、账户或授权。

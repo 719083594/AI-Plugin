@@ -1,0 +1,758 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "statusMeaning": {
+    "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
+    "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
+    "unconfigured": "已具备实现但当前实例尚未配置。"
+  },
+  "categories": [
+    {
+      "id": "A",
+      "title": "聊天与角色",
+      "ids": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8"
+      ]
+    },
+    {
+      "id": "B",
+      "title": "群内主动接话",
+      "ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "C",
+      "title": "模型与 API 渠道",
+      "ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ]
+    },
+    {
+      "id": "D",
+      "title": "联网搜索与扩展工具",
+      "ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "E",
+      "title": "图片与多模态",
+      "ids": [
+        "E1",
+        "E2",
+        "E3",
+        "E4"
+      ]
+    },
+    {
+      "id": "F",
+      "title": "历史、记忆与知识库",
+      "ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ]
+    },
+    {
+      "id": "G",
+      "title": "使用权限与内容控制",
+      "ids": [
+        "G1",
+        "G2",
+        "G3"
+      ]
+    },
+    {
+      "id": "H",
+      "title": "稳定性措施",
+      "ids": [
+        "H1",
+        "H2",
+        "H3",
+        "H4"
+      ]
+    },
+    {
+      "id": "I",
+      "title": "管理、日志与维护",
+      "ids": [
+        "I1",
+        "I2",
+        "I3",
+        "I4",
+        "I5",
+        "I6",
+        "I7"
+      ]
+    },
+    {
+      "id": "J",
+      "title": "自动化与对外接口",
+      "ids": [
+        "J1",
+        "J2",
+        "J3"
+      ]
+    },
+    {
+      "id": "K",
+      "title": "新增与补齐路线",
+      "ids": [
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "A1",
+      "name": "私聊问答",
+      "title": "私聊问答",
+      "status": "implemented",
+      "description": "独立核心、CLI、网页和可选云崽适配均可进行文字聊天；私聊开关由配置控制。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "chat.privateEnabled"
+      ]
+    },
+    {
+      "id": "A2",
+      "name": "群聊 @ 回复",
+      "title": "群聊 @ 回复",
+      "status": "implemented",
+      "description": "云崽适配器支持群聊 @ 触发，独立核心不依赖群平台。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "basic.triggerMode",
+        "chat.groupEnabled"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "命令前缀与角色前缀",
+      "title": "命令前缀与角色前缀",
+      "status": "implemented",
+      "description": "支持管理命令前缀、群聊提问前缀和每个角色的提问前缀。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "basic.commandPrefix",
+        "basic.triggerPrefix",
+        "presets.*.prefix"
+      ]
+    },
+    {
+      "id": "A4",
+      "name": "多轮聊天与结束会话",
+      "title": "多轮聊天与结束会话",
+      "status": "implemented",
+      "description": "持久多轮历史；可结束自己的会话，主人可结束全部。开始新会话仍保留原历史。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "A5",
+      "name": "角色预设与个人切换",
+      "title": "角色预设与个人切换",
+      "status": "implemented",
+      "description": "按名称、标识或别名切换角色，保存个人选择；切换开启新会话并取消旧任务。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "presets",
+        "chat.enableRoleSwitch"
+      ]
+    },
+    {
+      "id": "A6",
+      "name": "读取近期群聊",
+      "title": "读取近期群聊",
+      "status": "implemented",
+      "description": "保存并读取近期群聊文字；适配器可在首次请求时采集协议端近期历史。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "group.enableContext",
+        "group.contextLength"
+      ]
+    },
+    {
+      "id": "A7",
+      "name": "引用、长回答与富媒体回复",
+      "title": "引用、长回答与富媒体回复",
+      "status": "planned",
+      "description": "已处理引用文字、引用图片和普通富媒体回复；长文自动分段、合并转发与完整富媒体策略尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "chat.maxReplyLength"
+      ]
+    },
+    {
+      "id": "A8",
+      "name": "展示模型返回的思考内容",
+      "title": "展示模型返回的思考内容",
+      "status": "implemented",
+      "description": "可以展示服务实际返回的结构化 reasoning；默认隐藏，普通正文中的思考标签会过滤。此开关不会启用模型额外推理预算。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "presets.*.showReasoning"
+      ]
+    },
+    {
+      "id": "B1",
+      "name": "随机主动接话",
+      "title": "随机主动接话",
+      "status": "implemented",
+      "description": "群内按概率主动接话，结合背景；忙碌、冷却、指令、@提问时跳过，可由模型返回“不回复”。默认关闭。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "group.proactiveEnabled",
+        "group.probability"
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "关键词接话与指定角色",
+      "title": "关键词接话与指定角色",
+      "status": "implemented",
+      "description": "支持文字关键词命中，以及关键词对应角色；复杂正则和事件规则未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "group.keywords",
+        "group.keywordPresets"
+      ]
+    },
+    {
+      "id": "B3",
+      "name": "主动回复自动撤回",
+      "title": "主动回复自动撤回",
+      "status": "implemented",
+      "description": "可设置主动回复撤回秒数；效果取决于机器人协议端的撤回支持。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "group.recallSeconds"
+      ]
+    },
+    {
+      "id": "C1",
+      "name": "自定义 API 渠道",
+      "title": "自定义 API 渠道",
+      "status": "implemented",
+      "description": "可配置协议、地址、密钥、模型范围和启停；示例不含实际渠道或密钥。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "channels"
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "多种模型接口适配",
+      "title": "多种模型接口适配",
+      "status": "implemented",
+      "description": "已实现 OpenAI Chat Completions 兼容、Gemini 原生和 Claude Messages 的文字、图片与函数工具请求。具体能力仍由模型和服务决定。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "channels.*.type"
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "角色的模型与生成参数",
+      "title": "角色的模型与生成参数",
+      "status": "implemented",
+      "description": "角色可配置模型、固定渠道、提示词、温度、输出长度、历史长度和可用工具；额外模型专有思考预算尚未绑定完整聊天配置。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "presets"
+      ]
+    },
+    {
+      "id": "C4",
+      "name": "渠道优先级与权重",
+      "title": "渠道优先级与权重",
+      "status": "implemented",
+      "description": "先选择最高优先级，再按权重选择；可限定角色固定渠道和渠道模型名单。不是自动故障切换。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "channels.*.priority",
+        "channels.*.weight",
+        "channels.*.models"
+      ]
+    },
+    {
+      "id": "C5",
+      "name": "多模型并行取先返回",
+      "title": "多模型并行取先返回",
+      "status": "planned",
+      "description": "可把模型渠道地址指向现有独立竞速网关继续复用；AI 核心没有原生并行竞速或多渠道抢答实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "channels.*.baseUrl"
+      ]
+    },
+    {
+      "id": "C6",
+      "name": "模型发现与能力测试",
+      "title": "模型发现与能力测试",
+      "status": "planned",
+      "description": "健康检查会列出本地配置数量；上游模型发现、综合能力探测与可视化测试尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "D1",
+      "name": "AI 自动联网搜索",
+      "title": "AI 自动联网搜索",
+      "status": "implemented",
+      "description": "内置 web_search，通过 WebSearch-Plugin 模块或受配置的 HTTP 服务调用；支持文字与图片搜索，回答使用真实来源链接。须配置后端。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "tools.searchEnabled",
+        "tools.searchEndpoint",
+        "tools.searchModule"
+      ]
+    },
+    {
+      "id": "D2",
+      "name": "自定义工具与工具分组",
+      "title": "自定义工具与工具分组",
+      "status": "implemented",
+      "description": "本地 .mjs 工具可注册；验证参数并执行主人权限限制。角色中的工具 ID 列表用于选择工具；独立工具组 CRUD 和沙箱执行尚未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "tools.customDirectory",
+        "presets.*.tools",
+        "chat.maxToolRounds"
+      ]
+    },
+    {
+      "id": "D3",
+      "name": "回答前后处理器",
+      "title": "回答前后处理器",
+      "status": "planned",
+      "description": "输入输出屏蔽词已实现；通用可编程前后处理器及其管理、测试、预设绑定尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "extensions.processors"
+      ]
+    },
+    {
+      "id": "D4",
+      "name": "接入 MCP 工具",
+      "title": "接入 MCP 工具",
+      "status": "planned",
+      "description": "MCP 连接、协议适配、工具发现、连接测试与权限管理尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "extensions.mcp"
+      ]
+    },
+    {
+      "id": "D5",
+      "name": "Skills 技能文件",
+      "title": "Skills 技能文件",
+      "status": "planned",
+      "description": "Skills 目录仅预留；尚未加载 SKILL.md、按关键词选择技能或绑定工具约束。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "tools.skillsDirectory"
+      ]
+    },
+    {
+      "id": "D6",
+      "name": "Gemini 自带搜索等工具",
+      "title": "Gemini 自带搜索等工具",
+      "status": "implemented",
+      "description": "聊天预设可绑定 Gemini 的搜索、地图、代码执行和 URL 工具，并透传原生协议。需支持这些工具的 Gemini 模型；并非所有模型都允许与自定义工具混用。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "presets.*.geminiBuiltinTools"
+      ]
+    },
+    {
+      "id": "E1",
+      "name": "看图与识别图片文字",
+      "title": "看图与识别图片文字",
+      "status": "implemented",
+      "description": "当前、引用和历史图片可通过视觉工具交给支持看图的模型；可指定视觉渠道和模型。文字识别来自模型，不是独立 OCR 引擎。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "media.visionChannelId",
+        "media.visionModel"
+      ]
+    },
+    {
+      "id": "E2",
+      "name": "引用图片与群内图片上下文",
+      "title": "引用图片与群内图片上下文",
+      "status": "implemented",
+      "description": "缓存图片引用并保留来源；云崽适配器可读取引用图片或最近群图片。独立宿主需要提供对应图片上下文。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "group.contextImages",
+        "media.imageRetentionHours"
+      ]
+    },
+    {
+      "id": "E3",
+      "name": "读取 QQ 头像",
+      "title": "读取 QQ 头像",
+      "status": "implemented",
+      "description": "保留 GetQQAvatar 工具标识；云崽适配提供头像地址，其他平台需提供 getAvatar 回调。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "E4",
+      "name": "Gemini 生图与改图",
+      "title": "Gemini 生图与改图",
+      "status": "implemented",
+      "description": "支持为 Gemini 请求文字/图片输出，并解析、转送模型返回的图片；当前或引用图片可作为编辑输入。依赖兼容生图模型，尚未对每个实际渠道完成生成验收。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "presets.*.responseModalities",
+        "presets.*.model"
+      ]
+    },
+    {
+      "id": "F1",
+      "name": "持久聊天历史与会话管理",
+      "title": "持久聊天历史与会话管理",
+      "status": "implemented",
+      "description": "SQLite 持久保存用户选择、当前会话指针及消息父链；支持历史查询 API。可视化分支树和完整会话编辑器尚未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "F2",
+      "name": "个人长期记忆",
+      "title": "个人长期记忆",
+      "status": "implemented",
+      "description": "支持手工添加、查看、删除个人事实，开启后随回答读取；自动提取事实未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "memory.userEnabled",
+        "memory.maxItems"
+      ]
+    },
+    {
+      "id": "F3",
+      "name": "群长期记忆",
+      "title": "群长期记忆",
+      "status": "implemented",
+      "description": "管理 API 支持手工录入/删除群事实，开启后按群读取；自动提取和独立群记忆可视化页面未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "memory.groupEnabled"
+      ]
+    },
+    {
+      "id": "F4",
+      "name": "私人知识库 / RAG",
+      "title": "私人知识库 / RAG",
+      "status": "implemented",
+      "description": "可导入纯文本资料并按关键词匹配，命中内容加入回答背景。没有向量 Embedding、分块索引或完整文档解析。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "memory.knowledgeEnabled",
+        "memory.knowledgeLimit"
+      ]
+    },
+    {
+      "id": "G1",
+      "name": "用户、群与角色使用限制",
+      "title": "用户、群与角色使用限制",
+      "status": "implemented",
+      "description": "用户/群黑白名单、切换角色用户范围及主人管理权限已实现；每个角色独立用户 ACL 尚未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "security.userWhitelist",
+        "security.userBlacklist",
+        "security.groupWhitelist",
+        "security.groupBlacklist",
+        "chat.userRoleWhitelist"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "输入输出屏蔽词",
+      "title": "输入输出屏蔽词",
+      "status": "implemented",
+      "description": "输入屏蔽词拦截；输出可整段拦截或替换命中词。不是通用自定义处理器系统。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "security.inputBlockedWords",
+        "security.outputBlockedWords",
+        "security.blockStrategy"
+      ]
+    },
+    {
+      "id": "G3",
+      "name": "使用频率限制",
+      "title": "使用频率限制",
+      "status": "implemented",
+      "description": "按用户和时间窗口限制普通用户请求数量，主人不受该限制。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "security.rateWindowMs",
+        "security.maxRequestsPerWindow"
+      ]
+    },
+    {
+      "id": "H1",
+      "name": "超时、排队与过期回复处理",
+      "title": "超时、排队与过期回复处理",
+      "status": "implemented",
+      "description": "限制并发及排队数；请求总时限覆盖排队，使用取消信号丢弃超时结果。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "chat.maxConcurrent",
+        "chat.maxQueue",
+        "chat.timeoutMs",
+        "chat.toolTimeoutMs"
+      ]
+    },
+    {
+      "id": "H2",
+      "name": "切换角色后的旧任务保护",
+      "title": "切换角色后的旧任务保护",
+      "status": "implemented",
+      "description": "切换角色或结束会话会取消任务，持久状态 revision 防止旧结果覆盖新会话。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "H3",
+      "name": "只发送最终结果与图片去重",
+      "title": "只发送最终结果与图片去重",
+      "status": "implemented",
+      "description": "工具图片先收集，最终回答统一发送并按引用/地址去重；不发送工具内部思考或搜索中间文本。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "H4",
+      "name": "搜索失败提示与来源回退",
+      "title": "搜索失败提示与来源回退",
+      "status": "implemented",
+      "description": "工具错误如实返回；搜索成功且模型整理失败时提供真实来源回退，最终回答可补来源链接。超时取消不会冒充模型完成。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "I1",
+      "name": "GPT 网页管理后台",
+      "title": "AI 网页工作台",
+      "status": "implemented",
+      "description": "提供独立 AI 网页工作台：聊天、能力状态、调用记录、备份与清理；中文渠道/预设配置由 Orange 接入。高级扩展没有伪造管理页面。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "management"
+      ]
+    },
+    {
+      "id": "I2",
+      "name": "QQ 内管理命令",
+      "title": "QQ 内管理命令",
+      "status": "implemented",
+      "description": "支持角色、会话、个人记忆、主人登录、状态、备份、清理及主动接话开关命令。依赖显式启用云崽适配。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "I3",
+      "name": "运行日志与 Token 统计",
+      "title": "运行日志与 Token 统计",
+      "status": "implemented",
+      "description": "记录调用、模型、耗时、成功/失败及 Token；管理 API 返回当前保留日志的累计 Token、成功/失败数、平均耗时和按模型分组。高级筛选、费用统计尚未实现。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "I4",
+      "name": "历史、图片缓存与日志清理",
+      "title": "历史、图片缓存与日志清理",
+      "status": "implemented",
+      "description": "定期按天数清理普通/主动聊天历史，限制日志条数并检查图片 TTL；默认历史30天、图片永久、日志5000条。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "retention",
+        "media.imageRetentionHours"
+      ]
+    },
+    {
+      "id": "I5",
+      "name": "存储连接与数据库迁移",
+      "title": "存储连接与数据库迁移",
+      "status": "planned",
+      "description": "当前使用内置 SQLite；PostgreSQL 连接测试、存储方言切换和数据库迁移尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "I6",
+      "name": "插件、依赖更新与重启命令",
+      "title": "插件、依赖更新与重启命令",
+      "status": "planned",
+      "description": "可经 Orange 通用 Git 更新或人工 git pull 后重启；AI 内部强制更新、依赖更新和重启命令尚未实现。项目无 npm 运行依赖。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "I7",
+      "name": "Chaite Cloud 分享与下载",
+      "title": "Cloud 分享与下载",
+      "status": "planned",
+      "description": "不接入 Chaite Cloud；分享/下载渠道、预设、工具及扩展的独立云服务尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "J1",
+      "name": "定时或事件触发器",
+      "title": "定时或事件触发器",
+      "status": "planned",
+      "description": "定时或事件触发器仅预留配置位置；当前自动执行的任务只有数据清理。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "extensions.schedules"
+      ]
+    },
+    {
+      "id": "J2",
+      "name": "多步计划、工作流与后台任务",
+      "title": "多步计划、工作流与后台任务",
+      "status": "planned",
+      "description": "多步计划、工作流、后台任务、审批和任务管理尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "extensions.workflows"
+      ]
+    },
+    {
+      "id": "J3",
+      "name": "对外提供模型兼容 API",
+      "title": "对外提供模型兼容 API",
+      "status": "implemented",
+      "description": "提供授权 /v1/models 和非流式 /v1/chat/completions；消息角色和工具历史规范化，兼容请求不写入主人会话。列表来自已配置角色模型；不支持 embeddings 或 SSE。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": []
+    },
+    {
+      "id": "K1",
+      "name": "语音识别、语音回复与语音对话",
+      "title": "语音识别、语音回复与语音对话",
+      "status": "planned",
+      "description": "语音识别、TTS 和完整语音会话尚未实现；协议层遇到不支持的音频会明确拒绝。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "K2",
+      "name": "完整解析 PDF、Word、Excel",
+      "title": "完整解析 PDF、Word、Excel",
+      "status": "planned",
+      "description": "完整 PDF、Word、Excel 解析与导入尚未实现；当前只接收手工提供的纯文本资料。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "K3",
+      "name": "视频理解与视频生成",
+      "title": "视频理解与视频生成",
+      "status": "planned",
+      "description": "视频输入、理解、生成和输出完整流程尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "K4",
+      "name": "网页聊天界面",
+      "title": "网页聊天界面",
+      "status": "implemented",
+      "description": "主人登录后可在工作台选择角色聊天、显示文字/图片、重置会话并查看错误。网页等待完整结果，暂不支持文件上传和逐字输出。",
+      "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
+      "configPaths": [
+        "management.webChatEnabled"
+      ]
+    },
+    {
+      "id": "K5",
+      "name": "QQ 分段流式 / 逐字回复",
+      "title": "QQ 分段流式 / 逐字回复",
+      "status": "planned",
+      "description": "底层模型协议支持 SSE；QQ 适配与网页均一次发送最终结果，分段/逐字回复尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "presets.*.stream"
+      ]
+    },
+    {
+      "id": "K6",
+      "name": "费用、余额与预算限制",
+      "title": "费用、余额与预算限制",
+      "status": "planned",
+      "description": "记录 Token 不等于金额；费用定价、余额查询和预算限制尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "extensions.pricing"
+      ]
+    },
+    {
+      "id": "K7",
+      "name": "完整备份恢复与导出导入",
+      "title": "完整备份恢复与导出导入",
+      "status": "planned",
+      "description": "一致性 SQLite 快照与配置备份、CLI 停机恢复已实现；包含图片、自定义工具等全部资源的完整打包、导出/导入尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "retention.backupCount"
+      ]
+    },
+    {
+      "id": "K8",
+      "name": "全部 GPT 管理整合到 Orange",
+      "title": "全部 GPT 管理整合到 Orange",
+      "status": "planned",
+      "description": "Orange 已接入中文配置、密钥保留、能力状态及独立管理入口；所有运行数据与高级管理操作统一嵌入 Orange 尚未实现。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": []
+    },
+    {
+      "id": "K9",
+      "name": "后台多管理员与分级权限",
+      "title": "后台多管理员与分级权限",
+      "status": "planned",
+      "description": "AI 原生工作台和管理 API 当前仅主人角色；Orange 的主人/管理员/观察员不等同于 AI 原生细分角色体系。",
+      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
+      "configPaths": [
+        "management.apiToken"
+      ]
+    }
+  ]
+}

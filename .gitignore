@@ -1,0 +1,9 @@
+/config/local.json
+/config/integration.json
+/data/
+/node_modules/
+/backups/
+*.log
+*.tmp
+.env*
+!config/example.json
