@@ -1,6 +1,6 @@
 {
   "name": "ai-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "通用 AI 插件：独立聊天核心、模型与工具、会话管理、中文配置及可选云崽适配",
   "type": "module",
   "author": "719083594",

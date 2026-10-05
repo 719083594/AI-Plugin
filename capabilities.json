@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",

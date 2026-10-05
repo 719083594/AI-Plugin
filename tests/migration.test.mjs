@@ -78,7 +78,7 @@ async function fixtureTree(t) {
   await fs.writeFile(path.join(target, 'config/example.json'), JSON.stringify(defaults));
   const child = spawn(python, ['-u', '-c', fixture, source], { env: { ...process.env, PYTHONUTF8: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
   lifecycle = superviseChild(child, { label: 'Python migration fixture' });
-  await lifecycle.ready();
+  await lifecycle.ready('READY', 20000);
   return { directory, source, target, backup };
 }
 
