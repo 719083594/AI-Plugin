@@ -242,6 +242,6 @@ export class AIClient {
     const clean = async () => { try { const config = this.config(); this.storage.cleanup(config.retention); await this.images.cleanup?.() } catch (error) { this.host.log?.('清理失败：' + error.message) } }
     clean(); this.maintenanceTimer = setInterval(clean, this.config().retention.cleanupIntervalHours * 3600000); this.maintenanceTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.0.0', ready: true, uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.0.1', ready: true, uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { clearInterval(this.maintenanceTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); this.storage.close() }
 }

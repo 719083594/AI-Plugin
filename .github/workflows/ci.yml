@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   test:
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -22,7 +23,8 @@ jobs:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
       - name: Test without external model services
-        run: node --test
+        timeout-minutes: 3
+        run: node --test --test-timeout=60000
       - name: Check portable entries
         run: |
           node --check index.js

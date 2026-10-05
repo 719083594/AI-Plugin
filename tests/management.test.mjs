@@ -9,6 +9,7 @@ import { AIClient } from '../src/core/client.mjs';
 import { Storage } from '../src/core/storage.mjs';
 import { defaults, merge, writeJson } from '../src/core/config.mjs';
 import { startManagement } from '../src/management/server.mjs';
+import { withBudget, closeHttpServer } from './helpers/resources.mjs';
 
 const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
 const ownerToken = 'owner-test-token';
@@ -21,14 +22,18 @@ const makeConfig = extra => merge(defaults, merge({
 
 async function fixture(t, { config = makeConfig(), provider = async () => reply('模拟回答'), options = {} } = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ai-plugin-management-test-'));
-  let client, management;
+  let client, management, storage;
   t.after(async () => {
-    if (management) await management.close();
-    client?.close();
-    const resolved = path.resolve(root);
-    assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
-    assert.ok(path.basename(resolved).startsWith('ai-plugin-management-test-'));
-    await fs.rm(resolved, { recursive: true, force: true });
+    try { if (management) await closeHttpServer(management.server, () => management.close()); }
+    finally {
+      try { if (client) client.close(); else storage?.close(); }
+      finally {
+        const resolved = path.resolve(root);
+        assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
+        assert.ok(path.basename(resolved).startsWith('ai-plugin-management-test-'));
+        await fs.rm(resolved, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+      }
+    }
   });
   for (const file of ['capabilities.json', 'orangejuice.plugin.json', 'web/index.html', 'web/app.js', 'web/app.css']) {
     await fs.mkdir(path.dirname(path.join(root, file)), { recursive: true });
@@ -36,10 +41,10 @@ async function fixture(t, { config = makeConfig(), provider = async () => reply(
   }
   const configFile = path.join(root, 'config', 'local.json');
   writeJson(configFile, config);
-  const storage = new Storage(path.join(root, 'data', 'ai.db'));
+  storage = new Storage(path.join(root, 'data', 'ai.db'));
   client = new AIClient({ root, configFile, storage, provider, imageStore: { cleanup: async () => 0 } });
   management = startManagement(client, { host: '127.0.0.1', port: 0, ...options });
-  const address = await management.ready, base = `http://127.0.0.1:${address.port}`;
+  const address = await withBudget(management.ready, 5000, 'HTTP fixture startup'), base = `http://127.0.0.1:${address.port}`;
   management.settings.publicUrl = base;
   const call = async (route, { method = 'GET', cookie, csrf, token, origin, headers = {}, value, raw } = {}) => {
     const requestHeaders = { ...headers };
@@ -48,8 +53,8 @@ async function fixture(t, { config = makeConfig(), provider = async () => reply(
     if (token !== undefined) requestHeaders.authorization = 'Bearer ' + token;
     if (origin) requestHeaders.origin = origin;
     if (value !== undefined) requestHeaders['content-type'] = 'application/json';
-    const response = await fetch(new URL(route, base), { method, headers: requestHeaders, body: raw ?? (value !== undefined ? JSON.stringify(value) : undefined), redirect: 'manual' });
-    const text = await response.text();
+    const response = await fetch(new URL(route, base), { method, headers: requestHeaders, body: raw ?? (value !== undefined ? JSON.stringify(value) : undefined), redirect: 'manual', signal: AbortSignal.timeout(5000) });
+    const text = await withBudget(response.text(), 5000, 'HTTP fixture response');
     const data = text && response.headers.get('content-type')?.includes('application/json') ? JSON.parse(text) : null;
     return { response, status: response.status, text, data };
   };

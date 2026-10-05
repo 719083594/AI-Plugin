@@ -13,6 +13,27 @@ function sse(events) {
   const buffer = Buffer.from(events.map(event => `data: ${typeof event === 'string' ? event : JSON.stringify(event)}\r\n\r\n`).join(''));
   return new Response(new ReadableStream({ start(controller) { for (let i = 0; i < buffer.length; i += 3) controller.enqueue(buffer.subarray(i, i + 3)); controller.close(); } }), { headers: { 'content-type': 'text/event-stream' } });
 }
+async function within(promise, milliseconds = 1000) {
+  let timer;
+  try {
+    return await Promise.race([promise, new Promise((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('test operation did not settle within its budget')), milliseconds);
+    })]);
+  } finally { clearTimeout(timer); }
+}
+function hungFetch() {
+  const cleanup = new AbortController();
+  return {
+    fetchImpl: async (_url, { signal }) => {
+      const combined = AbortSignal.any([signal, cleanup.signal]);
+      return new Promise((_resolve, reject) => {
+        if (combined.aborted) reject(combined.reason);
+        else combined.addEventListener('abort', () => reject(combined.reason), { once: true });
+      });
+    },
+    abort: () => cleanup.abort(new Error('test fetch cleanup'))
+  };
+}
 
 test('OpenAI sends normalized image/system/tool history and returns usage', async () => {
   let request;
@@ -65,21 +86,20 @@ test('HTTP errors omit upstream private text and classify retryability', async (
 });
 
 test('provider abort uses the host cancellation signal', async () => {
-  const controller = new AbortController();
-  const pending = complete({ ...input('openai'), signal: controller.signal }, {
-    fetchImpl: async (_url, { signal }) => new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }))
-  });
-  controller.abort(new Error('host cancelled'));
-  await assert.rejects(pending, /host cancelled/);
+  const controller = new AbortController(), fetch = hungFetch();
+  try {
+    const pending = complete({ ...input('openai'), signal: controller.signal }, { fetchImpl: fetch.fetchImpl });
+    controller.abort(new Error('host cancelled'));
+    await assert.rejects(within(pending), /host cancelled/);
+  } finally { controller.abort(); fetch.abort(); }
 });
 
 test('request deadline applies to a hung provider', async () => {
-  const keepAlive = setInterval(() => {}, 100);
+  const controller = new AbortController(), fetch = hungFetch();
   try {
-    await assert.rejects(complete({ ...input('openai'), options: { timeoutMs: 20 } }, {
-      fetchImpl: async (_url, { signal }) => new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }))
-    }), { name: 'TimeoutError' });
-  } finally { clearInterval(keepAlive); }
+    const pending = complete({ ...input('openai'), signal: controller.signal, options: { timeoutMs: 20 } }, { fetchImpl: fetch.fetchImpl });
+    await assert.rejects(within(pending), { name: 'TimeoutError' });
+  } finally { controller.abort(); fetch.abort(); }
 });
 
 test('Gemini preserves actual image mime and signed function call follow-up', async () => {

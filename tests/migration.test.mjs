@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
 import { defaults } from '../src/core/config.mjs';
+import { superviseChild } from './helpers/resources.mjs';
 
 const python = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
 const script = fileURLToPath(new URL('../scripts/migrate-chatgpt.py', import.meta.url));
@@ -62,27 +63,22 @@ for connection in (memory,history,db):connection.close()
 async function fixtureTree(t) {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'ai-plugin-migration-test-'));
   const source = path.join(directory, 'source'), target = path.join(directory, 'target'), backup = path.join(directory, 'backup');
+  let lifecycle;
+  // Register cleanup before setup, so failed startup still stops Python and removes the fixture.
+  t.after(async () => {
+    try { if (lifecycle) await lifecycle.stop(); }
+    finally {
+      const resolved = path.resolve(directory);
+      assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
+      assert.ok(path.basename(resolved).startsWith('ai-plugin-migration-test-'));
+      await fs.rm(resolved, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    }
+  });
   await fs.mkdir(path.join(target, 'config'), { recursive: true });
   await fs.writeFile(path.join(target, 'config/example.json'), JSON.stringify(defaults));
   const child = spawn(python, ['-u', '-c', fixture, source], { env: { ...process.env, PYTHONUTF8: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
-  let errors = '';
-  child.stderr.on('data', data => { errors += data.toString(); });
-  await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Python fixture startup timed out')), 5000);
-    let output = '';
-    child.stdout.on('data', data => { output += data; if (output.includes('READY')) { clearTimeout(timeout); resolve(); } });
-    child.once('error', error => { clearTimeout(timeout); reject(error); });
-    child.once('exit', code => { clearTimeout(timeout); if (code) reject(new Error(`Fixture setup failed (${code}): ${errors}`)); });
-  });
-  t.after(async () => {
-    const stopped = new Promise(resolve => child.once('close', resolve));
-    child.stdin.end('\n');
-    await stopped;
-    const resolved = path.resolve(directory);
-    assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
-    assert.ok(path.basename(resolved).startsWith('ai-plugin-migration-test-'));
-    await fs.rm(resolved, { recursive: true, force: true });
-  });
+  lifecycle = superviseChild(child, { label: 'Python migration fixture' });
+  await lifecycle.ready();
   return { directory, source, target, backup };
 }
 
