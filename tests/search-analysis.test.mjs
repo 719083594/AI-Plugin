@@ -22,8 +22,21 @@ test('正文读取拒绝内网、DNS重绑定和重定向到内网，不触发�
   assert.equal((await readSearchPage('https://source.example.com/',{lookup:async()=>[{address:'10.0.0.1',family:4}],fetchImpl})).status,'unavailable');assert.equal(requests,0)
   assert.equal((await readSearchPage('https://source.example.com/',{lookup,fetchImpl})).status,'unavailable');assert.equal(requests,1)
 })
+
+test('图片目录跳到同站参数正文，保留对比表的单元格与列对应关系',async()=>{
+ const urls=[]
+ const result=await readSearchPage('https://source.example.com/picture',{lookup,fetchImpl:async url=>{
+  urls.push(url.href)
+  const html=urls.length===1?'<h1>产品外观对比</h1><a href="/params">参数对比</a>':('<main><table><tr><th>型号</th><th>甲</th><th>乙</th></tr><tr><td>主频</td><td>2.50 GHz</td><td>2.60 GHz</td></tr></table><p>'+('参数事实说明。'.repeat(12))+'</p></main>')
+  return new Response(html,{headers:{'content-type':'text/html'}})
+ }})
+ assert.equal(result.status,'read');assert.deepEqual(urls,['https://source.example.com/picture','https://source.example.com/params'])
+ assert(result.content.includes('型号 | 甲 | 乙 |'));assert(result.content.includes('主频 | 2.50 GHz | 2.60 GHz |'))
+})
 test('验证页面、超大正文与取消有准确状态；最多读取3个唯一链接',async()=>{
   const blocked=await readSearchPage('https://source.example.com/',{lookup,fetchImpl:async()=>new Response('验证码 captcha',{headers:{'content-type':'text/html'}})});assert.equal(blocked.status,'blocked')
+  const challenge=await readSearchPage('https://source.example.com/wappoc_appmsgcaptcha',{lookup,fetchImpl:async()=>new Response('环境异常，完成验证后即可继续访问。'.repeat(5),{headers:{'content-type':'text/html'}})});assert.equal(challenge.status,'blocked')
+  const navigation=await readSearchPage('https://source.example.com/compare',{lookup,fetchImpl:async()=>new Response('产品对比：外观对比；暂无相关内容。'.repeat(5),{headers:{'content-type':'text/html'}})});assert.equal(navigation.status,'unavailable')
   const big=await readSearchPage('https://source.example.com/',{lookup,fetchImpl:async()=>new Response('x',{headers:{'content-type':'text/html','content-length':'999999'}})});assert.equal(big.status,'unavailable')
   const signal=AbortSignal.abort();assert.equal((await readSearchPage('https://source.example.com/',{signal,lookup})).status,'unavailable')
   let calls=0

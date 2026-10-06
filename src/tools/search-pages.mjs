@@ -14,7 +14,16 @@ const decode=text=>text.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/g
 export function pageText(html){
   const body=html.replace(/<!--[\s\S]*?-->/g,' ').replace(/<(script|style|noscript|svg|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,' ')
   const article=body.match(/<(?:article|main)\b[^>]*>([\s\S]*?)<\/(?:article|main)\s*>/i)?.[1]||body
-  return decode(article.replace(/<\/(?:p|div|li|h[1-6]|tr)>|<br\b[^>]*>/gi,'\n').replace(/<[^>]*>/g,' ')).replace(/[\t \u00a0]+/g,' ').replace(/\s*\n\s*/g,'\n').trim().slice(0,MAX_TEXT)
+  return decode(article.replace(/<\/(?:td|th)\s*>/gi,' | ').replace(/<\/(?:p|div|li|h[1-6]|tr)>|<br\b[^>]*>/gi,'\n').replace(/<[^>]*>/g,' ')).replace(/[\t \u00a0]+/g,' ').replace(/\s*\n\s*/g,'\n').trim().slice(0,MAX_TEXT)
+}
+function detailLink(html,url,content){
+  if(/\b\d+(?:\.\d+)?\s*(?:GHz|MHz|nm|GB|MB)\b/i.test(content))return null
+  for(const row of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)){
+    const title=pageText(row[2])
+    if(!/^(?:参数对比|详细参数|规格参数|技术规格|技术参数|阅读全文|specifications|technical specifications)$/i.test(title))continue
+    try{const target=new URL(decode(row[1]),url);if(target.origin===url.origin&&target.href!==url.href)return target}catch{}
+  }
+  return null
 }
 function validateUrl(input){
   const url=publicImageUrl(input)
@@ -25,7 +34,7 @@ const requestWithHeaders=(url,options,callback)=>(url.protocol==='https:'?https:
 export async function readSearchPage(input,{signal,lookup=lookupDns,fetchImpl,timeoutMs=4500}={}){
   const deadline=AbortSignal.timeout(timeoutMs);signal=signal?AbortSignal.any([signal,deadline]):deadline
   try{
-    let url=validateUrl(input)
+    let url=validateUrl(input),followedDetail=false
     for(let hop=0;hop<=5;hop++){
       signal.throwIfAborted()
       if(/\.(?:invalid|test|example)$/.test(url.hostname))throw new Error('保留示例域名')
@@ -52,7 +61,10 @@ export async function readSearchPage(input,{signal,lookup=lookupDns,fetchImpl,ti
       const next=refresh||scriptRedirect
       if(next&&hop<5){url=validateUrl(new URL(decode(next.trim()),url));continue}
       const content=pageText(html)
-      if(/验证码|安全验证|访问过于频繁|captcha|verify you are human|access denied/i.test(content)&&content.length<700)return {status:'blocked',url:url.href,reason:'网页要求验证或限制访问'}
+      const detail=!followedDetail&&hop<5?detailLink(html,url,content):null
+      if(detail){followedDetail=true;url=validateUrl(detail);continue}
+      if((/验证码|安全验证|环境异常|完成验证|验证后.*(?:访问|继续)|访问过于频繁|captcha|verify you are human|access denied/i.test(content)&&content.length<700)||/\/(?:wappoc_appmsgcaptcha|captcha|challenge)(?:\/|$)/i.test(url.pathname))return {status:'blocked',url:url.href,reason:'网页要求验证或限制访问'}
+      if(content.length<900&&/图片对比|外观对比|产品对比/.test(content)&&/暂无相关内容/.test(content)&&!/[\d.]\s*(?:GHz|MHz|nm|GB|MB)\b/i.test(content))return {status:'unavailable',url:url.href,reason:'页面主要是导航或图片，没有可读取的参数正文'}
       if(content.length<50)return {status:'unavailable',url:url.href,reason:'没有可读取的正文'}
       return {status:'read',url:url.href,content}
     }
