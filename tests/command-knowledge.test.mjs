@@ -47,3 +47,12 @@ test('optional command source errors do not break chat',async t=>{
  const {client,captured}=setup(t);client.host.getCommandCatalog=async()=>{throw new Error('source unavailable')}
  await client.chat({userId:'user',text:'你能干什么',transient:true});assert.equal(captured.length,1);assert(!JSON.stringify(captured[0]).includes('#秘密重启'))
 })
+test('capability replies missing examples gain relevant authorized commands without another model call',async t=>{
+ const {client,captured}=setup(t)
+ client.provider=async request=>{captured.push(request);return {contents:[{type:'text',text:'我可以联网搜索资料。'}],usage:{}}}
+ const result=await client.chat({userId:'member',groupId:'group',text:'你能干什么',transient:true})
+ assert(result.text.includes('#搜索 内容'));assert(!result.text.includes('#秘密重启'));assert(!result.text.includes('#群管禁言 @'));assert.equal(captured.length,1)
+ const admin=setup(t,'admin');const prepared=await admin.client.commandKnowledge.prepare({userId:'admin',groupId:'group',text:'禁言怎么用'})
+ assert(admin.client.commandKnowledge.completeAnswer('可以对成员禁言',prepared).includes('#群管禁言 @成员 10分钟'))
+ assert.equal(admin.client.commandKnowledge.completeAnswer('用 #群管禁言 @成员 10分钟',prepared),'用 #群管禁言 @成员 10分钟')
+})
