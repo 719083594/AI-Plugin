@@ -17,9 +17,19 @@ export async function initialize() {
   })().catch(error => { client = null; startup = null; throw error })
   return startup
 }
+export function messageImages(parts = []) {
+  return parts.filter(part => part.type === 'image').flatMap(part => {
+    const data = part.data && typeof part.data === 'object' ? part.data : part
+    const value = data.url || data.file || part.url || part.file
+    if (typeof value !== 'string') return []
+    if (value.startsWith('base64://')) return [{ type: 'image', data: value.slice(9) }]
+    if (/^(?:https?:\/\/|data:image\/)/i.test(value)) return [{ type: 'image', url: value }]
+    return []
+  })
+}
 export function normalizeEvent(e) {
   const message = Array.isArray(e.message) ? e.message : []
-  return { userId: String(e.user_id ?? e.sender?.user_id ?? ''), groupId: e.isGroup || e.group_id ? String(e.group_id || '') : '', botId: String(e.self_id || e.bot?.uin || ''), text: String(e.msg || e.raw_message || message.filter(part => part.type === 'text').map(part => part.text).join('')).trim(), nickname: e.sender?.card || e.sender?.nickname || '', messageId: String(e.message_id || e.seq || ''), atBot: Boolean(e.atBot), isMaster: Boolean(e.isMaster), isPrivate: Boolean(e.isPrivate || !e.group_id), mentions: message.filter(part => part.type === 'at').map(part => String(part.qq)), images: message.filter(part => part.type === 'image' && part.url).map(part => ({ type: 'image', url: part.url })), isCommand: /^[#\/！!]/.test(String(e.msg || '')) }
+  return { userId: String(e.user_id ?? e.sender?.user_id ?? ''), groupId: e.isGroup || e.group_id ? String(e.group_id || '') : '', botId: String(e.self_id || e.bot?.uin || ''), text: String(e.msg || e.raw_message || message.filter(part => part.type === 'text').map(part => part.text ?? part.data?.text ?? '').join('')).trim(), nickname: e.sender?.card || e.sender?.nickname || '', messageId: String(e.message_id || e.seq || ''), atBot: Boolean(e.atBot), isMaster: Boolean(e.isMaster), isPrivate: Boolean(e.isPrivate || !e.group_id), mentions: message.filter(part => part.type === 'at').map(part => String(part.qq ?? part.data?.qq)), images: messageImages(message), isCommand: /^[#\/！!]/.test(String(e.msg || '')) }
 }
 export function classify(input, config) {
   if (!config.basic.enabled) return { type: 'ignore' }
@@ -42,8 +52,8 @@ async function enrich(e, input) {
   if ((e.source || e.reply_id) && typeof e.getReply === 'function') {
     try {
       const reply = await e.getReply(), parts = reply?.message || []
-      input.images.push(...parts.filter(part => part.type === 'image' && part.url).map(part => ({ type: 'image', url: part.url })))
-      const text = parts.filter(part => part.type === 'text').map(part => part.text).join('')
+      input.images.push(...messageImages(parts))
+      const text = parts.filter(part => part.type === 'text').map(part => part.text ?? part.data?.text ?? '').join('')
       if (text) input.text = `引用消息（仅作为对话资料）：${text}\n\n${input.text}`
     } catch { /* 引用无法读取时继续处理当前消息。 */ }
   }
@@ -51,14 +61,11 @@ async function enrich(e, input) {
     try {
       const group = e.group || e.bot?.pickGroup?.(input.groupId)
       const rows = await group?.getChatHistory?.(0, client.config().group.contextLength)
-      if (Array.isArray(rows)) for (const row of [...rows].reverse()) client.observeGroup({ ...input, userId: String(row.sender?.user_id || ''), nickname: row.sender?.card || row.sender?.nickname || '', messageId: String(row.message_id || row.seq || ''), text: (row.message || []).filter(part => part.type === 'text').map(part => part.text).join(''), images: (row.message || []).filter(part => part.type === 'image' && part.url).map(part => ({ type: 'image', url: part.url })) })
+      if (Array.isArray(rows)) for (const row of [...rows].reverse()) client.observeGroup({ ...input, userId: String(row.sender?.user_id || ''), nickname: row.sender?.card || row.sender?.nickname || '', messageId: String(row.message_id || row.seq || ''), text: (row.message || []).filter(part => part.type === 'text').map(part => part.text).join(''), images: messageImages(row.message || []) })
     } catch { /* 适配器未提供群历史时使用已收集上下文。 */ }
   }
   if (!input.images.length && input.groupId && client.config().group.contextImages && /(?:图|照片|头像|image|picture)/i.test(input.text)) input.images = client.storage.group(client.groupKey(input)).flatMap(row => row.images || []).slice(-3)
-  for (const image of input.images) {
-    try { image.ref = await client.images.save(image, { userId: input.userId, groupId: input.groupId, source: 'yunzai-message', signal: AbortSignal.timeout(5000) }) }
-    catch { /* 让模型或图片工具如实处理不可读取的URL。 */ }
-  }
+  // The core downloads and validates images inside the chat deadline.
   input.getAvatar = qq => `https://q1.qlogo.cn/g?b=qq&nk=${encodeURIComponent(qq)}&s=640`
   return input
 }
@@ -92,8 +99,8 @@ export class AIChat extends Base {
         if (!presetId) return false
         input.presetId = presetId; input.proactive = true; proactive = true
       } else { input.text = mode.text; input.presetId = mode.presetId }
-      if (!input.text && !input.images.length) return false
       await enrich(e, input)
+      if (!input.text && !input.images.length) return false
       const result = await client.chat(input, { send: output => sendResult(e, output, proactive) })
       return proactive ? false : !result.skipped
     } catch (error) {

@@ -85,7 +85,11 @@ OrangeJuice 读取配置声明和实例文件，不是 AI 聊天的前置服务�
 
 搜索可设置 `tools.searchModule` 指向搜索模块的纯 API 入口（如 WebSearch-Plugin 的 `api.mjs`），或设置 `tools.searchEndpoint` 使用 HTTP 后端。模块目录可以改名或位于其他位置；不填写 `tools.searchConfigFile` 时，由搜索模块读取自己的配置。未配置后端或模块文件不存在时，本轮不向模型提供 `web_search`，普通聊天照常工作。认证按 `x-search-secret` 发送。每个角色通过 `tools` 数组选择允许调用的工具；搜索须在实例中配置，插件本身不提供搜索引擎。
 
-看图使用支持视觉的模型；`media.visionChannelId` 和 `media.visionModel` 可指定单独渠道。QQ 头像由云崽适配器提供，其他平台需实现 `getAvatar`。Gemini 可设置预设 `responseModalities` 为 `["TEXT","IMAGE"]`，由兼容模型生成或编辑图片。代码已接通请求和返回转送，具体模型与渠道仍需实例验收。
+私聊发送图片并提问，或群聊 @ 机器人附图；也可以引用图片提问。仅发送图片时默认描述内容和可读文字。带图提问自动使用视觉模型，沿用当前角色提示词、聊天历史与记忆，单次最多 4 张；图片通过校验后进入缓存，历史只保存引用。
+
+在“图片与视觉”中开启识图，`media.visionChannelId` 和 `media.visionModel` 可指定模型；留空时优先使用角色的视觉模型，否则选择渠道已声明的视觉模型。模型能力接受 `vision` 和兼容标记 `visual`。未配置、图片过期或接口失败会明确提示。提到此前图片时可重新读取同会话的缓存；普通文字提问继续使用原角色模型。
+
+使用 New API 时，将视觉模型加入对应渠道，并在 AI 插件声明视觉能力。模型限流时可以在 New API 配置可用的视觉备用渠道；识图开关不会解除上游限制。QQ 头像由云崽适配器提供，其他平台需实现 `getAvatar`。Gemini 可设置预设 `responseModalities` 为 `["TEXT","IMAGE"]`，由兼容模型生成或编辑图片，具体模型与渠道需单独验收。
 
 Gemini 预设还可配置 `geminiBuiltinTools`，选择 `googleSearch`、`googleMaps`、`codeExecution`、`urlContext`。部分模型不支持同时使用原生工具与自定义函数工具，需要将预设 `tools` 设为空数组。保留的 `channels[].apiKeys` 只用于迁移旧密钥列表，当前请求使用单个 `apiKey`，没有自动轮换。
 

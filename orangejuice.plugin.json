@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -394,11 +394,9 @@
         },
         {
           "path": "media.imagesEnabled",
-          "label": "图片总开关（预留）",
+          "label": "启用图片识别",
           "type": "boolean",
-          "description": "本版尚未接入统一的图片禁用策略。",
-          "readonly": true,
-          "status": "planned"
+          "description": "控制当前、引用、历史图片识别与视觉工具；关闭后不读取图片。"
         },
         {
           "path": "media.maxImageBytes",
@@ -410,13 +408,13 @@
           "path": "media.visionChannelId",
           "label": "视觉渠道标识",
           "type": "string",
-          "description": "留空使用当前角色渠道。"
+          "description": "指定视觉渠道；留空从已声明视觉能力的可用渠道中选择。"
         },
         {
           "path": "media.visionModel",
           "label": "视觉模型名称",
           "type": "string",
-          "description": "留空使用当前角色模型；必须支持看图。"
+          "description": "指定支持识图的模型；留空优先角色视觉模型，否则自动选择已声明的视觉模型。"
         },
         {
           "path": "media.imageRetentionHours",

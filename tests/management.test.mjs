@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { AIClient } from '../src/core/client.mjs';
+import { ImageStore } from '../src/media/index.mjs';
 import { Storage } from '../src/core/storage.mjs';
 import { defaults, merge, writeJson } from '../src/core/config.mjs';
 import { startManagement } from '../src/management/server.mjs';
@@ -42,7 +43,7 @@ async function fixture(t, { config = makeConfig(), provider = async () => reply(
   const configFile = path.join(root, 'config', 'local.json');
   writeJson(configFile, config);
   storage = new Storage(path.join(root, 'data', 'ai.db'));
-  client = new AIClient({ root, configFile, storage, provider, imageStore: { cleanup: async () => 0 } });
+  client = new AIClient({ root, configFile, storage, provider, imageStore: new ImageStore({ directory: path.join(root, 'data/images') }) });
   management = startManagement(client, { host: '127.0.0.1', port: 0, ...options });
   const address = await withBudget(management.ready, 5000, 'HTTP fixture startup'), base = `http://127.0.0.1:${address.port}`;
   management.settings.publicUrl = base;
@@ -190,14 +191,16 @@ test('config save automatically creates a valid consistent SQLite backup of the 
 
 test('OpenAI compatibility accepts complete client history and keeps transient API sessions separate', async t => {
   const captured = [];
-  const { call, storage } = await fixture(t, { provider: async request => { captured.push(structuredClone(request.messages)); return reply('模拟结果'); } });
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S2sAAAAASUVORK5CYII=';
+  const config = makeConfig({ channels: [{ id: 'model-a', type: 'openai', models: [{ name: 'fake-model', features: ['chat', 'vision'] }] }] });
+  const { call, storage } = await fixture(t, { config, provider: async request => { captured.push(structuredClone(request.messages)); return reply('模拟结果'); } });
   await call('/api/chat', { token: ownerToken, method: 'POST', value: { text: '网页个人聊天' } });
   const original = structuredClone(storage.state('web-owner'));
   const messages = [
     { role: 'system', content: '客户端自己的规则' },
     { role: 'user', content: '客户端第一问' },
     { role: 'assistant', content: '客户端先前回答' },
-    { role: 'user', content: [{ type: 'text', text: '客户端第二问' }, { type: 'image_url', image_url: { url: 'https://images.invalid/local-test.png' } }] }
+    { role: 'user', content: [{ type: 'text', text: '客户端第二问' }, { type: 'image_url', image_url: { url: 'data:image/png;base64,' + png } }] }
   ];
   const first = await call('/v1/chat/completions', { token: ownerToken, method: 'POST', value: { model: 'fake-model', messages, stream: false } });
   assert.equal(first.status, 200); assert.equal(first.data.object, 'chat.completion');
@@ -208,7 +211,7 @@ test('OpenAI compatibility accepts complete client history and keeps transient A
   assert.equal(normalized[0].content[0].text, '客户端自己的规则');
   assert.equal(normalized[2].content[0].text, '客户端先前回答');
   assert.equal(normalized[3].content[1].type, 'image');
-  assert.equal(normalized[3].content[1].url, 'https://images.invalid/local-test.png');
+  assert.equal(normalized[3].content[1].data, png);
   const second = await call('/v1/chat/completions', { token: ownerToken, method: 'POST', value: { model: 'default', messages: [{ role: 'user', content: '另一个客户端的新问题' }] } });
   assert.equal(second.status, 200); assert.doesNotMatch(JSON.stringify(captured[2]), /客户端第一问|客户端先前回答|网页个人聊天/);
   assert.deepEqual(storage.state('web-owner'), original);

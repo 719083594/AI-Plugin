@@ -1,14 +1,29 @@
 {
   "name": "ai-plugin",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "通用 AI 插件：独立聊天核心、模型与工具、会话管理、中文配置及可选云崽适配",
   "type": "module",
   "author": "719083594",
   "license": "GPL-3.0-or-later",
-  "repository": {"type": "git", "url": "https://github.com/719083594/AI-Plugin.git"},
-  "engines": {"node": ">=22.13"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/719083594/AI-Plugin.git"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
   "main": "./api.mjs",
-  "exports": {".": "./api.mjs", "./providers": "./src/providers/index.mjs", "./tools": "./src/tools/index.mjs"},
-  "bin": {"ai-plugin": "./cli.mjs"},
-  "scripts": {"test": "node --test --test-timeout=60000 tests/*.test.mjs", "start": "node cli.mjs serve", "diagnose": "node cli.mjs diagnose"}
+  "exports": {
+    ".": "./api.mjs",
+    "./providers": "./src/providers/index.mjs",
+    "./tools": "./src/tools/index.mjs"
+  },
+  "bin": {
+    "ai-plugin": "./cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-timeout=60000 tests/*.test.mjs",
+    "start": "node cli.mjs serve",
+    "diagnose": "node cli.mjs diagnose"
+  }
 }

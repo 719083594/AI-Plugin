@@ -8,8 +8,9 @@ import { Queue } from './queue.mjs'
 import { complete } from '../providers/index.mjs'
 import { ToolRegistry, createBuiltinTools } from '../tools/index.mjs'
 import { ImageStore } from '../media/index.mjs'
+import { selectVision, checkImageScope, storedImage, imageNote, visionError } from './vision.mjs'
 
-export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning)>/gi, '').trim()
+export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning|answer)>/gi, '').trim()
 export function redactError(error, config) {
   let text = String(error?.message || error)
   for (const secret of [...config.channels.map(channel => channel.apiKey), config.tools.searchToken, config.management.apiToken]) if (secret && String(secret).length > 5) text = text.split(secret).join('[已隐藏]')
@@ -117,10 +118,27 @@ export class AIClient {
   }
   async vision({ question, images, signal, context = {} }) {
     const config = this.config(), preset = this.preset(context.userId ? context : { userId: 'vision' })
-    const discovered = config.channels.filter(channel => channel.enabled !== false).flatMap(channel => (channel.models || []).filter(model => typeof model === 'object' && model.features?.includes('vision')).map(model => ({ channelId: channel.id, model: model.name })))[0]
-    const visionPreset = { ...preset, channelId: config.media.visionChannelId || discovered?.channelId || preset.channelId, model: config.media.visionModel || discovered?.model || preset.model }
-    const result = await this.provider({ channel: selectChannel(config, visionPreset), model: visionPreset.model, messages: [{ role: 'user', content: [{ type: 'text', text: question || '请详细描述这张图片。' }, ...images.map(image => ({ ...image, type: 'image' }))] }], options: { maxTokens: 1024 }, signal })
-    return cleanText((result.contents || []).filter(row => row.type === 'text').map(row => row.text).join('\n'))
+    const selection = selectVision(config, preset)
+    if (!images?.length) throw new Error('没有可识别的图片，请发送图片或引用图片提问')
+    const prepared = await this.prepareImages(images, context, signal)
+    try {
+      const result = await this.provider({ ...selection, messages: [{ role: 'user', content: [{ type: 'text', text: question || '请详细描述这张图片。' }, ...prepared] }], options: { maxTokens: 1024, stream: false }, signal })
+      const text = cleanText((result.contents || []).filter(row => row.type === 'text').map(row => row.text).join('\n'))
+      if (!text) throw new Error('视觉模型未返回有效图片描述')
+      return text
+    } catch (error) { throw visionError(error) }
+  }
+  async prepareImages(images, context, signal) {
+    if (images.length > 4) throw new Error('每次最多识别 4 张图片，请分批发送')
+    const result = []
+    for (const image of images) {
+      signal?.throwIfAborted()
+      const ref = image.ref || await this.images.save(image, { signal, userId: context.userId, groupId: context.groupId, origin: context.botId, source: 'chat-input' })
+      const resolved = await this.images.resolve(ref, { signal })
+      checkImageScope(resolved, context)
+      if (!result.some(row => row.ref === ref)) result.push(resolved)
+    }
+    return result
   }
   observeGroup(input) {
     if (!input.groupId) return
@@ -156,11 +174,15 @@ export class AIClient {
         this.activeUsers.add(key)
         try {
         const state = this.storage.state(key); if (!input.transient) this.storage.saveState(state)
-        const revision = state.revision || 0, preset = this.preset(input), channel = selectChannel(config, preset)
+        const revision = state.revision || 0, preset = this.preset(input)
         if (!preset.model) throw new Error('角色尚未配置模型名称')
-        const metadata = channel.models?.find(model => typeof model === 'object' && model.name === preset.model)
-        const directImages = !metadata || metadata.features?.includes('vision')
-        const content = input.content || [{ type: 'text', text: String(input.text || '') + (!directImages && input.images?.length ? '\n本条消息附有图片，请用图片工具查看：' + input.images.map(image => image.ref || '当前图片').join('、') : '') }, ...(directImages ? input.images || [] : [])]
+        const supplied = input.content ?? input.messages?.at(-1)?.content
+        const incoming = Array.isArray(supplied) ? supplied : [{ type: 'text', text: typeof supplied === 'string' ? supplied : String(input.text || '') }, ...(input.images || [])]
+        const rawImages = incoming.filter(row => row.type === 'image')
+        if (rawImages.length && !config.media.imagesEnabled) throw new Error('识图已关闭，请让主人开启图片识别')
+        const prepared = await this.prepareImages(rawImages, input, signal)
+        const content = [...incoming.filter(row => row.type !== 'image'), ...prepared.map(storedImage)]
+        if (!content.some(row => row.type === 'text' && row.text?.trim()) && prepared.length) content.unshift({ type: 'text', text: '请描述图片内容；有可读文字时也请说明。' })
         const user = { role: 'user', content }, messages = []
         let systemPrompt = preset.systemPrompt || ''
         if (input.proactive) systemPrompt += '\n' + config.group.prompt
@@ -182,17 +204,35 @@ export class AIClient {
           }
           messages.push(user)
         }
+        // A follow-up referring to an earlier picture can reuse its scoped cache.
+        const wantsEarlierImage = !prepared.length && config.media.imagesEnabled && /(?:图|照片|截图|image|picture|上面)/i.test(String(input.text || ''))
+        const earlier = wantsEarlierImage ? [...messages].reverse().find(row => row !== user && row.role === 'user' && Array.isArray(row.content) && row.content.some(part => part.type === 'image')) : null
+        const earlierParts = earlier?.content.filter(part => part.type === 'image') || []
+        const recovered = []
+        for (const part of earlierParts.slice(0, 4)) {
+          try { recovered.push(...await this.prepareImages([part], input, signal)) }
+          catch (error) { if (signal.aborted) throw error; throw new Error('此前图片已过期或不可读取，请重新发送图片') }
+        }
+        const visualImages = [...prepared, ...recovered]
+        const selection = visualImages.length ? selectVision(config, preset) : { channel: selectChannel(config, preset), model: preset.model }
+        const { channel, model } = selection
+        const requestMessages = messages.map(message => ({ ...message, content: Array.isArray(message.content) ? message.content.map(part => part.type === 'image' ? imageNote(part) : part) : message.content }))
+        const current = requestMessages.at(-1)
+        if (visualImages.length) {
+          if (current?.role !== 'user' || !Array.isArray(current.content)) throw new Error('识图提问必须以用户消息结束')
+          current.content = [...current.content.filter(part => !(part.type === 'text' && part.text.startsWith('[此前的图片'))), ...visualImages]
+        }
         const names = (preset.tools || []).filter(name => name !== 'web_search' || this.searchConfigured(config))
         const definitions = this.tools.list({ names })
         const pendingImages = []
-        const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); return { delivered: true, queued: true } } }
+        const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: prepared.length ? prepared : input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); return { delivered: true, queued: true } } }
         const persisted = [user]; let response, usage = {}
         for (let round = 0; round <= config.chat.maxToolRounds; round++) {
           signal.throwIfAborted()
           try {
-            response = await abortable(() => this.provider({ channel, model: preset.model, messages, options: { temperature: preset.temperature, maxTokens: input.proactive ? config.group.maxTokens : preset.maxTokens, stream: false, geminiBuiltinTools: preset.geminiBuiltinTools || [], responseModalities: preset.responseModalities }, tools: round < config.chat.maxToolRounds ? definitions : [], signal }), signal)
+            response = await abortable(() => this.provider({ channel, model, messages: requestMessages, options: { temperature: preset.temperature, maxTokens: input.proactive ? config.group.maxTokens : preset.maxTokens, stream: false, geminiBuiltinTools: preset.geminiBuiltinTools || [], responseModalities: preset.responseModalities }, tools: round < config.chat.maxToolRounds ? definitions : [], signal }), signal)
           } catch (error) {
-            if (signal.aborted || !searchSources.length) throw error
+            if (signal.aborted || !searchSources.length) throw visualImages.length ? visionError(error) : error
             response = { contents: [{ type: 'text', text: '搜索已完成，模型整理暂时失败。以下是可直接查看的来源。' }], toolCalls: [], usage: {} }; break
           }
           for (const [name, value] of Object.entries(response.usage || {})) if (Number.isFinite(value)) usage[name] = (usage[name] || 0) + value
@@ -200,7 +240,7 @@ export class AIClient {
           if (round >= config.chat.maxToolRounds) throw new Error('工具调用已达到本轮上限，请简化问题后重试')
           usedTools = true; deadline(config.chat.toolTimeoutMs)
           const assistant = { role: 'assistant', content: response.contents || [], toolCalls: response.toolCalls }
-          messages.push(assistant); persisted.push(assistant)
+          messages.push(assistant); requestMessages.push(assistant); persisted.push(assistant)
           for (const call of response.toolCalls) {
             signal.throwIfAborted()
             let result
@@ -210,7 +250,7 @@ export class AIClient {
               if (call.name === 'web_search') searchSources = sourcesFrom(result)
             } catch (error) { if (signal.aborted) throw error; result = { error: '工具调用失败：' + redactError(error, config) } }
             const tool = { role: 'tool', toolCallId: call.id, name: call.name, content: [{ type: 'text', text: resultText(result).slice(0, 20000) }] }
-            messages.push(tool); persisted.push(tool)
+            messages.push(tool); requestMessages.push(tool); persisted.push(tool)
           }
         }
         signal.throwIfAborted()
@@ -229,13 +269,13 @@ export class AIClient {
         if (!text && !contents.some(row => row.type === 'image')) throw new Error('模型没有返回可发送的内容')
         const latest = this.storage.state(key)
         if (!input.transient && (latest.revision || 0) !== revision) throw new Error('角色或会话已变更')
-        const result = { text, contents, usage, model: preset.model, presetId: preset.id, usedTools, sources: searchSources }
+        const result = { text, contents, usage, model, presetId: preset.id, usedTools, sources: searchSources }
         if (send) { const receipt = await abortable(() => send(result), signal); if (receipt === false || receipt?.discarded || receipt?.error || receipt?.delivered === false || receipt?.status === 'failed' || (receipt?.retcode !== undefined && receipt.retcode !== 0)) throw new Error('回复未成功发送') }
         signal.throwIfAborted()
         const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning') }; persisted.push(assistant)
         if (!input.proactive && !input.transient && !this.storage.commitTurn({ userId: key, revision, conversationId: state.current.conversationId, parentId: state.current.messageId, messages: persisted })) throw new Error('会话已变更，未保存过期回答')
         if (input.proactive) for (const message of persisted) this.storage.db.prepare('INSERT INTO history VALUES(?,?,?,?,?,?)').run(randomUUID(), null, 'bym:' + String(input.groupId) + ':' + randomUUID(), message.role, JSON.stringify(message), new Date().toISOString())
-        this.storage.log({ kind: 'chat', model: preset.model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, success: true })
+        this.storage.log({ kind: 'chat', model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, success: true })
         return result
         } finally { this.activeUsers.delete(key) }
       }, signal)
@@ -250,6 +290,6 @@ export class AIClient {
     const clean = async () => { try { const config = this.config(); this.storage.cleanup(config.retention); await this.images.cleanup?.() } catch (error) { this.host.log?.('清理失败：' + error.message) } }
     clean(); this.maintenanceTimer = setInterval(clean, this.config().retention.cleanupIntervalHours * 3600000); this.maintenanceTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.0.3', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.0.4', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { clearInterval(this.maintenanceTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); this.storage.close() }
 }
