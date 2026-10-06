@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [

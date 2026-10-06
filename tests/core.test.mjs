@@ -331,6 +331,59 @@ test('search tool loop preserves complete query, actual sources and usage, sends
   assert.deepEqual(history(client, storage).map(row => row.role), ['user', 'assistant', 'tool', 'assistant']);
 });
 
+test('standalone chat omits search when backend is absent or optional module is missing', async t => {
+  const root = await temporaryRoot(t);
+  for (const searchModule of ['', './optional-search/api.mjs']) {
+    const config = makeConfig({ tools: { searchModule }, presets: [{ ...clone(defaults.presets[0]), model: 'fake-model', tools: ['web_search'] }] });
+    let sent = 0;
+    const { client } = fixture(t, { root, config, provider: async request => {
+      assert.ok(!request.tools.some(tool => tool.name === 'web_search'));
+      return answer('独立聊天结果');
+    } });
+    assert.equal(client.health().searchConfigured, false);
+    const result = await client.chat(input(), { send: async () => { sent++; return true; } });
+    assert.equal(result.text, '独立聊天结果'); assert.equal(sent, 1);
+  }
+});
+
+test('search factory owns its default config after moving; explicit override belongs to caller', async t => {
+  const root = await temporaryRoot(t);
+  const directory = path.join(root, 'relocated-search');
+  await fs.mkdir(directory);
+  await fs.writeFile(path.join(directory, 'own.json'), JSON.stringify({ marker: 'module-owned' }));
+  await fs.writeFile(path.join(root, 'override.json'), JSON.stringify({ marker: 'caller-owned' }));
+  await fs.writeFile(path.join(directory, 'api.mjs'), `
+    import fs from 'node:fs';
+    export function createWebSearch(options = {}) {
+      const config = JSON.parse(fs.readFileSync(options.configPath || new URL('./own.json', import.meta.url), 'utf8'));
+      return { search: async (query, type, {signal}) => { signal.throwIfAborted(); return {ok:true, marker:config.marker, query, results:[{title:config.marker, url:'https://source.invalid/owned'}]}; } };
+    }
+  `);
+  const config = makeConfig({ tools: { searchModule: './relocated-search/api.mjs', searchConfigFile: '' } });
+  const { client } = fixture(t, { root, config });
+  assert.equal((await client.search({ query: '问题' })).marker, 'module-owned');
+  config.tools.searchConfigFile = './override.json';
+  assert.equal((await client.search({ query: '问题' })).marker, 'caller-owned');
+});
+
+test('search images remain queued under the AI caller until one final send', async t => {
+  const config = makeConfig({ presets: [{ ...clone(defaults.presets[0]), model: 'fake-model', tools: ['web_search'] }] });
+  const sent = []; let searches = 0, rounds = 0;
+  const { client } = fixture(t, { config, imageStore: { save: async () => 'image-ref', resolve: async () => ({data:png, mime:'image/png'}) },
+    search: async () => { searches++; assert.equal(sent.length, 0); return {ok:true, format:'image', imageBase64:png, results:[{title:'资料', url:'https://source.invalid/picture'}]}; },
+    provider: async request => {
+      if (++rounds === 1) return answer('准备搜索', {toolCalls:[toolCall('web_search', {query:'问题', type:'image'})]});
+      assert.equal(sent.length, 0);
+      assert.equal(JSON.parse(request.messages.at(-1).content[0].text).imageRefs[0], 'image-ref');
+      return answer('核实后的回答');
+    }
+  });
+  await client.chat(input(), {send: async result => { sent.push(result); return true; }});
+  assert.equal(searches, 1); assert.equal(sent.length, 1);
+  assert.deepEqual(sent[0].contents.map(part => part.type), ['text','image']);
+  assert.doesNotMatch(sent[0].text, /准备搜索/);
+});
+
 test('successful real search falls back to its links when later model summarization fails', async t => {
   const config = makeConfig({ presets: [{ ...clone(defaults.presets[0]), model: 'fake-model', tools: ['web_search'] }] });
   let rounds = 0;

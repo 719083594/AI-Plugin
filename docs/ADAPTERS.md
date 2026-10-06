@@ -31,7 +31,7 @@ client.close()
 
 `data/tools` 内的 `.mjs` 工具在启动时加载，默认导出需包含 `name/description/inputSchema/execute`。工具代码由部署者安装，本版没有执行沙箱。每个预设的 `tools` 数组声明可调用的 ID。`requiresMaster` 限制主人，注册表验证参数和取消信号。
 
-搜索后端可实现 `createWebSearch({configPath}).search(query,type,{signal})`，或通用 `search({query,type,maxResults,signal})`。HTTP 模式使用 POST，正文为 `{query,image,maxResults}`，可带 `x-search-secret`。结果需包含真实 `results/items` 及标题、URL；图片结果可提供图片内容或地址。
+搜索后端可实现 `createWebSearch(options).search(query,type,{signal})`；未指定 `tools.searchConfigFile` 时传入空选项，由模块读取自己的默认配置。指定时仅传入显式的绝对 `configPath`。模块通过 `tools.searchModule` 指定，必须指向纯 API 入口，不导入启用了机器人适配的 `index.js`。搜索只返回资料和图片内容，不直接处理聊天事件或发送回复。也可实现 `createSearchAPI().search({query,type,maxResults,signal})`，或通用 `search({query,type,maxResults,signal})`。HTTP 模式使用 POST，正文为 `{query,image,maxResults}`，可带 `x-search-secret`。结果需包含真实 `results/items` 及标题、URL；图片结果可提供图片内容或地址。
 
 ## Orange 配置声明
 

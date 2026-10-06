@@ -15,7 +15,7 @@ node cli.mjs init
 node cli.mjs diagnose
 ```
 
-`init` 创建 `config/local.json` 和随机管理 API 密钥，不覆盖已有实例配置。示例 `config/example.json` 不含模型渠道或私人密钥。先在 Orange 中为 AI-Plugin 添加渠道，填写接口协议、地址和密钥，再为默认角色填写模型。也可直接编辑实例 JSON。
+`init` 创建 `config/local.json` 和随机管理 API 密钥，不覆盖已有实例配置。示例 `config/example.json` 不含模型渠道或私人密钥。在实例 JSON 中添加渠道，填写接口协议、地址和密钥，再为默认角色填写模型。安装 OrangeJuice 后也可用其配置页面编辑这些字段。
 
 渠道支持 `openai`、`gemini`、`claude`；它们分别使用 Chat Completions、Gemini 原生接口和 Claude Messages。`baseUrl` 留空使用对应协议默认地址。OpenAI 兼容服务通常提供含 `/v1` 的基础地址。模型、视觉和工具支持范围以实际服务为准。
 
@@ -32,6 +32,12 @@ node cli.mjs serve
 ```bash
 node cli.mjs diagnose --root /srv/AI-Plugin --config /srv/AI-Plugin/config/local.json
 ```
+
+## 插件组合与入口
+
+AI 核心可以单独使用。由其他应用调用时，导入 `api.mjs` 或包默认导出，调用 `client.chat()`，由调用方处理结果。AI 内部调用搜索时使用搜索模块的纯 API，搜索结果与图片回到 AI，最后只由 AI 的 `send` 回调统一发送；不会加载搜索插件的机器人命令入口。`index.js` 是云崽加载入口，不作为模块组合入口。
+
+OrangeJuice 读取配置声明和实例文件，不是 AI 聊天的前置服务。停用管理平台不影响已运行 AI 实例。
 
 ## OrangeJuice 配置接入
 
@@ -77,7 +83,7 @@ node cli.mjs diagnose --root /srv/AI-Plugin --config /srv/AI-Plugin/config/local
 
 保留五个内置工具 ID：`web_search`、`ask_about_image`、`look_at_image`、`resolve_image_ref`、`GetQQAvatar`。
 
-搜索可设置 `tools.searchModule` 指向相邻 WebSearch-Plugin 的 `api.mjs`，或设置 `tools.searchEndpoint` 使用 HTTP 后端。认证按 `x-search-secret` 发送。每个角色通过 `tools` 数组选择允许调用的工具；搜索须在实例中配置，插件本身不提供搜索引擎。
+搜索可设置 `tools.searchModule` 指向搜索模块的纯 API 入口（如 WebSearch-Plugin 的 `api.mjs`），或设置 `tools.searchEndpoint` 使用 HTTP 后端。模块目录可以改名或位于其他位置；不填写 `tools.searchConfigFile` 时，由搜索模块读取自己的配置。未配置后端或模块文件不存在时，本轮不向模型提供 `web_search`，普通聊天照常工作。认证按 `x-search-secret` 发送。每个角色通过 `tools` 数组选择允许调用的工具；搜索须在实例中配置，插件本身不提供搜索引擎。
 
 看图使用支持视觉的模型；`media.visionChannelId` 和 `media.visionModel` 可指定单独渠道。QQ 头像由云崽适配器提供，其他平台需实现 `getAvatar`。Gemini 可设置预设 `responseModalities` 为 `["TEXT","IMAGE"]`，由兼容模型生成或编辑图片。代码已接通请求和返回转送，具体模型与渠道仍需实例验收。
 

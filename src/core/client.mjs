@@ -27,7 +27,7 @@ export function accessAllowed(config, input) {
 }
 export function selectChannel(config, preset) {
   const channels = config.channels.filter(channel => channel.enabled !== false && (!preset.channelId || channel.id === preset.channelId) && (!channel.models?.length || channel.models.some(model => (typeof model === 'string' ? model : model.name) === preset.model)))
-  if (!channels.length) throw new Error('没有可用的模型渠道，请在 Orange 配置渠道和角色模型')
+  if (!channels.length) throw new Error('没有可用的模型渠道，请在 AI 实例配置中添加渠道和角色模型')
   const priority = Math.max(...channels.map(channel => Number(channel.priority) || 0))
   const eligible = channels.filter(channel => (Number(channel.priority) || 0) === priority)
   const total = eligible.reduce((sum, channel) => sum + Math.max(1, Number(channel.weight) || 1), 0)
@@ -42,7 +42,7 @@ const sourcesFrom = value => {
 export class AIClient {
   constructor({ root = pluginRoot, configFile, config, storage, provider = complete, search, host = {}, imageStore, tools } = {}) {
     this.root = root; this.configFile = configFile || path.join(root, 'config/local.json'); this.configProvider = config || (() => readConfig(this.configFile))
-    this.storage = storage || new Storage(path.join(root, 'data/ai.db')); this.provider = provider; this.host = host
+    this.storage = storage || new Storage(path.join(root, 'data/ai.db')); this.provider = provider; this.host = host; this.searchCallback = search
     this.images = imageStore || new ImageStore({ directory: path.join(root, 'data/images'), maxBytes: this.config().media.maxImageBytes, ttlMs: this.config().media.imageRetentionHours * 3600000 })
     this.queue = new Queue(this.config().chat); this.inflight = new Map(); this.rates = new Map(); this.groupCooldown = new Map(); this.activeUsers = new Set()
     this.tools = tools || new ToolRegistry()
@@ -51,6 +51,12 @@ export class AIClient {
     this.startedAt = Date.now(); this.maintenanceTimer = null
   }
   config() { return this.configProvider() }
+  searchConfigured(config = this.config()) {
+    if (!config.tools.searchEnabled) return false
+    if (this.searchCallback) return true
+    if (config.tools.searchModule) return fs.existsSync(path.resolve(this.root, config.tools.searchModule))
+    return Boolean(config.tools.searchEndpoint)
+  }
   userKey(input) { return input.botId ? `${input.botId}:${input.userId}` : String(input.userId) }
   groupKey(input) { return input.botId ? `${input.botId}:${input.groupId}` : String(input.groupId) }
   preset(input) {
@@ -94,14 +100,16 @@ export class AIClient {
     if (config.searchModule) {
       const module = await import(pathToFileURL(path.resolve(this.root, config.searchModule)))
       if (module.createWebSearch) {
-        const api = module.createWebSearch({ configPath: config.searchConfigFile ? path.resolve(this.root, config.searchConfigFile) : path.resolve(this.root, '..', 'WebSearch-Plugin/config/plugin.json') })
+        // The imported module owns its default configuration and directory.
+        // Only an explicit caller override may replace that configuration.
+        const api = module.createWebSearch(config.searchConfigFile ? { configPath: path.resolve(this.root, config.searchConfigFile) } : {})
         return api.search(query, type, { signal })
       }
       const api = module.createSearchAPI ? module.createSearchAPI() : module
       if (typeof api.search !== 'function') throw new Error('搜索模块没有提供 search 方法')
       return api.search({ query, type, maxResults: maxResults || config.maxSearchResults, signal })
     }
-    if (!config.searchEndpoint) throw new Error('搜索服务未配置，请在 Orange 设置搜索地址')
+    if (!config.searchEndpoint) throw new Error('搜索服务未配置，请设置搜索模块、搜索地址或提供搜索回调')
     const url = new URL(config.searchEndpoint); if (!['http:', 'https:'].includes(url.protocol)) throw new Error('搜索服务地址协议无效')
     const response = await fetch(url, { method: 'POST', signal, headers: { 'Content-Type': 'application/json', ...(config.searchToken ? { 'x-search-secret': config.searchToken } : {}) }, body: JSON.stringify({ query, image: type === 'image', maxResults: maxResults || config.maxSearchResults }) })
     if (!response.ok) throw new Error('搜索服务暂不可用（' + response.status + '）')
@@ -174,7 +182,7 @@ export class AIClient {
           }
           messages.push(user)
         }
-        const names = (preset.tools || []).filter(name => name !== 'web_search' || config.tools.searchEnabled)
+        const names = (preset.tools || []).filter(name => name !== 'web_search' || this.searchConfigured(config))
         const definitions = this.tools.list({ names })
         const pendingImages = []
         const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); return { delivered: true, queued: true } } }
@@ -242,6 +250,6 @@ export class AIClient {
     const clean = async () => { try { const config = this.config(); this.storage.cleanup(config.retention); await this.images.cleanup?.() } catch (error) { this.host.log?.('清理失败：' + error.message) } }
     clean(); this.maintenanceTimer = setInterval(clean, this.config().retention.cleanupIntervalHours * 3600000); this.maintenanceTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.0.2', ready: true, uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.0.3', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { clearInterval(this.maintenanceTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); this.storage.close() }
 }

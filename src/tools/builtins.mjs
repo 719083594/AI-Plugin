@@ -69,7 +69,8 @@ export function createBuiltinTools({ search, vision, imageStore } = {}) {
         const image = imageBase64 || imageData;
         if ((args.type === 'image' || result.format === 'image') && image) {
           if (!imageStore) missing('图片缓存');
-          ref = await imageStore.save({ data: image, mime: result.imageMime || result.mime || 'image/png' }, {
+          const mime = result.imageMime || result.mime || (result.imageType === 'jpeg' ? 'image/jpeg' : 'image/png');
+          ref = await imageStore.save({ data: image, mime }, {
             signal: context.signal, userId: context.userId, groupId: context.groupId, source: 'web-search'
           });
           const resolved = await imageStore.resolve(ref, { signal: context.signal });

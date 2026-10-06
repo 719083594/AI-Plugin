@@ -107,6 +107,17 @@ test('search image success sends once and false receipts report failure', async 
   await assert.rejects(registry.execute('web_search', { query: '问题', type: 'image' }, context({ send: async () => false })), { code: 'SEND_FAILED' });
 });
 
+test('JPEG search format is preserved when the nested API returns imageType only', async t => {
+  const imageStore = await cache(t);
+  // This signature fixture checks the MIME handoff; rendering is owned by search.
+  const data = Buffer.from([255,216,255,224,0,16]).toString('base64');
+  const registry = new ToolRegistry(createBuiltinTools({ imageStore, search: async () => ({ok:true, results:[{title:'资料',url:'https://source.invalid/'}], format:'image', imageBase64:data, imageType:'jpeg'}) }));
+  const result = await registry.execute('web_search', {query:'问题',type:'image'}, context({send: async contents => {
+    assert.equal(contents[0].mime, 'image/jpeg'); assert.equal(contents[0].data, data); return true;
+  }}));
+  assert.equal((await imageStore.resolve(result.imageRefs[0])).mime, 'image/jpeg');
+});
+
 test('search errors and empty results never masquerade as successful answer', async () => {
   const failed = new ToolRegistry(createBuiltinTools({ search: async () => ({ ok: false }) }));
   const empty = new ToolRegistry(createBuiltinTools({ search: async () => ({ ok: true, results: [] }) }));
