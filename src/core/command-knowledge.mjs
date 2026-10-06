@@ -73,17 +73,22 @@ export class CommandKnowledge {
       `当前聊天可推荐 ${allowed.length} 项，分类：${categories.join('、')}。${notice}\n`+
       '用户询问功能、用途或操作方法时，结合需求从下列真实指令中选择几项，务必写出完整指令和用途，例如“联网搜索：#搜索 问题”；不要只泛泛介绍能力。无需照抄整表。不要编造指令或声称已执行操作。管理员操作仍须发送指令并通过原插件权限检查。未列出的能力不要声称可用；没有匹配内容可建议查看 #指令表。\n'+
       selected.map(rowText).join('\n\n').slice(0,6500)
-    return {prompt,rows:selected,broad,query:input.text}
+    return {prompt,rows:selected,broad,query:input.text,notice}
   }
   completeAnswer(text,prepared) {
     if(!prepared?.prompt)return text
     const commands=prepared.rows.filter(row=>/^[#/]/.test(row.command)&&!row.command.startsWith('触发规则')).map(row=>({...row,samples:row.command.split(/\s+\/\s+/)}))
-    if(commands.some(row=>row.samples.some(sample=>{const head=sample.trim().split(/\s/)[0];return head.length>1&&text.includes(head)})))return text
-    const replyTerms=terms(text),queryTerms=terms(prepared.query)
-    const rank=row=>{const words=row.title+' '+row.description;return replyTerms.reduce((n,term)=>n+(words.includes(term)?1:0),0)+queryTerms.reduce((n,term)=>n+(words.includes(term)?3:0),0)}
-    const chosen=commands.sort((a,b)=>rank(b)-rank(a)).slice(0,prepared.broad?3:1)
-    if(!chosen.length)return text
-    return text+'\n\n对应指令：\n'+chosen.map(row=>`${row.title}：${row.samples[0]}${row.permission!=='all'?'（'+label[row.permission]+'）':''}`).join('\n')
+    const mentioned=row=>row.samples.some(sample=>{const head=sample.trim().split(/[\s（(]/)[0];return head.length>1&&text.includes(head)})
+    if(!commands.some(mentioned)) {
+      const replyTerms=terms(text),queryTerms=terms(prepared.query)
+      const rank=row=>{const words=row.title+' '+row.description;return replyTerms.reduce((n,term)=>n+(words.includes(term)?1:0),0)+queryTerms.reduce((n,term)=>n+(words.includes(term)?3:0),0)}
+      const chosen=commands.sort((a,b)=>rank(b)-rank(a)).slice(0,prepared.broad?3:1)
+      if(chosen.length)text+='\n\n对应指令：\n'+chosen.map(row=>`${row.title}：${row.samples[0]}`).join('\n')
+    }
+    // Permissions come from source metadata even if the model omits or misstates them.
+    const protectedRows=commands.filter(row=>row.permission!=='all'&&mentioned(row))
+    if(protectedRows.length||prepared.notice)text+='\n\n插件权限要求：\n'+[prepared.notice,...protectedRows.map(row=>`${row.title}：${label[row.permission]}。${row.description}`)].filter(Boolean).join('\n')
+    return text.replace(/[^\n。！？!?]+[。！？!?]?/g,sentence=>/(?:所有|全部|其他).*指令/.test(sentence)&&/(?:都|均)/.test(sentence)&&/(?:前缀|开头)/.test(sentence)&&/[#/]/.test(sentence)?'前缀请按指令示例原样使用。':sentence)
   }
   close(){this.closed=true;clearInterval(this.timer)}
 }

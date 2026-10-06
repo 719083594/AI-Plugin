@@ -54,5 +54,12 @@ test('capability replies missing examples gain relevant authorized commands with
  assert(result.text.includes('#搜索 内容'));assert(!result.text.includes('#秘密重启'));assert(!result.text.includes('#群管禁言 @'));assert.equal(captured.length,1)
  const admin=setup(t,'admin');const prepared=await admin.client.commandKnowledge.prepare({userId:'admin',groupId:'group',text:'禁言怎么用'})
  assert(admin.client.commandKnowledge.completeAnswer('可以对成员禁言',prepared).includes('#群管禁言 @成员 10分钟'))
- assert.equal(admin.client.commandKnowledge.completeAnswer('用 #群管禁言 @成员 10分钟',prepared),'用 #群管禁言 @成员 10分钟')
+ assert(admin.client.commandKnowledge.completeAnswer('用 #群管禁言 @成员 10分钟',prepared).includes('群管理员/群主'))
+})
+test('source permission requirements accompany model claims and unsupported prefix generalizations are corrected',async t=>{
+ const {client}=setup(t,'owner');const prepared=await client.commandKnowledge.prepare({userId:'owner',groupId:'group',text:'你能干什么'})
+ const text=client.commandKnowledge.completeAnswer('管理员可以 #群管开启。其他指令也都可以用 / 或者 # 开头调用。',prepared)
+ assert(text.includes('插件权限要求：'));assert(text.includes('群开关：群主'));assert(!text.includes('其他指令也都可以用'));assert(text.includes('前缀请按指令示例原样使用'))
+ const denied=await setup(t).client.commandKnowledge.prepare({userId:'member',groupId:'group',text:'禁言怎么用'})
+ assert(client.commandKnowledge.completeAnswer('可以看看帮助',denied).includes('禁言需要群管理员/群主权限'))
 })
