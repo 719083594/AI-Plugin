@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.4",
+  "version": "1.0.7",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
@@ -329,7 +329,7 @@
       "name": "AI 自动联网搜索",
       "title": "AI 自动联网搜索",
       "status": "implemented",
-      "description": "内置 web_search，通过 WebSearch-Plugin 模块或受配置的 HTTP 服务调用；支持文字与图片搜索，回答使用真实来源链接。须配置后端。",
+      "description": "内置 web_search，通过 WebSearch-Plugin 模块或受配置的 HTTP 服务调用；支持文字与图片搜索，尝试读取最多三个来源正文并分析，AI 故障时保留真实链接。须配置后端。",
       "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
       "configPaths": [
         "tools.searchEnabled",

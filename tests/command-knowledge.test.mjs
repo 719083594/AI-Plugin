@@ -63,3 +63,15 @@ test('source permission requirements accompany model claims and unsupported pref
  const denied=await setup(t).client.commandKnowledge.prepare({userId:'member',groupId:'group',text:'禁言怎么用'})
  assert(client.commandKnowledge.completeAnswer('可以看看帮助',denied).includes('禁言需要群管理员/群主权限'))
 })
+
+test('无前缀禁言推荐保留真实权限，主人不显示仅推荐公开功能的矛盾提示',async t=>{
+ const admin=setup(t,'admin');admin.setRows([row('群管禁言与踢人','禁言 @成员 [10分钟] / 解禁 @成员','admin')])
+ const prepared=await admin.client.commandKnowledge.prepare({userId:'admin',groupId:'group',text:'禁言怎么用'})
+ const text=admin.client.commandKnowledge.completeAnswer('可以对成员禁言',prepared)
+ assert(text.includes('禁言 @成员 [10分钟]'));assert(text.includes('群管理员/群主'))
+ const master=setup(t,'unknown');master.setRows([row('群管禁言与踢人','禁言 @成员 [10分钟]','admin')])
+ const authorized=await master.client.commandKnowledge.prepare({userId:'master',groupId:'group',text:'禁言怎么用',isMaster:true})
+ assert(!master.client.commandKnowledge.completeAnswer('可以禁言',authorized).includes('仅推荐公开功能'))
+ const denied=await setup(t,'unknown').client.commandKnowledge.prepare({userId:'unknown',groupId:'group',text:'禁言怎么用'})
+ assert.equal(denied.rows.some(row=>row.permission==='admin'),false)
+})

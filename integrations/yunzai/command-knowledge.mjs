@@ -15,8 +15,8 @@ export async function getCommandCatalog(input) {
     const bot=globalThis.Bot?.bots?.[input.botId]||globalThis.Bot?.[input.botId]
     let timer
     try {
-      const result=await Promise.race([bot?.sendApi?.('get_group_member_info',{group_id:Number(input.groupId),user_id:Number(input.userId),no_cache:true}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('权限查询超时')),1500)})])
-      if(result?.retcode===0&&['member','admin','owner'].includes(result.data?.role))table.memberRole=result.data.role
+      const result=await Promise.race([input.getGroupMember ? input.getGroupMember() : bot?.sendApi?.('get_group_member_info',{group_id:Number(input.groupId),user_id:Number(input.userId),no_cache:true}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('权限查询超时')),1500)})])
+      if((Number(result?.retcode)===0||result?.status==='ok')&&['member','admin','owner'].includes(result.data?.role))table.memberRole=result.data.role
     }catch{}finally{clearTimeout(timer)}
   }
   return table

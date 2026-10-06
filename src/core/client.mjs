@@ -1,3 +1,4 @@
+import {SEARCH_SUMMARY_PROMPT,SEARCH_FALLBACK,needsSearchAnalysis} from './search-analysis.mjs'
 import path from 'node:path'
 import fs from 'node:fs'
 import { randomUUID } from 'node:crypto'
@@ -48,7 +49,7 @@ export class AIClient {
     this.images = imageStore || new ImageStore({ directory: path.join(root, 'data/images'), maxBytes: this.config().media.maxImageBytes, ttlMs: this.config().media.imageRetentionHours * 3600000 })
     this.queue = new Queue(this.config().chat); this.inflight = new Map(); this.rates = new Map(); this.groupCooldown = new Map(); this.activeUsers = new Set()
     this.tools = tools || new ToolRegistry()
-    const builtin = createBuiltinTools({ search: search || (args => this.search(args)), imageStore: this.images, vision: args => this.vision(args) })
+    const builtin = createBuiltinTools({ search: search || (args => this.search(args)), imageStore: this.images, vision: args => this.vision(args), readPages: host.readSearchPages })
     for (const tool of builtin) this.tools.register(tool)
     this.startedAt = Date.now(); this.maintenanceTimer = null
     this.commandKnowledge = new CommandKnowledge(this)
@@ -165,7 +166,7 @@ export class AIClient {
     if (config.security.inputBlockedWords.some(word => word && String(input.text).includes(word))) throw new Error('消息包含已屏蔽内容')
     const controller = new AbortController(), signal = controller.signal, startedAt = Date.now(), key = this.userKey(input)
     const controllers = this.inflight.get(key) || new Set(); controllers.add(controller); this.inflight.set(key, controllers)
-    let timer, usedTools = false, searchSources = []
+    let timer, usedTools = false, searchSources = [], searchPageRead = 0, searchAnalysis = null
     const deadline = milliseconds => { clearTimeout(timer); timer = setTimeout(() => controller.abort(new Error('请求超时，请稍后再试')), Math.max(1, startedAt + milliseconds - Date.now())); timer.unref?.() }
     const externalAbort = () => controller.abort(externalSignal.reason || new Error('请求已取消'))
     externalSignal?.addEventListener('abort', externalAbort, { once: true }); if (externalSignal?.aborted) externalAbort()
@@ -231,17 +232,22 @@ export class AIClient {
         const definitions = this.tools.list({ names })
         const pendingImages = []
         const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: prepared.length ? prepared : input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); return { delivered: true, queued: true } } }
-        const persisted = [user]; let response, usage = {}
+        const persisted = [user]; let response, usage = {}, providerRounds = 0
+        // Reserve delivery time when the search succeeded but the upstream stops responding.
+        const analysisSignal = () => AbortSignal.any([signal,AbortSignal.timeout(Math.max(1,Math.min(config.chat.timeoutMs,startedAt+config.chat.toolTimeoutMs-Date.now()-1000)))])
         for (let round = 0; round <= config.chat.maxToolRounds; round++) {
           signal.throwIfAborted()
           try {
-            response = await abortable(() => this.provider({ channel, model, messages: requestMessages, options: { temperature: preset.temperature, maxTokens: input.proactive ? config.group.maxTokens : preset.maxTokens, stream: false, geminiBuiltinTools: preset.geminiBuiltinTools || [], responseModalities: preset.responseModalities }, tools: round < config.chat.maxToolRounds ? definitions : [], signal }), signal)
+            providerRounds++
+            const requestSignal = searchSources.length ? analysisSignal() : signal
+            response = await abortable(() => this.provider({ channel, model, messages: requestMessages, options: { temperature: preset.temperature, maxTokens: input.proactive ? config.group.maxTokens : preset.maxTokens, stream: false, geminiBuiltinTools: preset.geminiBuiltinTools || [], responseModalities: preset.responseModalities }, tools: !searchSources.length && round < config.chat.maxToolRounds ? definitions : [], signal: requestSignal }), requestSignal)
           } catch (error) {
             if (signal.aborted || !searchSources.length) throw visualImages.length ? visionError(error) : error
-            response = { contents: [{ type: 'text', text: '搜索已完成，模型整理暂时失败。以下是可直接查看的来源。' }], toolCalls: [], usage: {} }; break
+            searchAnalysis = {status:'upstream_error',pagesRead:searchPageRead,reason:error.code||'PROVIDER_ERROR'}
+            response = { contents: [{ type: 'text', text: SEARCH_FALLBACK }], toolCalls: [], usage: {} }; break
           }
           for (const [name, value] of Object.entries(response.usage || {})) if (Number.isFinite(value)) usage[name] = (usage[name] || 0) + value
-          if (!response.toolCalls?.length) break
+          if (!response.toolCalls?.length || searchSources.length) break
           if (round >= config.chat.maxToolRounds) throw new Error('工具调用已达到本轮上限，请简化问题后重试')
           usedTools = true; deadline(config.chat.toolTimeoutMs)
           const assistant = { role: 'assistant', content: response.contents || [], toolCalls: response.toolCalls }
@@ -252,13 +258,39 @@ export class AIClient {
             try {
               if (!names.includes(call.name)) throw new Error('此预设未允许调用该工具')
               result = await abortable(() => this.tools.execute(call.name, call.arguments, toolContext), signal)
-              if (call.name === 'web_search') searchSources = sourcesFrom(result)
+              if (call.name === 'web_search') {
+                searchSources = sourcesFrom(result); searchPageRead += result.pageRead?.read || 0
+                const pages = result.pages || []
+                searchSources = searchSources.map(row => { const page = pages.find(page => page.sourceUrl === row.url && page.status === 'read'); return page ? {...row,url:page.url} : row })
+              }
             } catch (error) { if (signal.aborted) throw error; result = { error: '工具调用失败：' + redactError(error, config) } }
             const tool = { role: 'tool', toolCallId: call.id, name: call.name, content: [{ type: 'text', text: resultText(result).slice(0, 20000) }] }
             messages.push(tool); requestMessages.push(tool); persisted.push(tool)
           }
+          if (searchSources.length) requestMessages.push({role:'system',content:[{type:'text',text:SEARCH_SUMMARY_PROMPT}]})
         }
         signal.throwIfAborted()
+        if (searchSources.length && !searchAnalysis) {
+          if (needsSearchAnalysis(response, searchSources)) {
+            try {
+              if (providerRounds >= config.chat.maxToolRounds + 1) throw Object.assign(new Error('模型未提供分析'),{code:'NO_SEARCH_ANALYSIS'})
+              providerRounds++
+              const repairSignal = analysisSignal()
+              const repaired = await abortable(() => this.provider({channel,model,tools:[],signal:repairSignal,
+                options:{temperature:preset.temperature,maxTokens:preset.maxTokens,stream:false,toolChoice:'none'},
+                messages:[...requestMessages,{role:'system',content:[{type:'text',text:SEARCH_SUMMARY_PROMPT+' 上一份输出仍是工具调用文字或链接清单，尚未发送；请立即用已经取得的资料给出结论。'}]}]
+              }),repairSignal)
+              for (const [name,value] of Object.entries(repaired.usage||{})) if(Number.isFinite(value)) usage[name]=(usage[name]||0)+value
+              if (needsSearchAnalysis(repaired, searchSources)) throw Object.assign(new Error('模型未提供分析'),{code:'NO_SEARCH_ANALYSIS'})
+              response = repaired
+            } catch(error) {
+              signal.throwIfAborted()
+              searchAnalysis={status:error.code==='NO_SEARCH_ANALYSIS'?'no_analysis':'upstream_error',pagesRead:searchPageRead,reason:error.code||'PROVIDER_ERROR'}
+              response={contents:[{type:'text',text:SEARCH_FALLBACK}],toolCalls:[],usage:{}}
+            }
+          }
+          searchAnalysis ||= {status:'analyzed',pagesRead:searchPageRead}
+        }
         let text = cleanText((response?.contents || []).filter(row => row.type === 'text').map(row => row.text).join('\n'))
         if (input.proactive && (text.includes('[不回复]') || !text)) return { skipped: true, text: '', contents: [] }
         if (searchSources.length && !searchSources.some(row => text.includes(row.url))) text += '\n\n来源：\n' + searchSources.map((row, index) => `${index + 1}. ${row.title}\n${row.url}`).join('\n')
@@ -275,13 +307,13 @@ export class AIClient {
         if (!text && !contents.some(row => row.type === 'image')) throw new Error('模型没有返回可发送的内容')
         const latest = this.storage.state(key)
         if (!input.transient && (latest.revision || 0) !== revision) throw new Error('角色或会话已变更')
-        const result = { text, contents, usage, model, presetId: preset.id, usedTools, sources: searchSources }
+        const result = { text, contents, usage, model, presetId: preset.id, usedTools, sources: searchSources, ...(searchAnalysis ? {searchAnalysis} : {}) }
         if (send) { const receipt = await abortable(() => send(result), signal); if (receipt === false || receipt?.discarded || receipt?.error || receipt?.delivered === false || receipt?.status === 'failed' || (receipt?.retcode !== undefined && receipt.retcode !== 0)) throw new Error('回复未成功发送') }
         signal.throwIfAborted()
         const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning') }; persisted.push(assistant)
         if (!input.proactive && !input.transient && !this.storage.commitTurn({ userId: key, revision, conversationId: state.current.conversationId, parentId: state.current.messageId, messages: persisted })) throw new Error('会话已变更，未保存过期回答')
         if (input.proactive) for (const message of persisted) this.storage.db.prepare('INSERT INTO history VALUES(?,?,?,?,?,?)').run(randomUUID(), null, 'bym:' + String(input.groupId) + ':' + randomUUID(), message.role, JSON.stringify(message), new Date().toISOString())
-        this.storage.log({ kind: 'chat', model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, success: true })
+        this.storage.log({ kind: 'chat', model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, ...(searchAnalysis ? {searchAnalysis} : {}), success: true })
         return result
         } finally { this.activeUsers.delete(key) }
       }, signal)
@@ -297,6 +329,6 @@ export class AIClient {
     const clean = async () => { try { const config = this.config(); this.storage.cleanup(config.retention); await this.images.cleanup?.() } catch (error) { this.host.log?.('清理失败：' + error.message) } }
     clean(); this.maintenanceTimer = setInterval(clean, this.config().retention.cleanupIntervalHours * 3600000); this.maintenanceTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.0.4', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.0.7', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); this.storage.close() }
 }

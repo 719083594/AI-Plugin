@@ -50,6 +50,7 @@ export function classify(input, config) {
   return { type: 'proactive' }
 }
 async function enrich(e, input) {
+  if (input.groupId && typeof e.bot?.sendApi === 'function') input.getGroupMember = () => e.bot.sendApi('get_group_member_info',{group_id:Number(input.groupId),user_id:Number(input.userId),no_cache:true})
   if ((e.source || e.reply_id) && typeof e.getReply === 'function') {
     try {
       const reply = await e.getReply(), parts = reply?.message || []

@@ -392,7 +392,7 @@ test('successful real search falls back to its links when later model summarizat
     throw new Error('fake gateway failed');
   } });
   const sent = [], result = await client.chat(input(), { send: async value => { sent.push(value); return true; } });
-  assert.match(result.text, /搜索已完成/); assert.match(result.text, /https:\/\/source\.invalid\/official/);
+  assert.match(result.text, /搜索已成功/); assert.match(result.text, /https:\/\/source\.invalid\/official/);
   assert.doesNotMatch(result.text, /javascript|fake gateway failed/); assert.equal(sent.length, 1);
 });
 

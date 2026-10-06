@@ -81,6 +81,8 @@ OrangeJuice 读取配置声明和实例文件，不是 AI 聊天的前置服务�
 
 ## 搜索与图片
 
+搜索成功后，AI 会并行尝试读取最多 3 个来源的正文，再分析问题并引用来源；页面要求验证或无法读取时只使用搜索摘要，不声称读过全文。网页内容只作为资料。模型故障、分析超时或仍无法生成分析时，保留搜索成功的链接与图片，并明确提示暂时未完成分析。重复搜索和工具调用文字不会直接作为答案发送。
+
 保留五个内置工具 ID：`web_search`、`ask_about_image`、`look_at_image`、`resolve_image_ref`、`GetQQAvatar`。
 
 搜索可设置 `tools.searchModule` 指向搜索模块的纯 API 入口（如 WebSearch-Plugin 的 `api.mjs`），或设置 `tools.searchEndpoint` 使用 HTTP 后端。模块目录可以改名或位于其他位置；不填写 `tools.searchConfigFile` 时，由搜索模块读取自己的配置。未配置后端或模块文件不存在时，本轮不向模型提供 `web_search`，普通聊天照常工作。认证按 `x-search-secret` 发送。每个角色通过 `tools` 数组选择允许调用的工具；搜索须在实例中配置，插件本身不提供搜索引擎。
