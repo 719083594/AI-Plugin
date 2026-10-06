@@ -7,3 +7,13 @@
 *.tmp
 .env*
 !config/example.json
+__pycache__/
+*.pyc
+*.key
+*.pem
+*.pfx
+*.p12
+*.db
+*.sqlite*
+*.bak
+*.backup
