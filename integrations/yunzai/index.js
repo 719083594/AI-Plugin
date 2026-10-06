@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { getCommandCatalog } from './command-knowledge.mjs'
 import { AIClient } from '../../src/core/client.mjs'
 import { startManagement } from '../../src/management/server.mjs'
 import { pluginRoot } from '../../src/core/config.mjs'
@@ -9,7 +10,7 @@ let startup
 export async function initialize() {
   if (client) return client
   if (!startup) startup = (async () => {
-    client = new AIClient({ root: pluginRoot, host: { log: text => globalThis.logger?.warn?.('[AI-Plugin] ' + text) } })
+    client = new AIClient({ root: pluginRoot, host: { getCommandCatalog, log: text => globalThis.logger?.warn?.('[AI-Plugin] ' + text) } })
     await client.loadExtensions(); client.startMaintenance()
     if (client.config().management.enabled) { management = startManagement(client); await management.ready }
     globalThis.logger?.info?.('[AI-Plugin] 通用核心和中文工作台已就绪')

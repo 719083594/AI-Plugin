@@ -78,7 +78,7 @@ export class Storage {
   searchKnowledge(query, limit = 3) {
     const terms = String(query).split(/[\s，。？！、]+/).filter(x => x.length > 1).slice(0, 8)
     if (!terms.length) return []
-    return this.db.prepare('SELECT id,title,text FROM knowledge WHERE ' + terms.map(() => 'text LIKE ?').join(' OR ') + ' LIMIT ?').all(...terms.map(term => '%' + term.replace(/[%_]/g, '') + '%'), limit)
+    return this.db.prepare("SELECT id,title,text FROM knowledge WHERE id NOT LIKE 'commands:%' AND (" + terms.map(() => 'text LIKE ?').join(' OR ') + ') LIMIT ?').all(...terms.map(term => '%' + term.replace(/[%_]/g, '') + '%'), limit)
   }
   group(id) { const row = this.db.prepare('SELECT data FROM group_context WHERE id=?').get(String(id)); return row ? JSON.parse(row.data) : [] }
   appendGroup(id, message, limit = 20) { const rows = this.group(id); if (rows.some(row => message.id && row.id === message.id)) return; rows.push(message); this.db.prepare('INSERT OR REPLACE INTO group_context VALUES(?,?)').run(String(id), JSON.stringify(rows.slice(-Math.max(1, limit)))) }

@@ -122,3 +122,7 @@ node --check index.js
 ## 来源与许可
 
 本项目采用 **GPL-3.0-or-later**。ChatGPT-Plugin 与 Chaite 用于原有功能及协议调研，没有复用其实现代码、前端资源或运行依赖。来源、配套项目和模型官方协议见 [致谢](docs/CREDITS.md)。本项目没有包含其他项目的云服务、账户或授权。
+
+## 自动指令知识库
+
+可直接问机器人“你能干什么”，插件变化后自动同步指令知识。用法和权限见 [自动指令知识库](docs/command-knowledge.md)。

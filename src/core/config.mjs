@@ -9,7 +9,7 @@ export const defaults = {
   presets: [{ id: 'default', name: '默认助手', prefix: '', model: '', channelId: '', systemPrompt: '你是一个可靠的中文助手。需要时使用工具；搜索答案附真实来源链接，不编造事实。', temperature: 0.7, maxTokens: 2048, historyLength: 20, tools: ['web_search', 'ask_about_image', 'look_at_image', 'resolve_image_ref', 'GetQQAvatar'], showReasoning: false, stream: false, enabled: true }],
   chat: { privateEnabled: true, groupEnabled: true, enableRoleSwitch: true, userRoleWhitelist: [], userRoleBlacklist: [], maxConcurrent: 1, maxQueue: 3, timeoutMs: 10000, toolTimeoutMs: 30000, maxToolRounds: 4, maxReplyLength: 12000 },
   group: { enableContext: true, contextLength: 20, contextImages: true, proactiveEnabled: false, probability: 0.03, keywords: [], keywordPresets: [], defaultPresetId: '', prompt: '结合最近的群聊，自然简短地接话。没有必要时返回 [不回复]，不要重复他人或打断指令。', maxTokens: 256, cooldownMs: 60000, recallSeconds: 0 },
-  memory: { userEnabled: false, groupEnabled: false, maxItems: 5, autoExtract: false, knowledgeEnabled: false, knowledgeLimit: 3 },
+  memory: { userEnabled: false, groupEnabled: false, maxItems: 5, autoExtract: false, knowledgeEnabled: false, knowledgeLimit: 3, commandKnowledgeEnabled: true },
   tools: { searchEnabled: true, searchEndpoint: '', searchToken: '', searchModule: '', searchConfigFile: '', searchTimeoutMs: 26000, maxSearchResults: 5, customDirectory: './data/tools', skillsDirectory: './data/skills' },
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
   security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },

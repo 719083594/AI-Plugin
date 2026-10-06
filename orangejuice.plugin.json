@@ -313,6 +313,12 @@
           "status": "planned"
         },
         {
+          "path": "memory.commandKnowledgeEnabled",
+          "label": "自动同步指令知识库",
+          "type": "boolean",
+          "description": "自动读取 OrangeJuice 当前指令表，按聊天范围和权限推荐真实指令；同步不调用模型。"
+        },
+        {
           "path": "memory.knowledgeEnabled",
           "label": "使用纯文本知识检索",
           "type": "boolean",
