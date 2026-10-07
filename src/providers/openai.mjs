@@ -13,7 +13,10 @@ export function openaiMessages(messages) {
       }
       else if (part.type !== 'reasoning') throw plannedCapability(part.type === 'audio' ? '语音输入' : '该多模态输入');
     }
-    const result = { role: message.role, content: content.length ? content : null };
+    // Some compatible gateways silently discard text-only content arrays.
+    // Keep structured arrays only when actual image blocks are present.
+    const serialized = content.some(part => part.type === 'image_url') ? content : content.map(part => part.text).join('\n');
+    const result = { role: message.role, content: content.length ? serialized : null };
     if (message.toolCalls?.length) result.tool_calls = message.toolCalls.map(call => ({
       id: call.id, type: 'function', function: { name: call.name, arguments: JSON.stringify(call.arguments ?? {}) }
     }));

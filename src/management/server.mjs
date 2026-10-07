@@ -73,6 +73,7 @@ export function startManagement(client, options = {}) {
       if (route === '/api/memories' && req.method === 'DELETE') { const value = await body(req); return json(res, 200, { deleted: client.storage.deleteMemory(value.id, value.scope, value.ownerId) }) }
       if (route === '/api/knowledge' && req.method === 'POST') { const value = await body(req); return json(res, 200, { id: client.storage.addKnowledge(value.title, value.text) }) }
       if (route === '/api/cleanup' && req.method === 'POST') return json(res, 200, client.storage.cleanup(client.config().retention))
+      if (route === '/api/history/clear' && req.method === 'POST') return json(res, 200, client.clearHistory())
       if (route === '/api/backup' && req.method === 'POST') return json(res, 200, backup())
       if (route === '/api/reset' && req.method === 'POST') { const value = await body(req); client.end({ userId: value.userId || 'web-owner', botId: value.botId }); return json(res, 200, { message: '已开始新会话，原历史保留' }) }
       if (route === '/v1/models' && req.method === 'GET') return json(res, 200, { object: 'list', data: [...new Set(client.config().presets.filter(row => row.enabled !== false).map(row => row.model))].map(id => ({ id, object: 'model', owned_by: 'AI-Plugin' })) })

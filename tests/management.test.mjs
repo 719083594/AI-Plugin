@@ -265,3 +265,15 @@ test('malformed authenticated requests return bounded errors without echoing cre
   assert.ok(malformed.text.length < 1000);
   assert.equal((await call('/api/does-not-exist', { token: ownerToken })).status, 404);
 });
+
+test('owner-only immediate history cleanup clears turns and group context while preserving role and memory', async t => {
+  const { call, storage } = await fixture(t);
+  await call('/api/chat', { token: ownerToken, method: 'POST', value: { text: '要清理的对话' } });
+  storage.addMemory('user', 'web-owner', '保留这条手工记忆');
+  storage.appendGroup('group', {id:'m',text:'清理群上下文'});
+  assert.equal((await call('/api/history/clear', { method: 'POST', value: {} })).status,401);
+  assert.equal(storage.stats().history,2);
+  const result=await call('/api/history/clear', { token: ownerToken, method: 'POST', value: {} });
+  assert.equal(result.status,200);assert.equal(result.data.history,2);assert.equal(result.data.groups,1);
+  assert.equal(storage.stats().history,0);assert.equal(storage.stats().memories,1);
+});

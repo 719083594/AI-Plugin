@@ -28,7 +28,10 @@
       ],
       "showReasoning": false,
       "stream": false,
-      "enabled": true
+      "enabled": true,
+      "chatStyle": "default",
+      "replyDetail": "auto",
+      "dialogueExamples": ""
     }
   ],
   "chat": {
@@ -111,7 +114,10 @@
     "proactiveHistoryDays": 30,
     "logLimit": 5000,
     "cleanupIntervalHours": 1,
-    "backupCount": 5
+    "backupCount": 5,
+    "dailyCleanupEnabled": true,
+    "dailyCleanupTime": "03:30",
+    "dailyCleanupTimezone": "Asia/Shanghai"
   },
   "extensions": {
     "mcp": [],

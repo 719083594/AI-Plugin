@@ -16,7 +16,8 @@ export class Storage {
       CREATE TABLE IF NOT EXISTS memories(id TEXT PRIMARY KEY, scope TEXT NOT NULL, ownerId TEXT NOT NULL, text TEXT NOT NULL, createdAt TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS knowledge(id TEXT PRIMARY KEY, title TEXT NOT NULL, text TEXT NOT NULL, createdAt TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS legacy(key TEXT PRIMARY KEY, data TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS group_context(id TEXT PRIMARY KEY, data TEXT NOT NULL);`)
+      CREATE TABLE IF NOT EXISTS group_context(id TEXT PRIMARY KEY, data TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS maintenance_state(id TEXT PRIMARY KEY, data TEXT NOT NULL);`)
   }
   state(id) { const row = this.db.prepare('SELECT data FROM user_states WHERE id=?').get(String(id)); return row ? JSON.parse(row.data) : { id: String(id), settings: {}, current: { conversationId: randomUUID(), messageId: null }, revision: 0 } }
   saveState(state) { this.db.prepare('INSERT OR REPLACE INTO user_states VALUES(?,?)').run(String(state.id), JSON.stringify(state)); return state }
@@ -24,6 +25,19 @@ export class Storage {
   selectPreset(id, preset) { const state = this.state(id); state.settings.preset = preset; state.current = { conversationId: randomUUID(), messageId: null }; state.revision = (state.revision || 0) + 1; return this.saveState(state) }
   reset(id) { const state = this.state(id); state.current = { conversationId: randomUUID(), messageId: null }; state.revision = (state.revision || 0) + 1; return this.saveState(state) }
   resetAll() { for (const state of this.users()) this.reset(state.id) }
+  maintenance(id) { const row = this.db.prepare('SELECT data FROM maintenance_state WHERE id=?').get(id); return row ? JSON.parse(row.data) : null }
+  setMaintenance(id, value) { this.db.prepare('INSERT OR REPLACE INTO maintenance_state VALUES(?,?)').run(id, JSON.stringify(value)) }
+  clearHistory({ scheduledDate, scheduleKey } = {}) {
+    this.db.exec('BEGIN IMMEDIATE')
+    try {
+      const history = this.db.prepare('DELETE FROM history').run().changes
+      const groups = this.db.prepare('DELETE FROM group_context').run().changes
+      const users = this.users(); for (const state of users) this.reset(state.id)
+      if (scheduledDate) this.setMaintenance('daily-history-cleanup', { lastDate: scheduledDate, initialized: true, executed: true, scheduleKey })
+      this.db.exec('COMMIT')
+      return { history, groups, sessions: users.length }
+    } catch (error) { this.db.exec('ROLLBACK'); throw error }
+  }
   history(conversationId, limit = 20, parentId = null) {
     const expand = rows => rows.flatMap(row => row.role === 'tool' && row.toolResults?.length ? row.toolResults.map(result => ({ ...row, ...result, role: 'tool' })) : [row])
     if (parentId) {

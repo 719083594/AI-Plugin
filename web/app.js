@@ -23,6 +23,7 @@ $('chat-form').addEventListener('submit', async event => {
 $('reset').addEventListener('click', async () => { try { await api('reset', 'POST', {}); $('messages').replaceChildren(); error('') } catch (value) { error(value) } })
 $('refresh-logs').addEventListener('click', () => logs().catch(error))
 for (const id of ['backup', 'cleanup']) $(id).addEventListener('click', async () => { try { $('maintenance-result').textContent = JSON.stringify(await api(id, 'POST', {}), null, 2) } catch (value) { error(value) } })
+$('clear-history').addEventListener('click', async () => { if (!confirm('清空全部聊天历史和群聊上下文？角色选择、配置与手工记忆会保留。')) return; try { $('maintenance-result').textContent = JSON.stringify(await api('history/clear', 'POST', {}), null, 2); $('messages').replaceChildren() } catch (value) { error(value) } })
 async function init() {
   try {
     const session = await api('session'); csrf = session.csrf; const health = await api('health'); $('status').textContent = `${health.version} · 服务正常`

@@ -121,7 +121,10 @@
             "geminiBuiltinTools": [],
             "responseModalities": [
               "TEXT"
-            ]
+            ],
+            "chatStyle": "default",
+            "replyDetail": "auto",
+            "dialogueExamples": ""
           }
         },
         {
@@ -557,6 +560,24 @@
           "type": "object"
         },
         {
+          "path": "retention.dailyCleanupEnabled",
+          "label": "每天定时清空聊天历史",
+          "type": "boolean",
+          "description": "默认开启。清空私聊、主动接话历史和群聊上下文，并开始新会话；保留角色选择、配置、手工记忆和知识库。插件运行时生效，关闭后仅按保留天数清理。"
+        },
+        {
+          "path": "retention.dailyCleanupTime",
+          "label": "每日清理时间",
+          "type": "string",
+          "description": "24小时制HH:mm，默认03:30。修改后下一次检查读取，通常30秒内执行。"
+        },
+        {
+          "path": "retention.dailyCleanupTimezone",
+          "label": "每日清理时区",
+          "type": "string",
+          "description": "默认Asia/Shanghai（北京时间）；也可填写其他有效IANA时区。首次启用已过清理时间时从下一天执行。"
+        },
+        {
           "path": "retention.historyDays",
           "label": "普通聊天历史保留天数",
           "type": "integer",
@@ -745,6 +766,37 @@
           "label": "角色系统提示词",
           "type": "string",
           "multiline": true
+        },
+        {
+          "path": "presets.*.chatStyle",
+          "label": "聊天风格",
+          "type": "string",
+          "enum": [
+            "default",
+            "natural"
+          ],
+          "enumLabels": {"default":"沿用角色提示词","natural":"自然朋友聊天"},
+          "description": "default 沿用角色提示词；natural 自然朋友聊天，减少客服开场和固定追问；留空沿用原提示词。"
+        },
+        {
+          "path": "presets.*.replyDetail",
+          "label": "回复展开程度",
+          "type": "string",
+          "enum": [
+            "auto",
+            "brief",
+            "balanced",
+            "detailed"
+          ],
+          "enumLabels": {"auto":"沿用提示词","brief":"简短","balanced":"适度展开","detailed":"充分展开"},
+          "description": "auto 沿用提示词；brief 简短；balanced 适度展开；detailed 充分展开。招呼和主动群聊仍简短，最大 Token 是输出硬上限。"
+        },
+        {
+          "path": "presets.*.dialogueExamples",
+          "label": "角色对话示例",
+          "type": "string",
+          "multiline": true,
+          "description": "填写用户与角色的原创对话示例，最多20000字。每轮作为语气示例加入系统提示词，不写入真实聊天历史。"
         },
         {
           "path": "presets.*.temperature",

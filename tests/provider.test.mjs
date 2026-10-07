@@ -48,6 +48,7 @@ test('OpenAI sends normalized image/system/tool history and returns usage', asyn
   assert.equal(request.url, 'https://example.invalid/v1/chat/completions');
   assert.equal(request.headers.authorization, 'Bearer test-key');
   assert.equal(request.redirect, 'error');
+  assert.equal(request.body.messages[0].content, '规则');
   assert.equal(request.body.messages[1].content[1].image_url.url, `data:image/png;base64,${png}`);
   assert.equal(request.body.messages[2].tool_calls[0].function.arguments, '{"query":"猫的品种"}');
   assert.equal(request.body.messages[3].tool_call_id, 'call1');
@@ -201,6 +202,19 @@ test('OpenAI assistant image history is compatible text and user private URLs ar
   let body;
   await complete({ ...input('openai'), messages: [{ role: 'assistant', content: [{ type: 'image', data: png, mime: 'image/png', ref: 'image-ref' }] },
     { role: 'user', content: [{ type: 'text', text: '继续' }] }] }, { fetchImpl: async (_url, options) => { body = JSON.parse(options.body); return json(openaiAnswer('继续回答')); } });
-  assert.equal(body.messages[0].content[0].type, 'text');
+  assert.equal(body.messages[0].content, '[此前生成的图片 ref:image-ref]');
+  assert.equal(body.messages[1].content, '继续');
   await assert.rejects(complete({ ...input('openai'), messages: [{ role: 'user', content: [{ type: 'image', url: 'http://169.254.169.254/private' }] }] }), { code: 'PRIVATE_IMAGE_URL' });
+});
+
+test('OpenAI text-only turns preserve full questions and history as gateway-compatible strings', async () => {
+  let body;
+  const question = '下班后只想刷手机，越刷越空虚，给出三个具体办法。';
+  await complete({ ...input('openai'), messages: [
+    { role: 'system', content: [{ type: 'text', text: '角色规则' }] },
+    { role: 'user', content: '上一轮的问题' },
+    { role: 'assistant', content: [{ type: 'text', text: '先前回答' }] },
+    { role: 'user', content: [{ type: 'text', text: question }, { type: 'text', text: '别只说早点睡。' }] }
+  ] }, { fetchImpl: async (_url, options) => { body = JSON.parse(options.body); return json(openaiAnswer('三个办法')); } });
+  assert.deepEqual(body.messages.map(row => row.content), ['角色规则', '上一轮的问题', '先前回答', question + '\n别只说早点睡。']);
 });

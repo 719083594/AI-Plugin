@@ -120,12 +120,13 @@ export class AIChat extends Base {
     if (/^记忆\s*列表$/.test(text)) { await e.reply(client.storage.memories('user', input.userId, 50).map(row => `${row.id}: ${row.text}`).join('\n') || '暂无个人记忆。', Boolean(e.isGroup)); return true }
     if (/^记忆\s*添加\s+/.test(text)) { client.storage.addMemory('user', input.userId, text.replace(/^记忆\s*添加\s+/, '')); await e.reply('已添加个人记忆；启用长期记忆后用于回答。', Boolean(e.isGroup)); return true }
     if (/^记忆\s*删除\s+/.test(text)) { const id = text.replace(/^记忆\s*删除\s+/, '').trim(); await e.reply(client.storage.deleteMemory(id, 'user', input.userId) ? '已删除记忆。' : '记忆不存在或不属于你。', Boolean(e.isGroup)); return true }
-    if (/^(?:登录|后台|状态|备份|清理|结束全部对话|主动接话)/.test(text)) {
+    if (/^(?:登录|后台|状态|备份|清理|清空聊天历史|结束全部对话|主动接话)/.test(text)) {
       if (!input.isMaster) { await e.reply('此操作仅主人可用。', Boolean(e.isGroup)); return true }
       if (/^(?:登录|后台)$/.test(text)) { if (!e.isPrivate) { await e.reply('请私聊发送 #AI登录 获取管理入口。', true); return true } await e.reply(management ? management.ticket() : '管理服务已关闭。', false); return true }
       if (text === '状态') { const health = client.health(); await e.reply(`AI-Plugin ${health.version}\n渠道 ${health.channelsEnabled} · 预设 ${health.presets} · 工具 ${health.tools.length}\n历史 ${health.storage.history} · 排队 ${health.queued}`, Boolean(e.isGroup)); return true }
       if (text === '备份') { await e.reply(management ? management.backup().message : '管理服务未启用，请使用CLI备份。', Boolean(e.isGroup)); return true }
       if (text === '清理') { await e.reply('清理完成：' + JSON.stringify(client.storage.cleanup(client.config().retention)), Boolean(e.isGroup)); return true }
+      if (text === '清空聊天历史') { const result = client.clearHistory(); await e.reply(`已清空 ${result.history} 条聊天历史与 ${result.groups} 份群上下文，角色选择和手工记忆保留。`, Boolean(e.isGroup)); return true }
       if (text === '结束全部对话') { for (const controllers of client.inflight.values()) for (const controller of controllers) controller.abort(); client.storage.resetAll(); await e.reply('已结束全部会话，历史保留。', Boolean(e.isGroup)); return true }
       if (/^主动接话\s*(?:开|关)$/.test(text)) { const { writeJson } = await import('../../src/core/config.mjs'); const config = client.config(); config.group.proactiveEnabled = /开$/.test(text); writeJson(client.configFile, config); await e.reply(config.group.proactiveEnabled ? '主动接话已开启。' : '主动接话已关闭。', Boolean(e.isGroup)); return true }
     }

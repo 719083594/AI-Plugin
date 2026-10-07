@@ -14,7 +14,7 @@ export const defaults = {
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
   security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },
   management: { enabled: true, host: '127.0.0.1', port: 48371, publicUrl: 'http://127.0.0.1:48371', apiToken: '', ticketSeconds: 180, sessionSeconds: 3600, webChatEnabled: true },
-  retention: { historyDays: 30, proactiveHistoryDays: 30, logLimit: 5000, cleanupIntervalHours: 1, backupCount: 5 },
+  retention: { historyDays: 30, proactiveHistoryDays: 30, logLimit: 5000, cleanupIntervalHours: 1, backupCount: 5, dailyCleanupEnabled: true, dailyCleanupTime: '03:30', dailyCleanupTimezone: 'Asia/Shanghai' },
   extensions: { mcp: [], schedules: [], workflows: [], processors: [], pricing: [] }
 }
 export function merge(base, value) {
@@ -36,6 +36,9 @@ export function validateConfig(config) {
   int(config.chat.maxToolRounds, 0, 12, '工具轮数')
   int(config.group.contextLength, 0, 100, '群上下文条数')
   int(config.security.maxRequestsPerWindow, 1, 10000, '频率限制')
+  if (typeof config.retention.dailyCleanupEnabled !== 'boolean') throw new Error('每日聊天清理开关无效')
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(config.retention.dailyCleanupTime)) throw new Error('每日聊天清理时间必须为HH:mm格式')
+  try { new Intl.DateTimeFormat('en', { timeZone: config.retention.dailyCleanupTimezone }).format() } catch { throw new Error('每日聊天清理时区无效') }
   if (!Number.isFinite(config.group.probability) || config.group.probability < 0 || config.group.probability > 1) throw new Error('主动接话概率必须在 0 与 1 之间')
   if (!['at', 'prefix', 'both'].includes(config.basic.triggerMode)) throw new Error('群聊触发方式无效')
   for (const category of ['channels', 'presets']) {
@@ -45,6 +48,11 @@ export function validateConfig(config) {
       if (!entry || !/^[\w.-]{1,80}$/.test(entry.id) || ids.has(entry.id)) throw new Error('渠道或预设标识为空、重复或格式无效')
       ids.add(entry.id)
       if (category === 'channels' && !['openai', 'gemini', 'claude'].includes(entry.type)) throw new Error('不支持的模型接口类型')
+      if (category === 'presets') {
+        if (entry.chatStyle !== undefined && !['default', 'natural'].includes(entry.chatStyle)) throw new Error('聊天风格无效')
+        if (entry.replyDetail !== undefined && !['auto', 'brief', 'balanced', 'detailed'].includes(entry.replyDetail)) throw new Error('回复展开程度无效')
+        if (entry.dialogueExamples !== undefined && (typeof entry.dialogueExamples !== 'string' || entry.dialogueExamples.length > 20000)) throw new Error('角色对话示例必须为不超过20000字的文本')
+      }
     }
   }
   return config
