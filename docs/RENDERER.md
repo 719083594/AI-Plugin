@@ -41,3 +41,56 @@ const image = await render({
 测试通过注入模拟后端验证队列、失败隔离及输入边界。运行机装有 sharp 时还会执行实际 JPEG 转换；可用 `AI_RENDERER_TEST_SHARP` 显式指定现有 sharp 的入口文件执行真实后端测试，测试素材全部为合成公开数据。
 
 来源：渲染约束来自本作者 SGS-Mobile-Plugin 的内存卡片实现；原生转换使用 [sharp](https://sharp.pixelplumbing.com/) 及其 [libvips](https://www.libvips.org/) 后端。服务没有远程渲染 API。
+
+## 固定帮助图片
+
+`buildStaticHelpCards` 为源码中的公开说明生成宽 1080 的原生 SVG 卡片，采用双栏分组、大字号指令与权限说明；长文本会换行，长帮助会分页，最多 8 页。支持 `dark`（默认）和 `light` 两种配色。它只接收下面的公开说明结构，不接收账号、会话、图片、SVG 或任意样式。不要将个人查询结果交给固定帮助构建器。
+
+```js
+import {buildStaticHelpCards, createNativeCardRenderer,
+  createStaticHelpReader, hashStaticHelpSource} from 'ai-plugin/renderer'
+
+const cards = buildStaticHelpCards({
+  title: '群管 · GroupGuard',
+  subtitle: '常用操作与权限，一张图快速查阅',
+  groups: [{title: '查看与帮助', items: [
+    {command: '#群管帮助', description: '查看公开指令说明'},
+    {command: '禁言 @成员 [10分钟]', permission: '需要群管理员权限'}
+  ]}],
+  footer: '按说明发送命令即可使用。',
+  theme: 'dark'
+})
+// cards: [{svg, width: 1080, height, private: false}, ...]
+// 在离线构建脚本内逐张调用 render(card)，写入插件 resources/help/。
+// 在线收到帮助命令时只调用 reader，不再启动浏览器或渲染器。
+const render = createNativeCardRenderer({loadSharp: () => import('sharp')})
+const image = await render(cards[0])
+
+const readHelp = createStaticHelpReader({root: pluginRoot, defaultPrefix: '#群管'})
+const images = readHelp({topic: 'help', private: false, prefix: '#群管'})
+// 成功得到 Buffer[]，不存在、不匹配或校验失败得到 null。
+```
+
+离线构建脚本负责生成图片与 `resources/help/manifest.json`。只有内容变更时需要重新生成。源文件哈希必须调用 `hashStaticHelpSource(bytes)`：严格 UTF-8 解码、去除开头 BOM、把 CRLF/CR 规范为 LF，再计算 SHA-256。图片哈希使用原始 JPEG 字节的 SHA-256；两种算法不能混用。manifest 格式如下：
+
+```json
+{
+  "version": 1,
+  "hashAlgorithm": "sha256-lf-v1",
+  "prefix": "#群管",
+  "cards": {
+    "help": [
+      {"file": "resources/help/help-1.jpg", "sha256": "填写图片字节的64位小写SHA256", "width": 1080, "height": 720}
+    ]
+  },
+  "sources": [
+    {"file": "lib/help-content.mjs", "sha256": "填写规范化源文件的64位小写SHA256"}
+  ]
+}
+```
+
+topic 仅允许小写字母开头的字母、数字、短横线，最长 40 字符；对应图片必须依次为 `resources/help/<topic>-1.jpg` 至 `-8.jpg`。最多 32 个 topic、16 个源文件。源文件仅允许根目录 `index.js`、`api.mjs`、`help-content.mjs`、`package.json`、`README.md`，或 `lib/`、`src/`、`integrations/`、`yunzai/` 下的 `.mjs`、`.js`、`.md`；拒绝点目录、配置、账号数据及私密目录。根目录固定文件名 `help-content.mjs` 也支持适配器被安装脚本平铺的插件。需要追踪构建器本身变更时，也将该插件复制的构建说明源文件列入 `sources`。
+
+reader 不导入 AI 核心，不读取账号，不下载素材，不写文件，不在首次请求生成图片。它只接受显式 `private: false` 的公开帮助请求，前缀必须与 manifest 及配置一致。manifest 可通过 `manifestFile` 指定为 `resources/help/` 下的固定小写 JSON 文件名。每次请求检查完整路径链，拒绝符号链接及多硬链接文件；文件标识或时间变化时重新校验 SHA-256。JPEG 还检查魔数、帧尺寸和末尾标记。公开图片只在内存缓存，最多 16 MiB、32 个 topic；每个调用者收到独立 Buffer 副本。任何校验失败都返回 `null`，由调用插件给出简短说明或文字帮助。
+
+这种帮助 manifest 与旧游戏插件的 `help-manifest.json` 是两个明确分开的格式，不能将旧格式直接改名使用。API 也可从 `ai-plugin/static-help` 单独导入。

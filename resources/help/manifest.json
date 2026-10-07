@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hashAlgorithm": "sha256-lf-v1",
+  "prefix": "#AI",
+  "cards": {
+    "ai-public": [
+      {
+        "file": "resources/help/ai-public-1.jpg",
+        "sha256": "704e54b2b97c0f912ea9015f297a9f71e25d9d1f0d6328574c2fa8bdf06e5b5c",
+        "width": 1080,
+        "height": 931
+      }
+    ],
+    "ai-master": [
+      {
+        "file": "resources/help/ai-master-1.jpg",
+        "sha256": "d0065bf32111fa07bcc927f95d9a32b990a807725a604a6453af4a8346adcfc8",
+        "width": 1080,
+        "height": 660
+      }
+    ]
+  },
+  "sources": [
+    {
+      "file": "src/rendering/help-content.mjs",
+      "sha256": "bf4c13cc7ae0bbd70fd1152e2c69998f08321d95987d92a7f255a44fdfca6e2f"
+    }
+  ]
+}

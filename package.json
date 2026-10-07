@@ -17,7 +17,8 @@
     ".": "./api.mjs",
     "./providers": "./src/providers/index.mjs",
     "./tools": "./src/tools/index.mjs",
-    "./renderer": "./src/rendering/index.mjs"
+    "./renderer": "./src/rendering/index.mjs",
+    "./static-help": "./src/rendering/static-help.mjs"
   },
   "bin": {
     "ai-plugin": "./cli.mjs"
