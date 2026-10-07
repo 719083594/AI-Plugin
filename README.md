@@ -39,6 +39,8 @@ AI 核心可以单独使用。由其他应用调用时，导入 `api.mjs` 或包
 
 OrangeJuice 读取配置声明和实例文件，不是 AI 聊天的前置服务。停用管理平台不影响已运行 AI 实例。
 
+通过 New API 统一转发时，可选用 [有限并发竞速网关](integrations/new-api-race/README.md)。它按文本、视觉和工具能力选模型，保留故障回退、共享限流与工具链隔离；实际运行凭据独立保存。
+
 ## OrangeJuice 配置接入
 
 将 AI-Plugin 放入 Orange 的插件目录即可读取 `orangejuice.plugin.json`。完整中文声明覆盖基础、渠道、预设、聊天、群聊、记忆、工具、图片、权限、工作台、保留策略和扩展。

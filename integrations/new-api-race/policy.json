@@ -1,0 +1,215 @@
+{
+  "timeoutMs": 30000,
+  "inventoryTimeoutMs": 1500,
+  "requestTimeoutMs": 35000,
+  "headersTimeoutMs": 10000,
+  "race": {
+    "maxParallel": 2,
+    "fallbackReserveMs": 6000,
+    "cooldownMs": 30000,
+    "stickyTtlMs": 300000,
+    "maxStickyEntries": 512,
+    "maxStickyBytes": 1048576,
+    "resources": {
+      "intern": {
+        "maxConcurrent": 2,
+        "requestsPerMinute": 40,
+        "tokensPerMinute": 1800000,
+        "maxOutputTokens": 4096
+      },
+      "legacy-glm": {
+        "maxConcurrent": 2,
+        "requestsPerMinute": 40,
+        "maxOutputTokens": 4096
+      }
+    },
+    "candidates": [
+      {
+        "model": "qqbot-race-text-intern-kimi-k2-6",
+        "priority": 300,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-intern-qwen3-8-27b",
+        "priority": 300,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-intern-deepseek-v4-flash-0731",
+        "priority": 200,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 8000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-intern-glm-5-3",
+        "priority": 200,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 8000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-intern-deepseek-v4-flash-vision",
+        "priority": 300,
+        "capabilities": [
+          "vision"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 10000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-intern-qwen3-8-27b",
+        "priority": 300,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 10000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-intern-kimi-k2-6",
+        "priority": 200,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-intern-agents-a1",
+        "priority": 200,
+        "capabilities": [
+          "vision"
+        ],
+        "resourceGroup": "intern",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-glm45",
+        "priority": 0,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "legacy-glm",
+        "timeoutMs": 6000,
+        "normalizeImageDetail": false,
+        "rejectTruncated": false,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-glm4-250414",
+        "priority": 0,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "legacy-glm",
+        "timeoutMs": 6000,
+        "normalizeImageDetail": false,
+        "rejectTruncated": false,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-glm47",
+        "priority": 0,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "legacy-glm",
+        "timeoutMs": 6000,
+        "normalizeImageDetail": false,
+        "rejectTruncated": false,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-glm46",
+        "priority": 0,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "legacy-glm",
+        "timeoutMs": 6000,
+        "normalizeImageDetail": false,
+        "rejectTruncated": false,
+        "enabled": true
+      },
+      {
+        "model": "qqbot-race-vision-glm41",
+        "priority": 0,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "legacy-glm",
+        "timeoutMs": 6000,
+        "normalizeImageDetail": false,
+        "rejectTruncated": false,
+        "enabled": true
+      }
+    ]
+  },
+  "aiInstanceTiming": {
+    "timeoutMs": 35000,
+    "toolTimeoutMs": 90000,
+    "channelTimeoutMs": 35000
+  },
+  "manualOnlyModels": [
+    "Agents-A1 (text)",
+    "Atria-Dawn-Preview",
+    "deepseek-v4-pro-0813",
+    "intern-s2",
+    "minimax-m3"
+  ],
+  "notes": [
+    "All ten models remain individually selectable in New API.",
+    "Only tested capabilities enter automatic racing.",
+    "At most two upstream attempts run in a priority group; losing requests may still cost upstream points.",
+    "Estimated TPM guard is conservative and is not an account points balance.",
+    "No global thinking parameter is injected."
+  ]
+}
