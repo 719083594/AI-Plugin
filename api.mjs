@@ -2,3 +2,4 @@ export { AIClient, accessAllowed, selectChannel, cleanText } from './src/core/cl
 export { Storage } from './src/core/storage.mjs'
 export { defaults, readConfig, validateConfig, mask } from './src/core/config.mjs'
 export { startManagement } from './src/management/server.mjs'
+export { createNativeCardRenderer, NativeCardRenderError, getNativeRenderStatus } from './src/rendering/index.mjs'
