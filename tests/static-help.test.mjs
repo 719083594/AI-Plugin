@@ -103,6 +103,45 @@ test('single-link ordinary file checks reject hardlinks for images, source and m
   }
 });
 
+test('Windows unavailable path-device sentinel is compatible without relaxing other cross-API identity fields',t=>{
+  const f=fixture(t),originalLstat=fs.lstatSync,originalFstat=fs.fstatSync;
+  const target=f.manifestPath;
+  try{
+    fs.lstatSync=function(file,...args){const value=originalLstat.call(this,file,...args);if(String(file)===target)value.dev=0n;return value};
+    const read=createStaticHelpReader({root:f.root,defaultPrefix:'#群管'});
+    assert.equal(Boolean(read(f.request)?.length),process.platform==='win32');
+    for(const field of ['ino','mode','nlink','size','mtimeNs','ctimeNs']){
+      fs.fstatSync=function(fd,...args){const value=originalFstat.call(this,fd,...args);value[field]+=1n;return value};
+      assert.equal(createStaticHelpReader({root:f.root,defaultPrefix:'#群管'})(f.request),null);
+    }
+    fs.fstatSync=originalFstat;
+    const fd=fs.openSync(target,fs.constants.O_RDONLY),otherDevice=originalFstat(fd,{bigint:true}).dev+1n;fs.closeSync(fd);
+    fs.lstatSync=function(file,...args){const value=originalLstat.call(this,file,...args);if(String(file)===target)value.dev=otherDevice;return value};
+    assert.equal(createStaticHelpReader({root:f.root,defaultPrefix:'#群管'})(f.request),null);
+  }finally{fs.lstatSync=originalLstat;fs.fstatSync=originalFstat}
+});
+
+test('path and descriptor identity/time changes during a read still fail closed independently',t=>{
+  const originalLstat=fs.lstatSync,originalFstat=fs.fstatSync;
+  try{
+    for(const side of ['path','descriptor'])for(const field of ['dev','ino','mode','nlink','size','mtimeNs','ctimeNs']){
+      const f=fixture(t);let pathCalls=0,descriptorCalls=0;
+      fs.lstatSync=function(file,...args){
+        const value=originalLstat.call(this,file,...args);
+        if(String(file)===f.manifestPath&&++pathCalls>1&&side==='path')value[field]+=1n;
+        return value;
+      };
+      fs.fstatSync=function(fd,...args){
+        const value=originalFstat.call(this,fd,...args);
+        if(++descriptorCalls>1&&side==='descriptor')value[field]+=1n;
+        return value;
+      };
+      assert.equal(f.read(f.request),null);
+      fs.lstatSync=originalLstat;fs.fstatSync=originalFstat;
+    }
+  }finally{fs.lstatSync=originalLstat;fs.fstatSync=originalFstat}
+});
+
 test('full-chain checks reject a symbolic directory inside the root',{skip:process.platform==='win32'&&process.env.AI_TEST_SYMLINKS!=='1'},t=>{
   const f=fixture(t),resources=path.join(f.root,'resources'),moved=path.join(f.root,'real-resources');assert.equal(f.read(f.request).length,1);
   fs.renameSync(resources,moved);fs.symlinkSync(moved,resources,'dir');assert.equal(f.read(f.request),null);

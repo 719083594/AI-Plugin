@@ -94,3 +94,5 @@ topic 仅允许小写字母开头的字母、数字、短横线，最长 40 字�
 reader 不导入 AI 核心，不读取账号，不下载素材，不写文件，不在首次请求生成图片。它只接受显式 `private: false` 的公开帮助请求，前缀必须与 manifest 及配置一致。manifest 可通过 `manifestFile` 指定为 `resources/help/` 下的固定小写 JSON 文件名。每次请求检查完整路径链，拒绝符号链接及多硬链接文件；文件标识或时间变化时重新校验 SHA-256。JPEG 还检查魔数、帧尺寸和末尾标记。公开图片只在内存缓存，最多 16 MiB、32 个 topic；每个调用者收到独立 Buffer 副本。任何校验失败都返回 `null`，由调用插件给出简短说明或文字帮助。
 
 这种帮助 manifest 与旧游戏插件的 `help-manifest.json` 是两个明确分开的格式，不能将旧格式直接改名使用。API 也可从 `ai-plugin/static-help` 单独导入。
+
+Windows 的部分旧 Node/libuv（已验证 Node 22.13.1）会让同一文件的 `lstat.dev` 返回不可用哨兵 `0`，而 `fstat.dev` 返回实际卷序号。reader 仅在 Windows 的这个跨 API 比较中兼容路径设备号 `0`；inode、模式、链接数、大小、mtime 与 ctime 仍严格相等。读取前后的路径 stat 与描述符 stat 各自继续比较完整指纹，缓存也保留路径 stat 的设备号与 ctime，不会因兼容性处理而忽略文件替换或时间变化。

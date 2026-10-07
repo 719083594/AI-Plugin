@@ -119,6 +119,13 @@ export function hashStaticHelpSource(input){
   source=source.replace(/^\ufeff/,'').replace(/\r\n?/g,'\n');return digest(Buffer.from(source,'utf8'));
 }
 const fingerprint=stat=>[stat.dev,stat.ino,stat.mode,stat.nlink,stat.size,stat.mtimeNs,stat.ctimeNs].join(':');
+function sameOpenedFile(pathStat,descriptorStat){
+  // Older Windows Node/libuv path stats report dev=0 while descriptor stats
+  // report the real volume serial. Only that unavailable path-device sentinel
+  // is tolerated across APIs; every other identity/time field stays exact.
+  const sameDevice=pathStat.dev===descriptorStat.dev||process.platform==='win32'&&pathStat.dev===0n&&descriptorStat.dev>0n;
+  return sameDevice&&['ino','mode','nlink','size','mtimeNs','ctimeNs'].every(key=>pathStat[key]===descriptorStat[key]);
+}
 function ordinary(file,maxBytes){
   let result;
   for(let current=file;;){
@@ -133,11 +140,11 @@ function readOrdinary(file,maxBytes){
   const before=ordinary(file,maxBytes);let fd;
   try{
     fd=fs.openSync(file,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW??0));const opened=fs.fstatSync(fd,{bigint:true});
-    if(!opened.isFile()||opened.nlink!==1n||fingerprint(opened)!==fingerprint(before))throw Error('PUBLIC_HELP_FILE_CHANGED');
+    if(!opened.isFile()||opened.nlink!==1n||!sameOpenedFile(before,opened))throw Error('PUBLIC_HELP_FILE_CHANGED');
     const bytes=Buffer.alloc(Number(opened.size));let offset=0;
     while(offset<bytes.length){const count=fs.readSync(fd,bytes,offset,bytes.length-offset,offset);if(!count)throw Error('PUBLIC_HELP_FILE_CHANGED');offset+=count}
-    if(fingerprint(fs.fstatSync(fd,{bigint:true}))!==fingerprint(opened)||fingerprint(ordinary(file,maxBytes))!==fingerprint(opened))throw Error('PUBLIC_HELP_FILE_CHANGED');
-    return {bytes,fingerprint:fingerprint(opened)};
+    if(fingerprint(fs.fstatSync(fd,{bigint:true}))!==fingerprint(opened)||fingerprint(ordinary(file,maxBytes))!==fingerprint(before))throw Error('PUBLIC_HELP_FILE_CHANGED');
+    return {bytes,fingerprint:fingerprint(before)};
   }finally{if(fd!==undefined)fs.closeSync(fd)}
 }
 function relativeSource(value){
