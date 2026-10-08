@@ -13,7 +13,7 @@ import { ImageStore } from '../media/index.mjs'
 import { selectVision, checkImageScope, storedImage, imageNote, visionError } from './vision.mjs'
 import { buildPersonaPrompt, buildPersonaIdentity, buildPersonaContinuity, needsPersonaRepair, stripServiceTail } from './persona.mjs'
 import { checkDailyCleanup } from './daily-cleanup.mjs'
-import { SpeechService, resolveVoice, normalizeGame } from '../speech/index.mjs'
+import { SpeechService, LEGACY_VOICE_CATALOG } from '../speech/index.mjs'
 
 export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning|answer)>/gi, '').trim()
 export function redactError(error, config) {
@@ -82,9 +82,17 @@ export class AIClient {
   groupKey(input) { return input.botId ? `${input.botId}:${input.groupId}` : String(input.groupId) }
   speechConfigured(config = this.config()) { return Boolean(config.speech?.enabled && config.speech.endpoint) }
   speechVersion() { return this.storage.maintenance('speech-settings')?.revision || 0 }
+  currentSpeechCatalog() { return this.speech.currentCatalog?.() || LEGACY_VOICE_CATALOG }
+  async speechCatalog(options) { return this.speechConfigured() && this.speech.catalogue ? this.speech.catalogue(options) : this.currentSpeechCatalog() }
   speechSettings() {
     const saved = this.storage.maintenance('speech-settings') || {}, config = this.config().speech || {}
-    return { mode: saved.mode === 'voice' ? 'voice' : 'text', voice: saved.voice || config.defaultVoice || '纳西妲（草神）', game: saved.game || 'genshin', language: saved.language || config.language || 'zh' }
+    const catalog=this.currentSpeechCatalog()
+    if(!catalog.modern)return { mode: saved.mode === 'voice' ? 'voice' : 'text', voice: saved.voice || config.defaultVoice || '纳西妲（草神）', game: saved.game || 'genshin', language: saved.language || config.language || 'zh' }
+    const language=saved.language || config.language || catalog.defaultLanguage
+    const voice=catalog.resolveVoice(saved.voice,{language}) || catalog.resolveVoice(config.defaultVoice,{language}) || catalog.resolveVoice(catalog.defaultVoice)
+    // An obsolete persisted voice is read through the new catalogue without
+    // rewriting user state or the database during discovery/synthesis.
+    return {mode:saved.mode==='voice'?'voice':'text',voice:voice.label,game:catalog.normalizeGame(saved.game)||voice.game,language:voice.language}
   }
   checkSpeechAccess(input) {
     const config = this.config()
@@ -96,14 +104,15 @@ export class AIClient {
     this.checkSpeechAccess(input)
     if (!patch || typeof patch !== 'object' || Object.keys(patch).some(key => !['mode', 'voice', 'game', 'language'].includes(key))) throw new Error('语音设置无效')
     const next = { ...this.speechSettings(input), ...patch }
-    if (!['text', 'voice'].includes(next.mode) || !['zh', 'ja', 'mix'].includes(next.language)) throw new Error('语音模式或语言无效')
-    const game = normalizeGame(next.game)
-    if (!game) throw new Error('请选择原神、崩坏3、赛马娘或其他音色目录')
+    if (!['text', 'voice'].includes(next.mode) || !['zh', 'ja', 'mix', 'en'].includes(next.language)) throw new Error('语音模式或语言无效')
+    const catalog=this.currentSpeechCatalog(),game = catalog.normalizeGame(next.game)
+    if (!game) throw new Error('请选择音色列表中的分类')
     next.game = game
     if (patch.voice !== undefined) {
-      const voice = resolveVoice(patch.voice, { language: next.language })
+      const voice = catalog.resolveVoice(patch.voice, { language: next.language })
       if (!voice) throw new Error('没有找到唯一的音色，请发送 #AI音色列表 查询完整名称')
       next.voice = voice.label
+      if(catalog.modern){next.language=voice.language;next.game=voice.game}
     }
     if (next.mode === 'voice' && !this.speechConfigured()) throw new Error('语音服务尚未配置，请联系机器人主人')
     for (const controller of this.speechControllers) controller.abort(new Error('语音设置已变更，本次返回文字'))
@@ -115,7 +124,9 @@ export class AIClient {
     const revision = this.speechVersion()
     this.speechControllers.add(controller)
     try {
-      const audio = await abortable(() => this.speech.synthesize(text, { voice: preferences.voice, language: preferences.language, signal: combined }), combined)
+      const catalog=await this.speechCatalog({signal:combined})
+      const current=catalog.modern&&!catalog.resolveVoice(preferences.voice,{language:preferences.language})?this.speechSettings():preferences
+      const audio = await abortable(() => this.speech.synthesize(text, { voice: current.voice, language: current.language, signal: combined }), combined)
       combined.throwIfAborted()
       if (revision !== this.speechVersion()) throw new Error('语音设置已变更，本次返回文字')
       return audio
@@ -460,6 +471,6 @@ export class AIClient {
     const daily = () => { try { checkDailyCleanup(this) } catch (error) { this.host.log?.('每日聊天清理失败：' + error.message) } }
     daily(); this.dailyCleanupTimer = setInterval(daily, 30000); this.dailyCleanupTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.1.0', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.1.1', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); for (const controller of this.speechControllers) controller.abort(); this.speech.close?.(); this.storage.close() }
 }

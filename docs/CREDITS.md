@@ -15,6 +15,6 @@ AI-Plugin 是新的独立实现。以下项目提供原有行为研究、适配�
 | [OrangeJuice-Plugin](https://github.com/719083594/OrangeJuice-Plugin) | 配套中文配置声明、权限、密钥遮罩与独立管理入口。 |
 | [WebSearch-Plugin](https://github.com/719083594/WebSearch-Plugin) | 可选联网搜索后端；其依赖、网络访问和搜索质量属于独立部署。 |
 | [VITS](https://github.com/jaywalnut310/vits) | 外部语音合成模型架构来源；AI-Plugin 不内置模型或训练权重。 |
-| [Gradio](https://www.gradio.app/) | 可选 VITS 语音服务的配置读取、推理与音频接口。服务源码、音色和模型权重适用其各自许可证。 |
+| [Gradio](https://www.gradio.app/) | 可选语音服务的配置读取、异步队列与音频接口。服务源码、音色和模型权重适用其各自许可证。 |
 
 本仓库没有引入上述插件的源码、前端资源或 npm 运行依赖。名称和工具 ID 用于兼容接口与来源标识，各原项目继续适用其许可证。AI-Plugin 自身采用 GPL-3.0-or-later，具体条款见仓库根目录 LICENSE。

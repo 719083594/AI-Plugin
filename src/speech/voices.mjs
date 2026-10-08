@@ -38,3 +38,37 @@ export function resolveVoice(name,{game,language='zh'}={}) {
   // A typo or an ambiguous substring must never silently select a different character.
   return null
 }
+
+export const LEGACY_VOICE_CATALOG = Object.freeze({
+  listVoices, resolveVoice, normalizeGame, games: VOICE_GAMES,
+  defaultVoice: '纳西妲（草神）', defaultLanguage: 'zh', modern: false
+})
+
+// Remote catalogues contain public labels and IDs only. Instance endpoints and
+// credentials stay in SpeechService, outside the catalogue and command replies.
+export function createVoiceCatalog({voices: rows, defaultVoice, defaultLanguage='zh', languages={}}) {
+  const valid = value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\u0000-\u001f]/.test(value)
+  if (!Array.isArray(rows) || !rows.length || rows.length > 2000) throw new Error('Invalid speech catalogue')
+  const data = rows.map(row => {
+    if (!row || !valid(row.id) || !valid(row.label) || !valid(row.language) || !valid(row.group || '通用')) throw new Error('Invalid speech voice')
+    return Object.freeze({id:row.id,label:row.label,name:row.label,language:row.language,game:row.group || '通用',aliases:Object.freeze([row.id])})
+  })
+  if (new Set(data.map(row => row.id)).size !== data.length) throw new Error('Duplicate speech voice')
+  const games = Object.freeze([...new Set(data.map(row => row.game))].map(id => Object.freeze({id,name:id,aliases:Object.freeze([id])})))
+  const normalize = value => games.find(row => key(row.id) === key(value))?.id || null
+  const resolve = (name,{game,language=defaultLanguage}={}) => {
+    const query=key(typeof name === 'object' ? name?.id || name?.label : name)
+    const candidates=data.filter(row => !game || row.game === normalize(game))
+    const exact=candidates.filter(row => [row.id,row.label].some(value => key(value) === query))
+    return exact.find(row => row.language === language) || (exact.length === 1 ? exact[0] : null)
+  }
+  const list = ({game,search,page=1,pageSize=30,language}={}) => {
+    const query=key(search), group=game ? normalize(game) : null
+    const filtered=data.filter(row => (!game || row.game === group) && (!language || row.language === language) && (!query || [row.id,row.label].some(value => key(value).includes(query))))
+    pageSize=Math.min(100,Math.max(1,Math.trunc(Number(pageSize)) || 30))
+    page=Number.isSafeInteger(Number(page)) && Number(page)>0 ? Number(page) : 1
+    return {voices:filtered.slice((page-1)*pageSize,page*pageSize),total:filtered.length,page,pageSize,pages:Math.max(1,Math.ceil(filtered.length/pageSize)),games}
+  }
+  const selected=resolve(defaultVoice) || data.find(row => row.language === defaultLanguage) || data[0]
+  return Object.freeze({modern:true,games,resolveVoice:resolve,listVoices:list,normalizeGame:normalize,defaultVoice:selected.label,defaultLanguage:selected.language,languages:Object.freeze({...languages})})
+}

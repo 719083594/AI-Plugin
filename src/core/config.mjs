@@ -44,7 +44,7 @@ export function validateConfig(config) {
     try { url = new URL(config.speech.endpoint) } catch { throw new Error('语音服务地址无效') }
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error('语音服务地址须使用不含凭证、参数的 HTTPS 地址')
   }
-  if (!['zh', 'ja', 'mix'].includes(config.speech.language)) throw new Error('语音语言无效')
+  if (!['zh', 'ja', 'mix', 'en'].includes(config.speech.language)) throw new Error('语音语言无效')
   if (typeof config.speech.defaultVoice !== 'string' || !config.speech.defaultVoice.trim() || config.speech.defaultVoice.length > 128) throw new Error('默认音色无效')
   int(config.speech.timeoutMs, 1000, 120000, '语音请求等待上限')
   int(config.speech.maxCharacters, 1, 500, '语音字数上限')

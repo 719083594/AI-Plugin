@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -15,9 +15,9 @@
     "#AI文字模式",
     "#AI语音状态",
     "#AI转语音 文字",
-    "#AI音色列表 [游戏] [页码]",
-    "#AI语音 纳西妲",
-    "#AI语音游戏 原神",
+    "#AI音色列表 [分类] [页码]",
+    "#AI语音 中文女声001",
+    "#AI语音游戏 分类",
     "#AI语音帮助",
     "#AI登录"
   ],
@@ -452,9 +452,9 @@
         },
         {
           "path": "speech.endpoint",
-          "label": "VITS 语音服务地址",
+          "label": "语音服务地址",
           "type": "string",
-          "description": "填写兼容 Gradio VITS 服务的 HTTPS 根地址，可带代理路径前缀；不填写 /api/generate/ 路由。合成文字会发送到该服务。"
+          "description": "填写兼容 VITS 或 Gradio 5 四输入 generate 服务的 HTTPS 根地址，可带代理路径前缀，不填写生成接口路由。合成文字会发送到该服务。"
         },
         {
           "path": "speech.token",
@@ -467,7 +467,7 @@
           "path": "speech.defaultVoice",
           "label": "默认语音音色",
           "type": "string",
-          "description": "默认纳西妲（草神）；支持实际服务目录中的名称和别名。"
+          "description": "支持当前服务目录中的完整名称或编号；旧音色失效时回退到服务默认音色。VITS 默认纳西妲（草神）。"
         },
         {
           "path": "speech.language",
@@ -476,14 +476,16 @@
           "enum": [
             "zh",
             "ja",
+            "en",
             "mix"
           ],
           "enumLabels": {
             "zh": "中文",
             "ja": "日语",
+            "en": "英文",
             "mix": "中日混合"
           },
-          "description": "中日混合文本按服务要求用 [ZH] 和 [JA] 标注。"
+          "description": "语言须由所接服务支持；旧 VITS 中日混合文本按服务要求用 [ZH] 和 [JA] 标注。"
         },
         {
           "path": "speech.timeoutMs",
@@ -1057,20 +1059,20 @@
     },
     {
       "title": "语音音色列表",
-      "command": "#AI音色列表 [游戏] [页码] / #AI语音列表 [游戏] [页码]",
-      "description": "按游戏分页查看语音服务提供的音色和别名。",
+      "command": "#AI音色列表 [分类] [页码] / #AI语音列表 [分类] [页码]",
+      "description": "按当前语音服务的分类分页查看可用音色和编号。",
       "permission": "all"
     },
     {
       "title": "选择语音音色",
-      "command": "#AI语音 纳西妲 / #AI语音纳西妲 / #AI音色 纳西妲",
+      "command": "#AI语音 中文女声001 / #AI语音zf_001 / #AI音色 中文女声001",
       "description": "按名称或别名切换机器人共用的音色并开启语音回复，有 AI 使用权限的用户均可切换。",
       "permission": "all"
     },
     {
-      "title": "语音游戏分类",
-      "command": "#AI语音游戏 原神",
-      "description": "选择机器人共用的音色列表游戏分类，不改变当前音色或回复方式。",
+      "title": "语音音色分类",
+      "command": "#AI语音游戏 分类",
+      "description": "选择机器人共用的音色列表分类，不改变当前音色或回复方式。",
       "permission": "all"
     },
     {
