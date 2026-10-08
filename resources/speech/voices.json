@@ -1,0 +1,6700 @@
+{
+  "schemaVersion": 1,
+  "source": "https://huggingface.co/spaces/sayashi/vits-uma-genshin-honkai/blob/main/model/config.json",
+  "voices": [
+    {
+      "id": 0,
+      "label": "特别周",
+      "name": "特别周",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 1,
+      "label": "无声铃鹿",
+      "name": "无声铃鹿",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 2,
+      "label": "东海帝皇（帝宝，帝王）",
+      "name": "东海帝皇",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "帝宝",
+        "帝王"
+      ]
+    },
+    {
+      "id": 3,
+      "label": "丸善斯基",
+      "name": "丸善斯基",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 4,
+      "label": "富士奇迹",
+      "name": "富士奇迹",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 5,
+      "label": "小栗帽",
+      "name": "小栗帽",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 6,
+      "label": "黄金船",
+      "name": "黄金船",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 7,
+      "label": "伏特加",
+      "name": "伏特加",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 8,
+      "label": "大和赤骥",
+      "name": "大和赤骥",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 9,
+      "label": "大树快车",
+      "name": "大树快车",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 10,
+      "label": "草上飞",
+      "name": "草上飞",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 11,
+      "label": "菱亚马逊",
+      "name": "菱亚马逊",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 12,
+      "label": "目白麦昆",
+      "name": "目白麦昆",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 13,
+      "label": "神鹰",
+      "name": "神鹰",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 14,
+      "label": "好歌剧",
+      "name": "好歌剧",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 15,
+      "label": "成田白仁",
+      "name": "成田白仁",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 16,
+      "label": "鲁道夫象征（皇帝）",
+      "name": "鲁道夫象征",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "皇帝"
+      ]
+    },
+    {
+      "id": 17,
+      "label": "气槽",
+      "name": "气槽",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 18,
+      "label": "爱丽数码",
+      "name": "爱丽数码",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 19,
+      "label": "星云天空",
+      "name": "星云天空",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 20,
+      "label": "玉藻十字",
+      "name": "玉藻十字",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 21,
+      "label": "美妙姿势",
+      "name": "美妙姿势",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 22,
+      "label": "琵琶晨光",
+      "name": "琵琶晨光",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 23,
+      "label": "摩耶重炮",
+      "name": "摩耶重炮",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 24,
+      "label": "曼城茶座",
+      "name": "曼城茶座",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 25,
+      "label": "美浦波旁",
+      "name": "美浦波旁",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 26,
+      "label": "目白赖恩",
+      "name": "目白赖恩",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 27,
+      "label": "菱曙",
+      "name": "菱曙",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 28,
+      "label": "雪中美人",
+      "name": "雪中美人",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 29,
+      "label": "米浴",
+      "name": "米浴",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 30,
+      "label": "艾尼斯风神",
+      "name": "艾尼斯风神",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 31,
+      "label": "爱丽速子（爱丽快子）",
+      "name": "爱丽速子",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "爱丽快子"
+      ]
+    },
+    {
+      "id": 32,
+      "label": "爱慕织姬",
+      "name": "爱慕织姬",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 33,
+      "label": "稻荷一",
+      "name": "稻荷一",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 34,
+      "label": "胜利奖券",
+      "name": "胜利奖券",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 35,
+      "label": "空中神宫",
+      "name": "空中神宫",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 36,
+      "label": "荣进闪耀",
+      "name": "荣进闪耀",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 37,
+      "label": "真机伶",
+      "name": "真机伶",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 38,
+      "label": "川上公主",
+      "name": "川上公主",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 39,
+      "label": "黄金城（黄金城市）",
+      "name": "黄金城",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "黄金城市"
+      ]
+    },
+    {
+      "id": 40,
+      "label": "樱花进王",
+      "name": "樱花进王",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 41,
+      "label": "采珠",
+      "name": "采珠",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 42,
+      "label": "新光风",
+      "name": "新光风",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 43,
+      "label": "东商变革",
+      "name": "东商变革",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 44,
+      "label": "超级小海湾",
+      "name": "超级小海湾",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 45,
+      "label": "醒目飞鹰（寄寄子）",
+      "name": "醒目飞鹰",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "寄寄子"
+      ]
+    },
+    {
+      "id": 46,
+      "label": "荒漠英雄",
+      "name": "荒漠英雄",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 47,
+      "label": "东瀛佐敦",
+      "name": "东瀛佐敦",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 48,
+      "label": "中山庆典",
+      "name": "中山庆典",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 49,
+      "label": "成田大进",
+      "name": "成田大进",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 50,
+      "label": "西野花",
+      "name": "西野花",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 51,
+      "label": "春丽（乌拉拉）",
+      "name": "春丽",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "乌拉拉"
+      ]
+    },
+    {
+      "id": 52,
+      "label": "青竹回忆",
+      "name": "青竹回忆",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 53,
+      "label": "微光飞驹",
+      "name": "微光飞驹",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 54,
+      "label": "美丽周日",
+      "name": "美丽周日",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 55,
+      "label": "待兼福来",
+      "name": "待兼福来",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 56,
+      "label": "mr cb（cb先生）",
+      "name": "mr cb",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "cb先生"
+      ]
+    },
+    {
+      "id": 57,
+      "label": "名将怒涛（名将户仁）",
+      "name": "名将怒涛",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "名将户仁"
+      ]
+    },
+    {
+      "id": 58,
+      "label": "目白多伯",
+      "name": "目白多伯",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 59,
+      "label": "优秀素质",
+      "name": "优秀素质",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 60,
+      "label": "帝王光辉",
+      "name": "帝王光辉",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 61,
+      "label": "待兼诗歌剧",
+      "name": "待兼诗歌剧",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 62,
+      "label": "生野狄杜斯",
+      "name": "生野狄杜斯",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 63,
+      "label": "目白善信",
+      "name": "目白善信",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 64,
+      "label": "大拓太阳神",
+      "name": "大拓太阳神",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 65,
+      "label": "双涡轮（两立直，两喷射，二锅头，逆喷射）",
+      "name": "双涡轮",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "两立直",
+        "两喷射",
+        "二锅头",
+        "逆喷射"
+      ]
+    },
+    {
+      "id": 66,
+      "label": "里见光钻（萨托诺金刚石）",
+      "name": "里见光钻",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "萨托诺金刚石"
+      ]
+    },
+    {
+      "id": 67,
+      "label": "北部玄驹",
+      "name": "北部玄驹",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 68,
+      "label": "樱花千代王",
+      "name": "樱花千代王",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 69,
+      "label": "天狼星象征",
+      "name": "天狼星象征",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 70,
+      "label": "目白阿尔丹",
+      "name": "目白阿尔丹",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 71,
+      "label": "八重无敌",
+      "name": "八重无敌",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 72,
+      "label": "鹤丸刚志",
+      "name": "鹤丸刚志",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 73,
+      "label": "目白光明",
+      "name": "目白光明",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 74,
+      "label": "成田拜仁（成田路）",
+      "name": "成田拜仁",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "成田路"
+      ]
+    },
+    {
+      "id": 75,
+      "label": "也文摄辉",
+      "name": "也文摄辉",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 76,
+      "label": "小林历奇",
+      "name": "小林历奇",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 77,
+      "label": "北港火山",
+      "name": "北港火山",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 78,
+      "label": "奇锐骏",
+      "name": "奇锐骏",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 79,
+      "label": "苦涩糖霜",
+      "name": "苦涩糖霜",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 80,
+      "label": "小小蚕茧",
+      "name": "小小蚕茧",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 81,
+      "label": "骏川手纲（绿帽恶魔）",
+      "name": "骏川手纲",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "绿帽恶魔"
+      ]
+    },
+    {
+      "id": 82,
+      "label": "秋川弥生（小小理事长）",
+      "name": "秋川弥生",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "小小理事长"
+      ]
+    },
+    {
+      "id": 83,
+      "label": "乙名史悦子（乙名记者）",
+      "name": "乙名史悦子",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": [
+        "乙名记者"
+      ]
+    },
+    {
+      "id": 84,
+      "label": "桐生院葵",
+      "name": "桐生院葵",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 85,
+      "label": "安心泽刺刺美",
+      "name": "安心泽刺刺美",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 86,
+      "label": "樫本理子",
+      "name": "樫本理子",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 87,
+      "label": "神里绫华（龟龟）",
+      "name": "神里绫华",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "龟龟"
+      ]
+    },
+    {
+      "id": 88,
+      "label": "琴",
+      "name": "琴",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 89,
+      "label": "空（空哥）",
+      "name": "空",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "空哥"
+      ]
+    },
+    {
+      "id": 90,
+      "label": "丽莎",
+      "name": "丽莎",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 91,
+      "label": "荧（荧妹）",
+      "name": "荧",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "荧妹"
+      ]
+    },
+    {
+      "id": 92,
+      "label": "芭芭拉",
+      "name": "芭芭拉",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 93,
+      "label": "凯亚",
+      "name": "凯亚",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 94,
+      "label": "迪卢克",
+      "name": "迪卢克",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 95,
+      "label": "雷泽",
+      "name": "雷泽",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 96,
+      "label": "安柏",
+      "name": "安柏",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 97,
+      "label": "温迪",
+      "name": "温迪",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 98,
+      "label": "香菱",
+      "name": "香菱",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 99,
+      "label": "北斗",
+      "name": "北斗",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 100,
+      "label": "行秋",
+      "name": "行秋",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 101,
+      "label": "魈",
+      "name": "魈",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 102,
+      "label": "凝光",
+      "name": "凝光",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 103,
+      "label": "可莉",
+      "name": "可莉",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 104,
+      "label": "钟离",
+      "name": "钟离",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 105,
+      "label": "菲谢尔（皇女）",
+      "name": "菲谢尔",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "皇女"
+      ]
+    },
+    {
+      "id": 106,
+      "label": "班尼特",
+      "name": "班尼特",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 107,
+      "label": "达达利亚（公子）",
+      "name": "达达利亚",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "公子"
+      ]
+    },
+    {
+      "id": 108,
+      "label": "诺艾尔（女仆）",
+      "name": "诺艾尔",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "女仆"
+      ]
+    },
+    {
+      "id": 109,
+      "label": "七七",
+      "name": "七七",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 110,
+      "label": "重云",
+      "name": "重云",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 111,
+      "label": "甘雨（椰羊）",
+      "name": "甘雨",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "椰羊"
+      ]
+    },
+    {
+      "id": 112,
+      "label": "阿贝多",
+      "name": "阿贝多",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 113,
+      "label": "迪奥娜（猫猫）",
+      "name": "迪奥娜",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "猫猫"
+      ]
+    },
+    {
+      "id": 114,
+      "label": "莫娜",
+      "name": "莫娜",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 115,
+      "label": "刻晴",
+      "name": "刻晴",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 116,
+      "label": "砂糖",
+      "name": "砂糖",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 117,
+      "label": "辛焱",
+      "name": "辛焱",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 118,
+      "label": "罗莎莉亚",
+      "name": "罗莎莉亚",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 119,
+      "label": "胡桃",
+      "name": "胡桃",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 120,
+      "label": "枫原万叶（万叶）",
+      "name": "枫原万叶",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "万叶"
+      ]
+    },
+    {
+      "id": 121,
+      "label": "烟绯",
+      "name": "烟绯",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 122,
+      "label": "宵宫",
+      "name": "宵宫",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 123,
+      "label": "托马",
+      "name": "托马",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 124,
+      "label": "优菈",
+      "name": "优菈",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 125,
+      "label": "雷电将军（雷神）",
+      "name": "雷电将军",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "雷神"
+      ]
+    },
+    {
+      "id": 126,
+      "label": "早柚",
+      "name": "早柚",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 127,
+      "label": "珊瑚宫心海（心海，扣扣米）",
+      "name": "珊瑚宫心海",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "心海",
+        "扣扣米"
+      ]
+    },
+    {
+      "id": 128,
+      "label": "五郎",
+      "name": "五郎",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 129,
+      "label": "九条裟罗",
+      "name": "九条裟罗",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 130,
+      "label": "荒泷一斗（一斗）",
+      "name": "荒泷一斗",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "一斗"
+      ]
+    },
+    {
+      "id": 131,
+      "label": "埃洛伊",
+      "name": "埃洛伊",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 132,
+      "label": "申鹤",
+      "name": "申鹤",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 133,
+      "label": "八重神子（神子）",
+      "name": "八重神子",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "神子"
+      ]
+    },
+    {
+      "id": 134,
+      "label": "神里绫人（绫人）",
+      "name": "神里绫人",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "绫人"
+      ]
+    },
+    {
+      "id": 135,
+      "label": "夜兰",
+      "name": "夜兰",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 136,
+      "label": "久岐忍",
+      "name": "久岐忍",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 137,
+      "label": "鹿野苑平藏",
+      "name": "鹿野苑平藏",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 138,
+      "label": "提纳里",
+      "name": "提纳里",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 139,
+      "label": "柯莱",
+      "name": "柯莱",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 140,
+      "label": "多莉",
+      "name": "多莉",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 141,
+      "label": "云堇",
+      "name": "云堇",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 142,
+      "label": "纳西妲（草神）",
+      "name": "纳西妲",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": [
+        "草神"
+      ]
+    },
+    {
+      "id": 143,
+      "label": "深渊使徒",
+      "name": "深渊使徒",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 144,
+      "label": "妮露",
+      "name": "妮露",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 145,
+      "label": "赛诺",
+      "name": "赛诺",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 146,
+      "label": "债务处理人",
+      "name": "债务处理人",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 147,
+      "label": "坎蒂丝",
+      "name": "坎蒂丝",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 148,
+      "label": "真弓快车",
+      "name": "真弓快车",
+      "game": "umamusume",
+      "language": "ja",
+      "aliases": []
+    },
+    {
+      "id": 149,
+      "label": "秋人",
+      "name": "秋人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 150,
+      "label": "望族",
+      "name": "望族",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 151,
+      "label": "艾尔菲",
+      "name": "艾尔菲",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 152,
+      "label": "艾莉丝",
+      "name": "艾莉丝",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 153,
+      "label": "艾伦",
+      "name": "艾伦",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 154,
+      "label": "阿洛瓦",
+      "name": "阿洛瓦",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 155,
+      "label": "天野",
+      "name": "天野",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 156,
+      "label": "天目十五",
+      "name": "天目十五",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 157,
+      "label": "愚人众-安德烈",
+      "name": "愚人众-安德烈",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 158,
+      "label": "安顺",
+      "name": "安顺",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 159,
+      "label": "安西",
+      "name": "安西",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 160,
+      "label": "葵",
+      "name": "葵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 161,
+      "label": "青木",
+      "name": "青木",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 162,
+      "label": "荒川幸次",
+      "name": "荒川幸次",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 163,
+      "label": "荒谷",
+      "name": "荒谷",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 164,
+      "label": "有泽",
+      "name": "有泽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 165,
+      "label": "浅川",
+      "name": "浅川",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 166,
+      "label": "麻美",
+      "name": "麻美",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 167,
+      "label": "凝光助手",
+      "name": "凝光助手",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 168,
+      "label": "阿托",
+      "name": "阿托",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 169,
+      "label": "竺子",
+      "name": "竺子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 170,
+      "label": "百识",
+      "name": "百识",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 171,
+      "label": "百闻",
+      "name": "百闻",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 172,
+      "label": "百晓",
+      "name": "百晓",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 173,
+      "label": "白术",
+      "name": "白术",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 174,
+      "label": "贝雅特丽奇",
+      "name": "贝雅特丽奇",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 175,
+      "label": "丽塔",
+      "name": "丽塔",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 176,
+      "label": "失落迷迭",
+      "name": "失落迷迭",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 177,
+      "label": "缭乱星棘",
+      "name": "缭乱星棘",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 178,
+      "label": "伊甸",
+      "name": "伊甸",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 179,
+      "label": "伏特加女孩",
+      "name": "伏特加女孩",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 180,
+      "label": "狂热蓝调",
+      "name": "狂热蓝调",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 181,
+      "label": "莉莉娅",
+      "name": "莉莉娅",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 182,
+      "label": "萝莎莉娅",
+      "name": "萝莎莉娅",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 183,
+      "label": "八重樱",
+      "name": "八重樱",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 184,
+      "label": "八重霞",
+      "name": "八重霞",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 185,
+      "label": "卡莲",
+      "name": "卡莲",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 186,
+      "label": "第六夜想曲",
+      "name": "第六夜想曲",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 187,
+      "label": "卡萝尔",
+      "name": "卡萝尔",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 188,
+      "label": "姬子",
+      "name": "姬子",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 189,
+      "label": "极地战刃",
+      "name": "极地战刃",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 190,
+      "label": "布洛妮娅",
+      "name": "布洛妮娅",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 191,
+      "label": "次生银翼",
+      "name": "次生银翼",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 192,
+      "label": "理之律者%26希儿",
+      "name": "理之律者%26希儿",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 193,
+      "label": "理之律者",
+      "name": "理之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 194,
+      "label": "迷城骇兔",
+      "name": "迷城骇兔",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 195,
+      "label": "希儿",
+      "name": "希儿",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 196,
+      "label": "魇夜星渊",
+      "name": "魇夜星渊",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 197,
+      "label": "黑希儿",
+      "name": "黑希儿",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 198,
+      "label": "帕朵菲莉丝",
+      "name": "帕朵菲莉丝",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 199,
+      "label": "不灭星锚",
+      "name": "不灭星锚",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 200,
+      "label": "天元骑英",
+      "name": "天元骑英",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 201,
+      "label": "幽兰黛尔",
+      "name": "幽兰黛尔",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 202,
+      "label": "派蒙bh3",
+      "name": "派蒙bh3",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 203,
+      "label": "爱酱",
+      "name": "爱酱",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 204,
+      "label": "绯玉丸",
+      "name": "绯玉丸",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 205,
+      "label": "德丽莎",
+      "name": "德丽莎",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 206,
+      "label": "月下初拥",
+      "name": "月下初拥",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 207,
+      "label": "朔夜观星",
+      "name": "朔夜观星",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 208,
+      "label": "暮光骑士",
+      "name": "暮光骑士",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 209,
+      "label": "格蕾修",
+      "name": "格蕾修",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 210,
+      "label": "留云借风真君",
+      "name": "留云借风真君",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 211,
+      "label": "梅比乌斯",
+      "name": "梅比乌斯",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 212,
+      "label": "仿犹大",
+      "name": "仿犹大",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 213,
+      "label": "克莱因",
+      "name": "克莱因",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 214,
+      "label": "圣剑幽兰黛尔",
+      "name": "圣剑幽兰黛尔",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 215,
+      "label": "妖精爱莉",
+      "name": "妖精爱莉",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 216,
+      "label": "特斯拉zero",
+      "name": "特斯拉zero",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 217,
+      "label": "苍玄",
+      "name": "苍玄",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 218,
+      "label": "若水",
+      "name": "若水",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 219,
+      "label": "西琳",
+      "name": "西琳",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 220,
+      "label": "戴因斯雷布",
+      "name": "戴因斯雷布",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 221,
+      "label": "贝拉",
+      "name": "贝拉",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 222,
+      "label": "赤鸢",
+      "name": "赤鸢",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 223,
+      "label": "镇魂歌",
+      "name": "镇魂歌",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 224,
+      "label": "渡鸦",
+      "name": "渡鸦",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 225,
+      "label": "人之律者",
+      "name": "人之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 226,
+      "label": "爱莉希雅",
+      "name": "爱莉希雅",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 227,
+      "label": "天穹游侠",
+      "name": "天穹游侠",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 228,
+      "label": "琪亚娜",
+      "name": "琪亚娜",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 229,
+      "label": "空之律者",
+      "name": "空之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 230,
+      "label": "薪炎之律者",
+      "name": "薪炎之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 231,
+      "label": "云墨丹心",
+      "name": "云墨丹心",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 232,
+      "label": "符华",
+      "name": "符华",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 233,
+      "label": "识之律者",
+      "name": "识之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 234,
+      "label": "特瓦林",
+      "name": "特瓦林",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 235,
+      "label": "维尔薇",
+      "name": "维尔薇",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 236,
+      "label": "芽衣",
+      "name": "芽衣",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 237,
+      "label": "雷之律者",
+      "name": "雷之律者",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 238,
+      "label": "断罪影舞",
+      "name": "断罪影舞",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 239,
+      "label": "阿波尼亚",
+      "name": "阿波尼亚",
+      "game": "honkai3",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 240,
+      "label": "榎本",
+      "name": "榎本",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 241,
+      "label": "厄尼斯特",
+      "name": "厄尼斯特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 242,
+      "label": "恶龙",
+      "name": "恶龙",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 243,
+      "label": "范二爷",
+      "name": "范二爷",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 244,
+      "label": "法拉",
+      "name": "法拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 245,
+      "label": "愚人众士兵",
+      "name": "愚人众士兵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 246,
+      "label": "愚人众士兵a",
+      "name": "愚人众士兵a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 247,
+      "label": "愚人众士兵b",
+      "name": "愚人众士兵b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 248,
+      "label": "愚人众士兵c",
+      "name": "愚人众士兵c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 249,
+      "label": "愚人众a",
+      "name": "愚人众a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 250,
+      "label": "愚人众b",
+      "name": "愚人众b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 251,
+      "label": "飞飞",
+      "name": "飞飞",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 252,
+      "label": "菲利克斯",
+      "name": "菲利克斯",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 253,
+      "label": "女性跟随者",
+      "name": "女性跟随者",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 254,
+      "label": "逢岩",
+      "name": "逢岩",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 255,
+      "label": "摆渡人",
+      "name": "摆渡人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 256,
+      "label": "狂躁的男人",
+      "name": "狂躁的男人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 257,
+      "label": "奥兹",
+      "name": "奥兹",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 258,
+      "label": "芙萝拉",
+      "name": "芙萝拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 259,
+      "label": "跟随者",
+      "name": "跟随者",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 260,
+      "label": "蜜汁生物",
+      "name": "蜜汁生物",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 261,
+      "label": "黄麻子",
+      "name": "黄麻子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 262,
+      "label": "渊上",
+      "name": "渊上",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 263,
+      "label": "藤木",
+      "name": "藤木",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 264,
+      "label": "深见",
+      "name": "深见",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 265,
+      "label": "福本",
+      "name": "福本",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 266,
+      "label": "芙蓉",
+      "name": "芙蓉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 267,
+      "label": "古泽",
+      "name": "古泽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 268,
+      "label": "古田",
+      "name": "古田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 269,
+      "label": "古山",
+      "name": "古山",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 270,
+      "label": "古谷昇",
+      "name": "古谷昇",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 271,
+      "label": "傅三儿",
+      "name": "傅三儿",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 272,
+      "label": "高老六",
+      "name": "高老六",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 273,
+      "label": "矿工冒",
+      "name": "矿工冒",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 274,
+      "label": "元太",
+      "name": "元太",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 275,
+      "label": "德安公",
+      "name": "德安公",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 276,
+      "label": "茂才公",
+      "name": "茂才公",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 277,
+      "label": "杰拉德",
+      "name": "杰拉德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 278,
+      "label": "葛罗丽",
+      "name": "葛罗丽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 279,
+      "label": "金忽律",
+      "name": "金忽律",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 280,
+      "label": "公俊",
+      "name": "公俊",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 281,
+      "label": "锅巴",
+      "name": "锅巴",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 282,
+      "label": "歌德",
+      "name": "歌德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 283,
+      "label": "阿豪",
+      "name": "阿豪",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 284,
+      "label": "狗三儿",
+      "name": "狗三儿",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 285,
+      "label": "葛瑞丝",
+      "name": "葛瑞丝",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 286,
+      "label": "若心",
+      "name": "若心",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 287,
+      "label": "阿山婆",
+      "name": "阿山婆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 288,
+      "label": "怪鸟",
+      "name": "怪鸟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 289,
+      "label": "广竹",
+      "name": "广竹",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 290,
+      "label": "观海",
+      "name": "观海",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 291,
+      "label": "关宏",
+      "name": "关宏",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 292,
+      "label": "蜜汁卫兵",
+      "name": "蜜汁卫兵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 293,
+      "label": "守卫1",
+      "name": "守卫1",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 294,
+      "label": "傲慢的守卫",
+      "name": "傲慢的守卫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 295,
+      "label": "害怕的守卫",
+      "name": "害怕的守卫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 296,
+      "label": "贵安",
+      "name": "贵安",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 297,
+      "label": "盖伊",
+      "name": "盖伊",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 298,
+      "label": "阿创",
+      "name": "阿创",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 299,
+      "label": "哈夫丹",
+      "name": "哈夫丹",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 300,
+      "label": "日语阿贝多（野岛健儿）",
+      "name": "阿贝多",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "野岛健儿",
+        "日语阿贝多"
+      ]
+    },
+    {
+      "id": 301,
+      "label": "日语埃洛伊（高垣彩阳）",
+      "name": "埃洛伊",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "高垣彩阳",
+        "日语埃洛伊"
+      ]
+    },
+    {
+      "id": 302,
+      "label": "日语安柏（石见舞菜香）",
+      "name": "安柏",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "石见舞菜香",
+        "日语安柏"
+      ]
+    },
+    {
+      "id": 303,
+      "label": "日语神里绫华（早见沙织）",
+      "name": "神里绫华",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "早见沙织",
+        "日语神里绫华"
+      ]
+    },
+    {
+      "id": 304,
+      "label": "日语神里绫人（石田彰）",
+      "name": "神里绫人",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "石田彰",
+        "日语神里绫人"
+      ]
+    },
+    {
+      "id": 305,
+      "label": "日语白术（游佐浩二）",
+      "name": "白术",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "游佐浩二",
+        "日语白术"
+      ]
+    },
+    {
+      "id": 306,
+      "label": "日语芭芭拉（鬼头明里）",
+      "name": "芭芭拉",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "鬼头明里",
+        "日语芭芭拉"
+      ]
+    },
+    {
+      "id": 307,
+      "label": "日语北斗（小清水亚美）",
+      "name": "北斗",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小清水亚美",
+        "日语北斗"
+      ]
+    },
+    {
+      "id": 308,
+      "label": "日语班尼特（逢坂良太）",
+      "name": "班尼特",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "逢坂良太",
+        "日语班尼特"
+      ]
+    },
+    {
+      "id": 309,
+      "label": "日语坎蒂丝（柚木凉香）",
+      "name": "坎蒂丝",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "柚木凉香",
+        "日语坎蒂丝"
+      ]
+    },
+    {
+      "id": 310,
+      "label": "日语重云（齐藤壮马）",
+      "name": "重云",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "齐藤壮马",
+        "日语重云"
+      ]
+    },
+    {
+      "id": 311,
+      "label": "日语柯莱（前川凉子）",
+      "name": "柯莱",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "前川凉子",
+        "日语柯莱"
+      ]
+    },
+    {
+      "id": 312,
+      "label": "日语赛诺（入野自由）",
+      "name": "赛诺",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "入野自由",
+        "日语赛诺"
+      ]
+    },
+    {
+      "id": 313,
+      "label": "日语戴因斯雷布（津田健次郎）",
+      "name": "戴因斯雷布",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "津田健次郎",
+        "日语戴因斯雷布"
+      ]
+    },
+    {
+      "id": 314,
+      "label": "日语迪卢克（小野贤章）",
+      "name": "迪卢克",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小野贤章",
+        "日语迪卢克"
+      ]
+    },
+    {
+      "id": 315,
+      "label": "日语迪奥娜（井泽诗织）",
+      "name": "迪奥娜",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "井泽诗织",
+        "日语迪奥娜"
+      ]
+    },
+    {
+      "id": 316,
+      "label": "日语多莉（金田朋子）",
+      "name": "多莉",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "金田朋子",
+        "日语多莉"
+      ]
+    },
+    {
+      "id": 317,
+      "label": "日语优菈（佐藤利奈）",
+      "name": "优菈",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "佐藤利奈",
+        "日语优菈"
+      ]
+    },
+    {
+      "id": 318,
+      "label": "日语菲谢尔（内田真礼）",
+      "name": "菲谢尔",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "内田真礼",
+        "日语菲谢尔"
+      ]
+    },
+    {
+      "id": 319,
+      "label": "日语甘雨（上田丽奈）",
+      "name": "甘雨",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "上田丽奈",
+        "日语甘雨"
+      ]
+    },
+    {
+      "id": 320,
+      "label": "日语（畠中祐）",
+      "name": "",
+      "game": "other",
+      "language": "ja",
+      "aliases": [
+        "畠中祐",
+        "日语"
+      ]
+    },
+    {
+      "id": 321,
+      "label": "日语鹿野院平藏（井口祐一）",
+      "name": "鹿野苑平藏",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "鹿野院平藏",
+        "井口祐一",
+        "日语鹿野苑平藏"
+      ]
+    },
+    {
+      "id": 322,
+      "label": "日语空（堀江瞬）",
+      "name": "空",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "堀江瞬",
+        "日语空"
+      ]
+    },
+    {
+      "id": 323,
+      "label": "日语荧（悠木碧）",
+      "name": "荧",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "悠木碧",
+        "日语荧"
+      ]
+    },
+    {
+      "id": 324,
+      "label": "日语胡桃（高桥李依）",
+      "name": "胡桃",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "高桥李依",
+        "日语胡桃"
+      ]
+    },
+    {
+      "id": 325,
+      "label": "日语一斗（西川贵教）",
+      "name": "荒泷一斗",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "一斗",
+        "西川贵教",
+        "日语荒泷一斗"
+      ]
+    },
+    {
+      "id": 326,
+      "label": "日语凯亚（鸟海浩辅）",
+      "name": "凯亚",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "鸟海浩辅",
+        "日语凯亚"
+      ]
+    },
+    {
+      "id": 327,
+      "label": "日语万叶（岛崎信长）",
+      "name": "枫原万叶",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "万叶",
+        "岛崎信长",
+        "日语枫原万叶"
+      ]
+    },
+    {
+      "id": 328,
+      "label": "日语刻晴（喜多村英梨）",
+      "name": "刻晴",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "喜多村英梨",
+        "日语刻晴"
+      ]
+    },
+    {
+      "id": 329,
+      "label": "日语可莉（久野美咲）",
+      "name": "可莉",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "久野美咲",
+        "日语可莉"
+      ]
+    },
+    {
+      "id": 330,
+      "label": "日语心海（三森铃子）",
+      "name": "珊瑚宫心海",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "心海",
+        "三森铃子",
+        "日语珊瑚宫心海"
+      ]
+    },
+    {
+      "id": 331,
+      "label": "日语九条裟罗（濑户麻沙美）",
+      "name": "九条裟罗",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "濑户麻沙美",
+        "日语九条裟罗"
+      ]
+    },
+    {
+      "id": 332,
+      "label": "日语丽莎（田中理惠）",
+      "name": "丽莎",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "田中理惠",
+        "日语丽莎"
+      ]
+    },
+    {
+      "id": 333,
+      "label": "日语莫娜（小原好美）",
+      "name": "莫娜",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小原好美",
+        "日语莫娜"
+      ]
+    },
+    {
+      "id": 334,
+      "label": "日语纳西妲（田村由加莉）",
+      "name": "纳西妲",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "田村由加莉",
+        "日语纳西妲"
+      ]
+    },
+    {
+      "id": 335,
+      "label": "日语妮露（金元寿子）",
+      "name": "妮露",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "金元寿子",
+        "日语妮露"
+      ]
+    },
+    {
+      "id": 336,
+      "label": "日语凝光（大原沙耶香）",
+      "name": "凝光",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "大原沙耶香",
+        "日语凝光"
+      ]
+    },
+    {
+      "id": 337,
+      "label": "日语诺艾尔（高尾奏音）",
+      "name": "诺艾尔",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "高尾奏音",
+        "日语诺艾尔"
+      ]
+    },
+    {
+      "id": 338,
+      "label": "日语奥兹（增谷康纪）",
+      "name": "奥兹",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "增谷康纪",
+        "日语奥兹"
+      ]
+    },
+    {
+      "id": 339,
+      "label": "日语派蒙（古贺葵）",
+      "name": "派蒙",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "古贺葵",
+        "日语派蒙"
+      ]
+    },
+    {
+      "id": 340,
+      "label": "日语琴（斋藤千和）",
+      "name": "琴",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "斋藤千和",
+        "日语琴"
+      ]
+    },
+    {
+      "id": 341,
+      "label": "日语七七（田村由加莉）",
+      "name": "七七",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "田村由加莉",
+        "日语七七"
+      ]
+    },
+    {
+      "id": 342,
+      "label": "日语雷电将军（泽城美雪）",
+      "name": "雷电将军",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "泽城美雪",
+        "日语雷电将军"
+      ]
+    },
+    {
+      "id": 343,
+      "label": "日语雷泽（内山昂辉）",
+      "name": "雷泽",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "内山昂辉",
+        "日语雷泽"
+      ]
+    },
+    {
+      "id": 344,
+      "label": "日语罗莎莉亚（加隈亚衣）",
+      "name": "罗莎莉亚",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "加隈亚衣",
+        "日语罗莎莉亚"
+      ]
+    },
+    {
+      "id": 345,
+      "label": "日语早柚（洲崎绫）",
+      "name": "早柚",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "洲崎绫",
+        "日语早柚"
+      ]
+    },
+    {
+      "id": 346,
+      "label": "日语散兵（柿原彻也）",
+      "name": "散兵",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "柿原彻也",
+        "日语散兵"
+      ]
+    },
+    {
+      "id": 347,
+      "label": "日语申鹤（川澄绫子）",
+      "name": "申鹤",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "川澄绫子",
+        "日语申鹤"
+      ]
+    },
+    {
+      "id": 348,
+      "label": "日语久岐忍（水桥香织）",
+      "name": "久岐忍",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "水桥香织",
+        "日语久岐忍"
+      ]
+    },
+    {
+      "id": 349,
+      "label": "日语女士（庄子裕衣）",
+      "name": "女士",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "庄子裕衣",
+        "日语女士"
+      ]
+    },
+    {
+      "id": 350,
+      "label": "日语砂糖（藤田茜）",
+      "name": "砂糖",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "藤田茜",
+        "日语砂糖"
+      ]
+    },
+    {
+      "id": 351,
+      "label": "日语达达利亚（木村良平）",
+      "name": "达达利亚",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "木村良平",
+        "日语达达利亚"
+      ]
+    },
+    {
+      "id": 352,
+      "label": "日语托马（森田成一）",
+      "name": "托马",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "森田成一",
+        "日语托马"
+      ]
+    },
+    {
+      "id": 353,
+      "label": "日语提纳里（小林沙苗）",
+      "name": "提纳里",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小林沙苗",
+        "日语提纳里"
+      ]
+    },
+    {
+      "id": 354,
+      "label": "日语温迪（村濑步）",
+      "name": "温迪",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "村濑步",
+        "日语温迪"
+      ]
+    },
+    {
+      "id": 355,
+      "label": "日语香菱（小泽亚李）",
+      "name": "香菱",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小泽亚李",
+        "日语香菱"
+      ]
+    },
+    {
+      "id": 356,
+      "label": "日语魈（松冈祯丞）",
+      "name": "魈",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "松冈祯丞",
+        "日语魈"
+      ]
+    },
+    {
+      "id": 357,
+      "label": "日语行秋（皆川纯子）",
+      "name": "行秋",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "皆川纯子",
+        "日语行秋"
+      ]
+    },
+    {
+      "id": 358,
+      "label": "日语辛焱（高桥智秋）",
+      "name": "辛焱",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "高桥智秋",
+        "日语辛焱"
+      ]
+    },
+    {
+      "id": 359,
+      "label": "日语八重神子（佐仓绫音）",
+      "name": "八重神子",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "佐仓绫音",
+        "日语八重神子"
+      ]
+    },
+    {
+      "id": 360,
+      "label": "日语烟绯（花守由美里）",
+      "name": "烟绯",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "花守由美里",
+        "日语烟绯"
+      ]
+    },
+    {
+      "id": 361,
+      "label": "日语夜兰（远藤绫）",
+      "name": "夜兰",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "远藤绫",
+        "日语夜兰"
+      ]
+    },
+    {
+      "id": 362,
+      "label": "日语宵宫（植田佳奈）",
+      "name": "宵宫",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "植田佳奈",
+        "日语宵宫"
+      ]
+    },
+    {
+      "id": 363,
+      "label": "日语云堇（小岩井小鸟）",
+      "name": "云堇",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "小岩井小鸟",
+        "日语云堇"
+      ]
+    },
+    {
+      "id": 364,
+      "label": "日语钟离（前野智昭）",
+      "name": "钟离",
+      "game": "genshin",
+      "language": "ja",
+      "aliases": [
+        "前野智昭",
+        "日语钟离"
+      ]
+    },
+    {
+      "id": 365,
+      "label": "杰克",
+      "name": "杰克",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 366,
+      "label": "阿吉",
+      "name": "阿吉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 367,
+      "label": "江舟",
+      "name": "江舟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 368,
+      "label": "鉴秋",
+      "name": "鉴秋",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 369,
+      "label": "嘉义",
+      "name": "嘉义",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 370,
+      "label": "纪芳",
+      "name": "纪芳",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 371,
+      "label": "景澄",
+      "name": "景澄",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 372,
+      "label": "经纶",
+      "name": "经纶",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 373,
+      "label": "景明",
+      "name": "景明",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 374,
+      "label": "晋优",
+      "name": "晋优",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 375,
+      "label": "阿鸠",
+      "name": "阿鸠",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 376,
+      "label": "酒客",
+      "name": "酒客",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 377,
+      "label": "乔尔",
+      "name": "乔尔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 378,
+      "label": "乔瑟夫",
+      "name": "乔瑟夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 379,
+      "label": "约顿",
+      "name": "约顿",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 380,
+      "label": "乔伊斯",
+      "name": "乔伊斯",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 381,
+      "label": "居安",
+      "name": "居安",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 382,
+      "label": "君君",
+      "name": "君君",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 383,
+      "label": "顺吉",
+      "name": "顺吉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 384,
+      "label": "纯也",
+      "name": "纯也",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 385,
+      "label": "重佐",
+      "name": "重佐",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 386,
+      "label": "大岛纯平",
+      "name": "大岛纯平",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 387,
+      "label": "蒲泽",
+      "name": "蒲泽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 388,
+      "label": "勘解由小路健三郎",
+      "name": "勘解由小路健三郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 389,
+      "label": "枫",
+      "name": "枫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 390,
+      "label": "枫原义庆",
+      "name": "枫原义庆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 391,
+      "label": "荫山",
+      "name": "荫山",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 392,
+      "label": "甲斐田龍馬",
+      "name": "甲斐田龍馬",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 393,
+      "label": "海斗",
+      "name": "海斗",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 394,
+      "label": "惟神晴之介",
+      "name": "惟神晴之介",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 395,
+      "label": "鹿野奈奈",
+      "name": "鹿野奈奈",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 396,
+      "label": "卡琵莉亚",
+      "name": "卡琵莉亚",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 397,
+      "label": "凯瑟琳",
+      "name": "凯瑟琳",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 398,
+      "label": "加藤信悟",
+      "name": "加藤信悟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 399,
+      "label": "加藤洋平",
+      "name": "加藤洋平",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 400,
+      "label": "胜家",
+      "name": "胜家",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 401,
+      "label": "茅葺一庆",
+      "name": "茅葺一庆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 402,
+      "label": "和昭",
+      "name": "和昭",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 403,
+      "label": "一正",
+      "name": "一正",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 404,
+      "label": "一道",
+      "name": "一道",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 405,
+      "label": "桂一",
+      "name": "桂一",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 406,
+      "label": "庆次郎",
+      "name": "庆次郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 407,
+      "label": "阿贤",
+      "name": "阿贤",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 408,
+      "label": "健司",
+      "name": "健司",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 409,
+      "label": "健次郎",
+      "name": "健次郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 410,
+      "label": "健三郎",
+      "name": "健三郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 411,
+      "label": "天理",
+      "name": "天理",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 412,
+      "label": "杀手a",
+      "name": "杀手a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 413,
+      "label": "杀手b",
+      "name": "杀手b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 414,
+      "label": "木南杏奈",
+      "name": "木南杏奈",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 415,
+      "label": "木村",
+      "name": "木村",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 416,
+      "label": "国王",
+      "name": "国王",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 417,
+      "label": "木下",
+      "name": "木下",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 418,
+      "label": "北村",
+      "name": "北村",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 419,
+      "label": "清惠",
+      "name": "清惠",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 420,
+      "label": "清人",
+      "name": "清人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 421,
+      "label": "克列门特",
+      "name": "克列门特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 422,
+      "label": "骑士",
+      "name": "骑士",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 423,
+      "label": "小林",
+      "name": "小林",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 424,
+      "label": "小春",
+      "name": "小春",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 425,
+      "label": "康拉德",
+      "name": "康拉德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 426,
+      "label": "大肉丸",
+      "name": "大肉丸",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 427,
+      "label": "琴美",
+      "name": "琴美",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 428,
+      "label": "宏一",
+      "name": "宏一",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 429,
+      "label": "康介",
+      "name": "康介",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 430,
+      "label": "幸德",
+      "name": "幸德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 431,
+      "label": "高善",
+      "name": "高善",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 432,
+      "label": "梢",
+      "name": "梢",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 433,
+      "label": "克罗索",
+      "name": "克罗索",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 434,
+      "label": "久保",
+      "name": "久保",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 435,
+      "label": "九条镰治",
+      "name": "九条镰治",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 436,
+      "label": "久木田",
+      "name": "久木田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 437,
+      "label": "昆钧",
+      "name": "昆钧",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 438,
+      "label": "菊地君",
+      "name": "菊地君",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 439,
+      "label": "久利须",
+      "name": "久利须",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 440,
+      "label": "黑田",
+      "name": "黑田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 441,
+      "label": "黑泽京之介",
+      "name": "黑泽京之介",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 442,
+      "label": "响太",
+      "name": "响太",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 443,
+      "label": "岚姐",
+      "name": "岚姐",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 444,
+      "label": "兰溪",
+      "name": "兰溪",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 445,
+      "label": "澜阳",
+      "name": "澜阳",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 446,
+      "label": "劳伦斯",
+      "name": "劳伦斯",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 447,
+      "label": "乐明",
+      "name": "乐明",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 448,
+      "label": "莱诺",
+      "name": "莱诺",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 449,
+      "label": "莲",
+      "name": "莲",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 450,
+      "label": "良子",
+      "name": "良子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 451,
+      "label": "李当",
+      "name": "李当",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 452,
+      "label": "李丁",
+      "name": "李丁",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 453,
+      "label": "小乐",
+      "name": "小乐",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 454,
+      "label": "灵",
+      "name": "灵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 455,
+      "label": "小玲",
+      "name": "小玲",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 456,
+      "label": "琳琅a",
+      "name": "琳琅a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 457,
+      "label": "琳琅b",
+      "name": "琳琅b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 458,
+      "label": "小彬",
+      "name": "小彬",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 459,
+      "label": "小德",
+      "name": "小德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 460,
+      "label": "小楽",
+      "name": "小楽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 461,
+      "label": "小龙",
+      "name": "小龙",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 462,
+      "label": "小吴",
+      "name": "小吴",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 463,
+      "label": "小吴的记忆",
+      "name": "小吴的记忆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 464,
+      "label": "理正",
+      "name": "理正",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 465,
+      "label": "阿龙",
+      "name": "阿龙",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 466,
+      "label": "卢卡",
+      "name": "卢卡",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 467,
+      "label": "洛成",
+      "name": "洛成",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 468,
+      "label": "罗巧",
+      "name": "罗巧",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 469,
+      "label": "北风狼",
+      "name": "北风狼",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 470,
+      "label": "卢正",
+      "name": "卢正",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 471,
+      "label": "萍姥姥",
+      "name": "萍姥姥",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 472,
+      "label": "前田",
+      "name": "前田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 473,
+      "label": "真昼",
+      "name": "真昼",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 474,
+      "label": "麻纪",
+      "name": "麻纪",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 475,
+      "label": "真",
+      "name": "真",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 476,
+      "label": "愚人众-马克西姆",
+      "name": "愚人众-马克西姆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 477,
+      "label": "女性a",
+      "name": "女性a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 478,
+      "label": "女性b",
+      "name": "女性b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 479,
+      "label": "女性a的跟随者",
+      "name": "女性a的跟随者",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 480,
+      "label": "阿守",
+      "name": "阿守",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 481,
+      "label": "玛格丽特",
+      "name": "玛格丽特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 482,
+      "label": "真理",
+      "name": "真理",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 483,
+      "label": "玛乔丽",
+      "name": "玛乔丽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 484,
+      "label": "玛文",
+      "name": "玛文",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 485,
+      "label": "正胜",
+      "name": "正胜",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 486,
+      "label": "昌信",
+      "name": "昌信",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 487,
+      "label": "将司",
+      "name": "将司",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 488,
+      "label": "正人",
+      "name": "正人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 489,
+      "label": "路爷",
+      "name": "路爷",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 490,
+      "label": "老章",
+      "name": "老章",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 491,
+      "label": "松田",
+      "name": "松田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 492,
+      "label": "松本",
+      "name": "松本",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 493,
+      "label": "松浦",
+      "name": "松浦",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 494,
+      "label": "松坂",
+      "name": "松坂",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 495,
+      "label": "老孟",
+      "name": "老孟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 496,
+      "label": "孟丹",
+      "name": "孟丹",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 497,
+      "label": "商人随从",
+      "name": "商人随从",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 498,
+      "label": "传令兵",
+      "name": "传令兵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 499,
+      "label": "米歇尔",
+      "name": "米歇尔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 500,
+      "label": "御舆源一郎",
+      "name": "御舆源一郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 501,
+      "label": "御舆源次郎",
+      "name": "御舆源次郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 502,
+      "label": "千岩军教头",
+      "name": "千岩军教头",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 503,
+      "label": "千岩军士兵",
+      "name": "千岩军士兵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 504,
+      "label": "明博",
+      "name": "明博",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 505,
+      "label": "明俊",
+      "name": "明俊",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 506,
+      "label": "美铃",
+      "name": "美铃",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 507,
+      "label": "美和",
+      "name": "美和",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 508,
+      "label": "阿幸",
+      "name": "阿幸",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 509,
+      "label": "削月筑阳真君",
+      "name": "削月筑阳真君",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 510,
+      "label": "钱眼儿",
+      "name": "钱眼儿",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 511,
+      "label": "森彦",
+      "name": "森彦",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 512,
+      "label": "元助",
+      "name": "元助",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 513,
+      "label": "理水叠山真君",
+      "name": "理水叠山真君",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 514,
+      "label": "理水疊山真君",
+      "name": "理水疊山真君",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 515,
+      "label": "朱老板",
+      "name": "朱老板",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 516,
+      "label": "木木",
+      "name": "木木",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 517,
+      "label": "村上",
+      "name": "村上",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 518,
+      "label": "村田",
+      "name": "村田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 519,
+      "label": "永野",
+      "name": "永野",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 520,
+      "label": "长野原龙之介",
+      "name": "长野原龙之介",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 521,
+      "label": "长濑",
+      "name": "长濑",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 522,
+      "label": "中野志乃",
+      "name": "中野志乃",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 523,
+      "label": "菜菜子",
+      "name": "菜菜子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 524,
+      "label": "楠楠",
+      "name": "楠楠",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 525,
+      "label": "成濑",
+      "name": "成濑",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 526,
+      "label": "阿内",
+      "name": "阿内",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 527,
+      "label": "宁禄",
+      "name": "宁禄",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 528,
+      "label": "牛志",
+      "name": "牛志",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 529,
+      "label": "信博",
+      "name": "信博",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 530,
+      "label": "伸夫",
+      "name": "伸夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 531,
+      "label": "野方",
+      "name": "野方",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 532,
+      "label": "诺拉",
+      "name": "诺拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 533,
+      "label": "纪香",
+      "name": "纪香",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 534,
+      "label": "诺曼",
+      "name": "诺曼",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 535,
+      "label": "修女",
+      "name": "修女",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 536,
+      "label": "纯水精灵",
+      "name": "纯水精灵",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 537,
+      "label": "小川",
+      "name": "小川",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 538,
+      "label": "小仓澪",
+      "name": "小仓澪",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 539,
+      "label": "冈林",
+      "name": "冈林",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 540,
+      "label": "冈崎绘里香",
+      "name": "冈崎绘里香",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 541,
+      "label": "冈崎陆斗",
+      "name": "冈崎陆斗",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 542,
+      "label": "奥拉夫",
+      "name": "奥拉夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 543,
+      "label": "老科",
+      "name": "老科",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 544,
+      "label": "鬼婆婆",
+      "name": "鬼婆婆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 545,
+      "label": "小野寺",
+      "name": "小野寺",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 546,
+      "label": "大河原五右卫门",
+      "name": "大河原五右卫门",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 547,
+      "label": "大久保大介",
+      "name": "大久保大介",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 548,
+      "label": "大森",
+      "name": "大森",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 549,
+      "label": "大助",
+      "name": "大助",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 550,
+      "label": "奥特",
+      "name": "奥特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 551,
+      "label": "派蒙",
+      "name": "派蒙",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 552,
+      "label": "派蒙2",
+      "name": "派蒙2",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 553,
+      "label": "病人a",
+      "name": "病人a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 554,
+      "label": "病人b",
+      "name": "病人b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 555,
+      "label": "巴顿",
+      "name": "巴顿",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 556,
+      "label": "派恩",
+      "name": "派恩",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 557,
+      "label": "朋义",
+      "name": "朋义",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 558,
+      "label": "围观群众",
+      "name": "围观群众",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 559,
+      "label": "围观群众a",
+      "name": "围观群众a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 560,
+      "label": "围观群众b",
+      "name": "围观群众b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 561,
+      "label": "围观群众c",
+      "name": "围观群众c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 562,
+      "label": "围观群众d",
+      "name": "围观群众d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 563,
+      "label": "围观群众e",
+      "name": "围观群众e",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 564,
+      "label": "铜雀",
+      "name": "铜雀",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 565,
+      "label": "阿肥",
+      "name": "阿肥",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 566,
+      "label": "兴叔",
+      "name": "兴叔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 567,
+      "label": "老周叔",
+      "name": "老周叔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 568,
+      "label": "公主",
+      "name": "公主",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 569,
+      "label": "彼得",
+      "name": "彼得",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 570,
+      "label": "乾子",
+      "name": "乾子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 571,
+      "label": "芊芊",
+      "name": "芊芊",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 572,
+      "label": "乾玮",
+      "name": "乾玮",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 573,
+      "label": "绮命",
+      "name": "绮命",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 574,
+      "label": "杞平",
+      "name": "杞平",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 575,
+      "label": "秋月",
+      "name": "秋月",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 576,
+      "label": "昆恩",
+      "name": "昆恩",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 577,
+      "label": "雷电影",
+      "name": "雷电影",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 578,
+      "label": "兰道尔",
+      "name": "兰道尔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 579,
+      "label": "雷蒙德",
+      "name": "雷蒙德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 580,
+      "label": "冒失的帕拉德",
+      "name": "冒失的帕拉德",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 581,
+      "label": "伶一",
+      "name": "伶一",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 582,
+      "label": "玲花",
+      "name": "玲花",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 583,
+      "label": "阿仁",
+      "name": "阿仁",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 584,
+      "label": "家臣们",
+      "name": "家臣们",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 585,
+      "label": "梨绘",
+      "name": "梨绘",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 586,
+      "label": "荣江",
+      "name": "荣江",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 587,
+      "label": "戎世",
+      "name": "戎世",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 588,
+      "label": "浪人",
+      "name": "浪人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 589,
+      "label": "罗伊斯",
+      "name": "罗伊斯",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 590,
+      "label": "如意",
+      "name": "如意",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 591,
+      "label": "凉子",
+      "name": "凉子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 592,
+      "label": "彩香",
+      "name": "彩香",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 593,
+      "label": "酒井",
+      "name": "酒井",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 594,
+      "label": "坂本",
+      "name": "坂本",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 595,
+      "label": "朔次郎",
+      "name": "朔次郎",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 596,
+      "label": "武士a",
+      "name": "武士a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 597,
+      "label": "武士b",
+      "name": "武士b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 598,
+      "label": "武士c",
+      "name": "武士c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 599,
+      "label": "武士d",
+      "name": "武士d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 600,
+      "label": "珊瑚",
+      "name": "珊瑚",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 601,
+      "label": "三田",
+      "name": "三田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 602,
+      "label": "莎拉",
+      "name": "莎拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 603,
+      "label": "笹野",
+      "name": "笹野",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 604,
+      "label": "聪美",
+      "name": "聪美",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 605,
+      "label": "聪",
+      "name": "聪",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 606,
+      "label": "小百合",
+      "name": "小百合",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 607,
+      "label": "散兵",
+      "name": "散兵",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 608,
+      "label": "害怕的小刘",
+      "name": "害怕的小刘",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 609,
+      "label": "舒伯特",
+      "name": "舒伯特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 610,
+      "label": "舒茨",
+      "name": "舒茨",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 611,
+      "label": "海龙",
+      "name": "海龙",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 612,
+      "label": "世子",
+      "name": "世子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 613,
+      "label": "谢尔盖",
+      "name": "谢尔盖",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 614,
+      "label": "家丁",
+      "name": "家丁",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 615,
+      "label": "商华",
+      "name": "商华",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 616,
+      "label": "沙寅",
+      "name": "沙寅",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 617,
+      "label": "阿升",
+      "name": "阿升",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 618,
+      "label": "柴田",
+      "name": "柴田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 619,
+      "label": "阿茂",
+      "name": "阿茂",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 620,
+      "label": "式大将",
+      "name": "式大将",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 621,
+      "label": "清水",
+      "name": "清水",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 622,
+      "label": "志村勘兵卫",
+      "name": "志村勘兵卫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 623,
+      "label": "新之丞",
+      "name": "新之丞",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 624,
+      "label": "志织",
+      "name": "志织",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 625,
+      "label": "石头",
+      "name": "石头",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 626,
+      "label": "诗羽",
+      "name": "诗羽",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 627,
+      "label": "诗筠",
+      "name": "诗筠",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 628,
+      "label": "石壮",
+      "name": "石壮",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 629,
+      "label": "翔太",
+      "name": "翔太",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 630,
+      "label": "正二",
+      "name": "正二",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 631,
+      "label": "周平",
+      "name": "周平",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 632,
+      "label": "舒杨",
+      "name": "舒杨",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 633,
+      "label": "齐格芙丽雅",
+      "name": "齐格芙丽雅",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 634,
+      "label": "女士",
+      "name": "女士",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 635,
+      "label": "思勤",
+      "name": "思勤",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 636,
+      "label": "六指乔瑟",
+      "name": "六指乔瑟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 637,
+      "label": "愚人众小兵d",
+      "name": "愚人众小兵d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 638,
+      "label": "愚人众小兵a",
+      "name": "愚人众小兵a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 639,
+      "label": "愚人众小兵b",
+      "name": "愚人众小兵b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 640,
+      "label": "愚人众小兵c",
+      "name": "愚人众小兵c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 641,
+      "label": "吴老五",
+      "name": "吴老五",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 642,
+      "label": "吴老二",
+      "name": "吴老二",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 643,
+      "label": "滑头鬼",
+      "name": "滑头鬼",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 644,
+      "label": "言笑",
+      "name": "言笑",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 645,
+      "label": "吴老七",
+      "name": "吴老七",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 646,
+      "label": "士兵h",
+      "name": "士兵h",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 647,
+      "label": "士兵i",
+      "name": "士兵i",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 648,
+      "label": "士兵a",
+      "name": "士兵a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 649,
+      "label": "士兵b",
+      "name": "士兵b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 650,
+      "label": "士兵c",
+      "name": "士兵c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 651,
+      "label": "士兵d",
+      "name": "士兵d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 652,
+      "label": "士兵e",
+      "name": "士兵e",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 653,
+      "label": "士兵f",
+      "name": "士兵f",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 654,
+      "label": "士兵g",
+      "name": "士兵g",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 655,
+      "label": "奏太",
+      "name": "奏太",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 656,
+      "label": "斯坦利",
+      "name": "斯坦利",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 657,
+      "label": "掇星攫辰天君",
+      "name": "掇星攫辰天君",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 658,
+      "label": "小头",
+      "name": "小头",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 659,
+      "label": "大武",
+      "name": "大武",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 660,
+      "label": "陶义隆",
+      "name": "陶义隆",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 661,
+      "label": "杉本",
+      "name": "杉本",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 662,
+      "label": "苏西",
+      "name": "苏西",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 663,
+      "label": "嫌疑人a",
+      "name": "嫌疑人a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 664,
+      "label": "嫌疑人b",
+      "name": "嫌疑人b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 665,
+      "label": "嫌疑人c",
+      "name": "嫌疑人c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 666,
+      "label": "嫌疑人d",
+      "name": "嫌疑人d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 667,
+      "label": "斯万",
+      "name": "斯万",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 668,
+      "label": "剑客a",
+      "name": "剑客a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 669,
+      "label": "剑客b",
+      "name": "剑客b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 670,
+      "label": "阿二",
+      "name": "阿二",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 671,
+      "label": "忠胜",
+      "name": "忠胜",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 672,
+      "label": "忠夫",
+      "name": "忠夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 673,
+      "label": "阿敬",
+      "name": "阿敬",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 674,
+      "label": "孝利",
+      "name": "孝利",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 675,
+      "label": "鹰司进",
+      "name": "鹰司进",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 676,
+      "label": "高山",
+      "name": "高山",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 677,
+      "label": "九条孝行",
+      "name": "九条孝行",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 678,
+      "label": "毅",
+      "name": "毅",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 679,
+      "label": "竹内",
+      "name": "竹内",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 680,
+      "label": "拓真",
+      "name": "拓真",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 681,
+      "label": "卓也",
+      "name": "卓也",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 682,
+      "label": "太郎丸",
+      "name": "太郎丸",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 683,
+      "label": "泰勒",
+      "name": "泰勒",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 684,
+      "label": "手岛",
+      "name": "手岛",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 685,
+      "label": "哲平",
+      "name": "哲平",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 686,
+      "label": "哲夫",
+      "name": "哲夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 687,
+      "label": "托克",
+      "name": "托克",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 688,
+      "label": "大boss",
+      "name": "大boss",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 689,
+      "label": "阿强",
+      "name": "阿强",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 690,
+      "label": "托尔德拉",
+      "name": "托尔德拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 691,
+      "label": "旁观者",
+      "name": "旁观者",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 692,
+      "label": "天成",
+      "name": "天成",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 693,
+      "label": "阿大",
+      "name": "阿大",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 694,
+      "label": "蒂玛乌斯",
+      "name": "蒂玛乌斯",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 695,
+      "label": "提米",
+      "name": "提米",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 696,
+      "label": "户田",
+      "name": "户田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 697,
+      "label": "阿三",
+      "name": "阿三",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 698,
+      "label": "一起的人",
+      "name": "一起的人",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 699,
+      "label": "德田",
+      "name": "德田",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 700,
+      "label": "德长",
+      "name": "德长",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 701,
+      "label": "智树",
+      "name": "智树",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 702,
+      "label": "利彦",
+      "name": "利彦",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 703,
+      "label": "胖乎乎的旅行者",
+      "name": "胖乎乎的旅行者",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 704,
+      "label": "藏宝人a",
+      "name": "藏宝人a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 705,
+      "label": "藏宝人b",
+      "name": "藏宝人b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 706,
+      "label": "藏宝人c",
+      "name": "藏宝人c",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 707,
+      "label": "藏宝人d",
+      "name": "藏宝人d",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 708,
+      "label": "阿祇",
+      "name": "阿祇",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 709,
+      "label": "恒雄",
+      "name": "恒雄",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 710,
+      "label": "露子",
+      "name": "露子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 711,
+      "label": "话剧团团长",
+      "name": "话剧团团长",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 712,
+      "label": "内村",
+      "name": "内村",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 713,
+      "label": "上野",
+      "name": "上野",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 714,
+      "label": "上杉",
+      "name": "上杉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 715,
+      "label": "老戴",
+      "name": "老戴",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 716,
+      "label": "老高",
+      "name": "老高",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 717,
+      "label": "老贾",
+      "name": "老贾",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 718,
+      "label": "老墨",
+      "name": "老墨",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 719,
+      "label": "老孙",
+      "name": "老孙",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 720,
+      "label": "天枢星",
+      "name": "天枢星",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 721,
+      "label": "老云",
+      "name": "老云",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 722,
+      "label": "有乐斋",
+      "name": "有乐斋",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 723,
+      "label": "丑雄",
+      "name": "丑雄",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 724,
+      "label": "乌维",
+      "name": "乌维",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 725,
+      "label": "瓦京",
+      "name": "瓦京",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 726,
+      "label": "菲尔戈黛特",
+      "name": "菲尔戈黛特",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 727,
+      "label": "维多利亚",
+      "name": "维多利亚",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 728,
+      "label": "薇尔",
+      "name": "薇尔",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 729,
+      "label": "瓦格纳",
+      "name": "瓦格纳",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 730,
+      "label": "阿外",
+      "name": "阿外",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 731,
+      "label": "侍女",
+      "name": "侍女",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 732,
+      "label": "瓦拉",
+      "name": "瓦拉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 733,
+      "label": "望雅",
+      "name": "望雅",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 734,
+      "label": "宛烟",
+      "name": "宛烟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 735,
+      "label": "琬玉",
+      "name": "琬玉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 736,
+      "label": "战士a",
+      "name": "战士a",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 737,
+      "label": "战士b",
+      "name": "战士b",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 738,
+      "label": "渡辺",
+      "name": "渡辺",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 739,
+      "label": "渡部",
+      "name": "渡部",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 740,
+      "label": "阿伟",
+      "name": "阿伟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 741,
+      "label": "文璟",
+      "name": "文璟",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 742,
+      "label": "文渊",
+      "name": "文渊",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 743,
+      "label": "韦尔纳",
+      "name": "韦尔纳",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 744,
+      "label": "王扳手",
+      "name": "王扳手",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 745,
+      "label": "武沛",
+      "name": "武沛",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 746,
+      "label": "晓飞",
+      "name": "晓飞",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 747,
+      "label": "辛程",
+      "name": "辛程",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 748,
+      "label": "星火",
+      "name": "星火",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 749,
+      "label": "星稀",
+      "name": "星稀",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 750,
+      "label": "辛秀",
+      "name": "辛秀",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 751,
+      "label": "秀华",
+      "name": "秀华",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 752,
+      "label": "阿旭",
+      "name": "阿旭",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 753,
+      "label": "徐刘师",
+      "name": "徐刘师",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 754,
+      "label": "矢部",
+      "name": "矢部",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 755,
+      "label": "八木",
+      "name": "八木",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 756,
+      "label": "山上",
+      "name": "山上",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 757,
+      "label": "阿阳",
+      "name": "阿阳",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 758,
+      "label": "颜笑",
+      "name": "颜笑",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 759,
+      "label": "康明",
+      "name": "康明",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 760,
+      "label": "泰久",
+      "name": "泰久",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 761,
+      "label": "安武",
+      "name": "安武",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 762,
+      "label": "矢田幸喜",
+      "name": "矢田幸喜",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 763,
+      "label": "矢田辛喜",
+      "name": "矢田辛喜",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 764,
+      "label": "义坚",
+      "name": "义坚",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 765,
+      "label": "莺儿",
+      "name": "莺儿",
+      "game": "genshin",
+      "language": "zh",
+      "aliases": []
+    },
+    {
+      "id": 766,
+      "label": "盈丰",
+      "name": "盈丰",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 767,
+      "label": "宜年",
+      "name": "宜年",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 768,
+      "label": "银杏",
+      "name": "银杏",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 769,
+      "label": "逸轩",
+      "name": "逸轩",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 770,
+      "label": "横山",
+      "name": "横山",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 771,
+      "label": "永贵",
+      "name": "永贵",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 772,
+      "label": "永业",
+      "name": "永业",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 773,
+      "label": "嘉久",
+      "name": "嘉久",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 774,
+      "label": "吉川",
+      "name": "吉川",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 775,
+      "label": "义高",
+      "name": "义高",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 776,
+      "label": "用高",
+      "name": "用高",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 777,
+      "label": "阳太",
+      "name": "阳太",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 778,
+      "label": "元蓉",
+      "name": "元蓉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 779,
+      "label": "玥辉",
+      "name": "玥辉",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 780,
+      "label": "毓华",
+      "name": "毓华",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 781,
+      "label": "有香",
+      "name": "有香",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 782,
+      "label": "幸也",
+      "name": "幸也",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 783,
+      "label": "由真",
+      "name": "由真",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 784,
+      "label": "结菜",
+      "name": "结菜",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 785,
+      "label": "韵宁",
+      "name": "韵宁",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 786,
+      "label": "百合",
+      "name": "百合",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 787,
+      "label": "百合华",
+      "name": "百合华",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 788,
+      "label": "尤苏波夫",
+      "name": "尤苏波夫",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 789,
+      "label": "裕子",
+      "name": "裕子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 790,
+      "label": "悠策",
+      "name": "悠策",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 791,
+      "label": "悠也",
+      "name": "悠也",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 792,
+      "label": "于嫣",
+      "name": "于嫣",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 793,
+      "label": "柚子",
+      "name": "柚子",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 794,
+      "label": "老郑",
+      "name": "老郑",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 795,
+      "label": "正茂",
+      "name": "正茂",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 796,
+      "label": "志成",
+      "name": "志成",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 797,
+      "label": "芷巧",
+      "name": "芷巧",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 798,
+      "label": "知易",
+      "name": "知易",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 799,
+      "label": "支支",
+      "name": "支支",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 800,
+      "label": "周良",
+      "name": "周良",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 801,
+      "label": "珠函",
+      "name": "珠函",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 802,
+      "label": "祝明",
+      "name": "祝明",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    },
+    {
+      "id": 803,
+      "label": "祝涛",
+      "name": "祝涛",
+      "game": "other",
+      "language": "unknown",
+      "aliases": []
+    }
+  ]
+}

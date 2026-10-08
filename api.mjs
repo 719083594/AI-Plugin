@@ -4,3 +4,4 @@ export { defaults, readConfig, validateConfig, mask } from './src/core/config.mj
 export { startManagement } from './src/management/server.mjs'
 export { createNativeCardRenderer, NativeCardRenderError, getNativeRenderStatus } from './src/rendering/index.mjs'
 export { buildStaticHelpCards, createStaticHelpReader, hashStaticHelpSource } from './src/rendering/index.mjs'
+export { SpeechService, listVoices, resolveVoice, normalizeGame, VOICE_GAMES } from './src/speech/index.mjs'

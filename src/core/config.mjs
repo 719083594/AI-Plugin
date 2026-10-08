@@ -12,6 +12,7 @@ export const defaults = {
   memory: { userEnabled: false, groupEnabled: false, maxItems: 5, autoExtract: false, knowledgeEnabled: false, knowledgeLimit: 3, commandKnowledgeEnabled: true },
   tools: { searchEnabled: true, searchEndpoint: '', searchToken: '', searchModule: '', searchConfigFile: '', searchTimeoutMs: 26000, maxSearchResults: 5, customDirectory: './data/tools', skillsDirectory: './data/skills' },
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
+  speech: { enabled: false, endpoint: '', token: '', defaultVoice: '纳西妲（草神）', language: 'zh', timeoutMs: 45000, maxCharacters: 500, maxAudioBytes: 10485760, noiseScale: 0.6, noiseScaleW: 0.668, lengthScale: 1.2 },
   security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },
   management: { enabled: true, host: '127.0.0.1', port: 48371, publicUrl: 'http://127.0.0.1:48371', apiToken: '', ticketSeconds: 180, sessionSeconds: 3600, webChatEnabled: true },
   retention: { historyDays: 30, proactiveHistoryDays: 30, logLimit: 5000, cleanupIntervalHours: 1, backupCount: 5, dailyCleanupEnabled: true, dailyCleanupTime: '03:30', dailyCleanupTimezone: 'Asia/Shanghai' },
@@ -36,6 +37,19 @@ export function validateConfig(config) {
   int(config.chat.maxToolRounds, 0, 12, '工具轮数')
   int(config.group.contextLength, 0, 100, '群上下文条数')
   int(config.security.maxRequestsPerWindow, 1, 10000, '频率限制')
+  if (typeof config.speech.enabled !== 'boolean') throw new Error('语音开关无效')
+  if (typeof config.speech.endpoint !== 'string' || typeof config.speech.token !== 'string' || config.speech.token.length > 4096) throw new Error('语音服务配置无效')
+  if (config.speech.endpoint) {
+    let url
+    try { url = new URL(config.speech.endpoint) } catch { throw new Error('语音服务地址无效') }
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error('语音服务地址须使用不含凭证、参数的 HTTPS 地址')
+  }
+  if (!['zh', 'ja', 'mix'].includes(config.speech.language)) throw new Error('语音语言无效')
+  if (typeof config.speech.defaultVoice !== 'string' || !config.speech.defaultVoice.trim() || config.speech.defaultVoice.length > 128) throw new Error('默认音色无效')
+  int(config.speech.timeoutMs, 1000, 120000, '语音请求等待上限')
+  int(config.speech.maxCharacters, 1, 500, '语音字数上限')
+  int(config.speech.maxAudioBytes, 65536, 20971520, '语音文件上限')
+  for (const key of ['noiseScale', 'noiseScaleW', 'lengthScale']) if (!Number.isFinite(config.speech[key]) || config.speech[key] < 0.1 || config.speech[key] > (key === 'lengthScale' ? 2 : 1)) throw new Error('语音合成参数超出允许范围')
   if (typeof config.retention.dailyCleanupEnabled !== 'boolean') throw new Error('每日聊天清理开关无效')
   if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(config.retention.dailyCleanupTime)) throw new Error('每日聊天清理时间必须为HH:mm格式')
   try { new Intl.DateTimeFormat('en', { timeZone: config.retention.dailyCleanupTimezone }).format() } catch { throw new Error('每日聊天清理时区无效') }

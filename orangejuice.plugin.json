@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -11,6 +11,14 @@
     "#AI预设列表",
     "#AI切换预设 名称",
     "#AI结束对话",
+    "#AI语音模式",
+    "#AI文字模式",
+    "#AI语音状态",
+    "#AI转语音 文字",
+    "#AI音色列表 [游戏] [页码]",
+    "#AI语音 纳西妲",
+    "#AI语音游戏 原神",
+    "#AI语音帮助",
     "#AI登录"
   ],
   "managementPanel": "ai-plugin",
@@ -432,6 +440,100 @@
           "description": "0 永久；运行时图片缓存参数，修改后重启。"
         },
         {
+          "path": "speech",
+          "label": "语音合成与回复",
+          "type": "object"
+        },
+        {
+          "path": "speech.enabled",
+          "label": "启用外部语音合成",
+          "type": "boolean",
+          "description": "默认关闭，回复方式初始为文字；机器人共用模式、音色与游戏分类，有 AI 使用权限的用户均可切换，各会话上下文保留。"
+        },
+        {
+          "path": "speech.endpoint",
+          "label": "VITS 语音服务地址",
+          "type": "string",
+          "description": "填写兼容 Gradio VITS 服务的 HTTPS 根地址，可带代理路径前缀；不填写 /api/generate/ 路由。合成文字会发送到该服务。"
+        },
+        {
+          "path": "speech.token",
+          "label": "语音服务认证密钥",
+          "type": "string",
+          "secret": true,
+          "description": "可选 Bearer 密钥，只发送到所配服务；保持圆点保留原密钥。公网服务需自行配置认证和频率限制。"
+        },
+        {
+          "path": "speech.defaultVoice",
+          "label": "默认语音音色",
+          "type": "string",
+          "description": "默认纳西妲（草神）；支持实际服务目录中的名称和别名。"
+        },
+        {
+          "path": "speech.language",
+          "label": "默认合成语言",
+          "type": "string",
+          "enum": [
+            "zh",
+            "ja",
+            "mix"
+          ],
+          "enumLabels": {
+            "zh": "中文",
+            "ja": "日语",
+            "mix": "中日混合"
+          },
+          "description": "中日混合文本按服务要求用 [ZH] 和 [JA] 标注。"
+        },
+        {
+          "path": "speech.timeoutMs",
+          "label": "语音合成总等待上限（毫秒）",
+          "type": "integer",
+          "min": 1000,
+          "max": 120000,
+          "description": "默认45000；包括等待合成和下载音频。"
+        },
+        {
+          "path": "speech.maxCharacters",
+          "label": "单次最多合成字符数",
+          "type": "integer",
+          "min": 1,
+          "max": 500,
+          "description": "默认500；超出后明确提示，不自动截断正文。"
+        },
+        {
+          "path": "speech.maxAudioBytes",
+          "label": "语音文件最大字节数",
+          "type": "integer",
+          "min": 65536,
+          "max": 20971520,
+          "description": "默认10485760，即10 MiB。"
+        },
+        {
+          "path": "speech.noiseScale",
+          "label": "语音情感变化程度",
+          "type": "number",
+          "min": 0.1,
+          "max": 1,
+          "description": "VITS noise_scale，默认0.6。"
+        },
+        {
+          "path": "speech.noiseScaleW",
+          "label": "语音音素长度变化",
+          "type": "number",
+          "min": 0.1,
+          "max": 1,
+          "description": "VITS noise_scale_w，默认0.668。"
+        },
+        {
+          "path": "speech.lengthScale",
+          "label": "语音语速参数",
+          "type": "number",
+          "min": 0.1,
+          "max": 2,
+          "description": "VITS length_scale，默认1.2；数值越大通常越慢。"
+        },
+        {
           "path": "security",
           "label": "使用权限与内容过滤",
           "type": "object"
@@ -775,7 +877,10 @@
             "default",
             "natural"
           ],
-          "enumLabels": {"default":"沿用角色提示词","natural":"自然朋友聊天"},
+          "enumLabels": {
+            "default": "沿用角色提示词",
+            "natural": "自然朋友聊天"
+          },
           "description": "default 沿用角色提示词；natural 自然朋友聊天，减少客服开场和固定追问；留空沿用原提示词。"
         },
         {
@@ -788,7 +893,12 @@
             "balanced",
             "detailed"
           ],
-          "enumLabels": {"auto":"沿用提示词","brief":"简短","balanced":"适度展开","detailed":"充分展开"},
+          "enumLabels": {
+            "auto": "沿用提示词",
+            "brief": "简短",
+            "balanced": "适度展开",
+            "detailed": "充分展开"
+          },
           "description": "auto 沿用提示词；brief 简短；balanced 适度展开；detailed 充分展开。招呼和主动群聊仍简短，最大 Token 是输出硬上限。"
         },
         {
@@ -883,6 +993,116 @@
           "description": "如 [\"TEXT\"] 或支持生图模型的 [\"TEXT\",\"IMAGE\"]。生成与编辑效果必须由对应模型提供，不能仅靠设置得到能力。"
         }
       ]
+    }
+  ],
+  "commandTable": [
+    {
+      "title": "普通聊天",
+      "command": "私聊提问 / 群内 @机器人 提问",
+      "description": "按当前角色回复，可使用视觉与已配置工具。"
+    },
+    {
+      "title": "使用帮助",
+      "command": "#AI帮助",
+      "description": "显示聊天与管理指令。"
+    },
+    {
+      "title": "角色列表",
+      "command": "#AI预设列表 / #AI角色列表",
+      "description": "查看已启用的预设。"
+    },
+    {
+      "title": "切换角色",
+      "command": "#AI切换预设 名称 / #AI切换角色 名称",
+      "description": "切换并新建会话；历史保留，普通用户受切换权限控制。"
+    },
+    {
+      "title": "当前角色",
+      "command": "#AI当前预设 / #AI当前角色",
+      "description": "查看正在使用的角色。"
+    },
+    {
+      "title": "结束对话",
+      "command": "#AI结束对话 / #AI重置会话",
+      "description": "开始新会话并保留历史。"
+    },
+    {
+      "title": "个人记忆",
+      "command": "#AI记忆 列表 / #AI记忆 添加 内容 / #AI记忆 删除 ID",
+      "description": "管理自己的记忆；启用长期记忆后参与回答。"
+    },
+    {
+      "title": "语音回复模式",
+      "command": "#AI语音模式 / #AI切换语音",
+      "description": "将机器人共用的回复方式切换为语音，影响后续 AI 回答，保留各会话上下文；须已配置语音服务。",
+      "permission": "all"
+    },
+    {
+      "title": "文字回复模式",
+      "command": "#AI文字模式 / #AI切换文字",
+      "description": "将机器人共用的回复方式恢复为文字，影响后续 AI 回答，保留各会话上下文。",
+      "permission": "all"
+    },
+    {
+      "title": "语音状态",
+      "command": "#AI语音状态",
+      "description": "查看机器人共用的回复方式、音色和语音服务状态。",
+      "permission": "all"
+    },
+    {
+      "title": "文字转语音",
+      "command": "#AI转语音 文字 / #AI文字转语音 文字",
+      "description": "直接朗读指定文字，不改变当前回复方式，不额外请求聊天模型。",
+      "permission": "all"
+    },
+    {
+      "title": "语音音色列表",
+      "command": "#AI音色列表 [游戏] [页码] / #AI语音列表 [游戏] [页码]",
+      "description": "按游戏分页查看语音服务提供的音色和别名。",
+      "permission": "all"
+    },
+    {
+      "title": "选择语音音色",
+      "command": "#AI语音 纳西妲 / #AI语音纳西妲 / #AI音色 纳西妲",
+      "description": "按名称或别名切换机器人共用的音色并开启语音回复，有 AI 使用权限的用户均可切换。",
+      "permission": "all"
+    },
+    {
+      "title": "语音游戏分类",
+      "command": "#AI语音游戏 原神",
+      "description": "选择机器人共用的音色列表游戏分类，不改变当前音色或回复方式。",
+      "permission": "all"
+    },
+    {
+      "title": "语音帮助",
+      "command": "#AI语音帮助 / #AI语音",
+      "description": "查看语音回复、音色和文字转语音指令。",
+      "permission": "all"
+    },
+    {
+      "title": "AI 工作台",
+      "command": "#AI登录 / #AI后台",
+      "description": "仅主人私聊，一次性登录管理入口。"
+    },
+    {
+      "title": "运行状态",
+      "command": "#AI状态",
+      "description": "仅主人；渠道、角色、工具、历史和排队统计。"
+    },
+    {
+      "title": "备份与清理",
+      "command": "#AI备份 / #AI清理",
+      "description": "仅主人；按保留策略清理旧数据或创建备份。"
+    },
+    {
+      "title": "主动接话",
+      "command": "#AI主动接话 开 / #AI主动接话 关",
+      "description": "仅主人；控制群内主动发言。"
+    },
+    {
+      "title": "结束全部对话",
+      "command": "#AI结束全部对话",
+      "description": "仅主人；中止请求并重置会话，历史保留。"
     }
   ]
 }

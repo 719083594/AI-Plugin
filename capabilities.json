@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.8",
+  "version": "1.1.0",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
@@ -580,7 +580,7 @@
       "name": "QQ 内管理命令",
       "title": "QQ 内管理命令",
       "status": "implemented",
-      "description": "支持角色、会话、个人记忆、主人登录、状态、备份、清理及主动接话开关命令。依赖显式启用云崽适配。",
+      "description": "支持角色、会话、个人记忆、回复方式、音色选择、文字转语音、主人登录、状态、备份、清理及主动接话开关命令。依赖显式启用云崽适配。",
       "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
       "configPaths": []
     },
@@ -668,9 +668,15 @@
       "name": "语音识别、语音回复与语音对话",
       "title": "语音识别、语音回复与语音对话",
       "status": "planned",
-      "description": "语音识别、TTS 和完整语音会话尚未实现；协议层遇到不支持的音频会明确拒绝。",
-      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
-      "configPaths": []
+      "description": "已接入外部 VITS 语音回复和文字转语音；机器人共用回复方式、音色和游戏分类，有 AI 使用权限的用户均可切换，各会话上下文保留。按游戏查看音色与别名，默认文字，须配置语音服务。用户语音转文字（ASR）和完整实时语音对话尚未实现。",
+      "reason": "语音回复和文字转语音已实现；语音识别和完整实时语音对话仍待完整实现。",
+      "configPaths": [
+        "speech.enabled",
+        "speech.endpoint",
+        "speech.token",
+        "speech.defaultVoice",
+        "speech.language"
+      ]
     },
     {
       "id": "K2",

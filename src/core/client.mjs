@@ -13,11 +13,12 @@ import { ImageStore } from '../media/index.mjs'
 import { selectVision, checkImageScope, storedImage, imageNote, visionError } from './vision.mjs'
 import { buildPersonaPrompt, buildPersonaIdentity, buildPersonaContinuity, needsPersonaRepair, stripServiceTail } from './persona.mjs'
 import { checkDailyCleanup } from './daily-cleanup.mjs'
+import { SpeechService, resolveVoice, normalizeGame } from '../speech/index.mjs'
 
 export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning|answer)>/gi, '').trim()
 export function redactError(error, config) {
   let text = String(error?.message || error)
-  for (const secret of [...config.channels.map(channel => channel.apiKey), config.tools.searchToken, config.management.apiToken]) if (secret && String(secret).length > 5) text = text.split(secret).join('[已隐藏]')
+  for (const secret of [...config.channels.map(channel => channel.apiKey), config.tools.searchToken, config.management.apiToken, config.speech?.token]) if (secret && String(secret).length > 5) text = text.split(secret).join('[已隐藏]')
   return text.replace(/Bearer\s+[\w.-]+/gi, 'Bearer [已隐藏]').slice(0, 400)
 }
 async function abortable(operation, signal) {
@@ -58,7 +59,7 @@ const sourcesFrom = value => {
   return Array.isArray(raw) ? raw.filter(row => row && /^https?:\/\//i.test(row.url || row.link || '')).slice(0, 8).map(row => ({ title: String(row.title || '来源').slice(0, 200), url: row.url || row.link })) : []
 }
 export class AIClient {
-  constructor({ root = pluginRoot, configFile, config, storage, provider = complete, search, host = {}, imageStore, tools } = {}) {
+  constructor({ root = pluginRoot, configFile, config, storage, provider = complete, search, host = {}, imageStore, tools, speechService } = {}) {
     this.root = root; this.configFile = configFile || path.join(root, 'config/local.json'); this.configProvider = config || (() => readConfig(this.configFile))
     this.storage = storage || new Storage(path.join(root, 'data/ai.db')); this.provider = provider; this.host = host; this.searchCallback = search
     this.images = imageStore || new ImageStore({ directory: path.join(root, 'data/images'), maxBytes: this.config().media.maxImageBytes, ttlMs: this.config().media.imageRetentionHours * 3600000 })
@@ -66,8 +67,9 @@ export class AIClient {
     this.tools = tools || new ToolRegistry()
     const builtin = createBuiltinTools({ search: search || (args => this.search(args)), imageStore: this.images, vision: args => this.vision(args), readPages: host.readSearchPages })
     for (const tool of builtin) this.tools.register(tool)
-    this.startedAt = Date.now(); this.maintenanceTimer = null
+    this.startedAt = Date.now(); this.maintenanceTimer = null; this.speechControllers = new Set()
     this.commandKnowledge = new CommandKnowledge(this)
+    this.speech = speechService || new SpeechService({ config: () => this.config().speech || { enabled: false } })
   }
   config() { return this.configProvider() }
   searchConfigured(config = this.config()) {
@@ -78,6 +80,70 @@ export class AIClient {
   }
   userKey(input) { return input.botId ? `${input.botId}:${input.userId}` : String(input.userId) }
   groupKey(input) { return input.botId ? `${input.botId}:${input.groupId}` : String(input.groupId) }
+  speechConfigured(config = this.config()) { return Boolean(config.speech?.enabled && config.speech.endpoint) }
+  speechVersion() { return this.storage.maintenance('speech-settings')?.revision || 0 }
+  speechSettings() {
+    const saved = this.storage.maintenance('speech-settings') || {}, config = this.config().speech || {}
+    return { mode: saved.mode === 'voice' ? 'voice' : 'text', voice: saved.voice || config.defaultVoice || '纳西妲（草神）', game: saved.game || 'genshin', language: saved.language || config.language || 'zh' }
+  }
+  checkSpeechAccess(input) {
+    const config = this.config()
+    if (!config.basic.enabled) throw new Error('AI 插件已停用')
+    if (!accessAllowed(config, input)) throw new Error('你没有使用 AI 的权限')
+    if (input.groupId ? !config.chat.groupEnabled : !config.chat.privateEnabled) throw new Error(input.groupId ? '群聊 AI 已关闭' : '私聊 AI 已关闭')
+  }
+  setSpeechSettings(input, patch) {
+    this.checkSpeechAccess(input)
+    if (!patch || typeof patch !== 'object' || Object.keys(patch).some(key => !['mode', 'voice', 'game', 'language'].includes(key))) throw new Error('语音设置无效')
+    const next = { ...this.speechSettings(input), ...patch }
+    if (!['text', 'voice'].includes(next.mode) || !['zh', 'ja', 'mix'].includes(next.language)) throw new Error('语音模式或语言无效')
+    const game = normalizeGame(next.game)
+    if (!game) throw new Error('请选择原神、崩坏3、赛马娘或其他音色目录')
+    next.game = game
+    if (patch.voice !== undefined) {
+      const voice = resolveVoice(patch.voice, { language: next.language })
+      if (!voice) throw new Error('没有找到唯一的音色，请发送 #AI音色列表 查询完整名称')
+      next.voice = voice.label
+    }
+    if (next.mode === 'voice' && !this.speechConfigured()) throw new Error('语音服务尚未配置，请联系机器人主人')
+    for (const controller of this.speechControllers) controller.abort(new Error('语音设置已变更，本次返回文字'))
+    this.storage.setMaintenance('speech-settings', { ...next, revision: this.speechVersion() + 1 })
+    return next
+  }
+  async synthesizeSpeech(text, preferences, signal) {
+    const controller = new AbortController(), combined = AbortSignal.any([controller.signal, AbortSignal.timeout(this.config().speech?.timeoutMs || 45000), ...(signal ? [signal] : [])])
+    const revision = this.speechVersion()
+    this.speechControllers.add(controller)
+    try {
+      const audio = await abortable(() => this.speech.synthesize(text, { voice: preferences.voice, language: preferences.language, signal: combined }), combined)
+      combined.throwIfAborted()
+      if (revision !== this.speechVersion()) throw new Error('语音设置已变更，本次返回文字')
+      return audio
+    } finally { this.speechControllers.delete(controller) }
+  }
+  async speak(input, text, { signal: externalSignal } = {}) {
+    this.checkSpeechAccess(input)
+    const config = this.config()
+    if (!this.speechConfigured(config)) throw new Error('语音服务尚未配置，请联系机器人主人')
+    if (!this.rateAllowed(input)) throw new Error('请求过于频繁，请稍后再试')
+    text = cleanText(text)
+    if (config.security.inputBlockedWords.some(word => word && text.includes(word))) throw new Error('消息包含已屏蔽内容')
+    const key = this.userKey(input), state = this.storage.state(key), preferences = this.speechSettings(input), speechRevision = this.speechVersion(), controller = new AbortController()
+    const signal = externalSignal ? AbortSignal.any([externalSignal, controller.signal]) : controller.signal
+    const controllers = this.inflight.get(key) || new Set(); controllers.add(controller); this.inflight.set(key, controllers)
+    try {
+      const audio = await this.synthesizeSpeech(text, preferences, signal)
+      signal.throwIfAborted()
+      if (speechRevision !== this.speechVersion()) throw new Error('语音设置已变更，请重新发送转语音指令')
+      if ((this.storage.state(key).revision || 0) !== (state.revision || 0)) throw new Error('语音设置或会话已变更')
+      this.storage.log({ kind: 'speech', userId: String(input.userId), voice: preferences.voice, success: true })
+      return { text, contents: [audio], sources: [], speechMode: 'voice' }
+    } catch (error) {
+      const message = redactError(signal.aborted ? signal.reason || error : error, config)
+      this.storage.log({ kind: 'speech', userId: String(input.userId), success: false, error: message })
+      throw new Error(message)
+    } finally { controllers.delete(controller); if (!controllers.size && this.inflight.get(key) === controllers) this.inflight.delete(key) }
+  }
   preset(input) {
     const config = this.config(); const state = this.storage.state(this.userKey(input))
     const id = input.presetId || state.settings.preset || config.basic.defaultPresetId
@@ -352,9 +418,28 @@ export class AIClient {
         const latest = this.storage.state(key)
         if (!input.transient && (latest.revision || 0) !== revision) throw new Error('角色或会话已变更')
         const result = { text, contents, usage, model, presetId: preset.id, usedTools, sources: searchSources, ...(searchAnalysis ? {searchAnalysis} : {}) }
+        const speech = this.speechSettings(input), speechRevision = this.speechVersion()
+        if (!input.proactive && !input.transient && speech.mode === 'voice') {
+          // Give TTS its own bounded timeout, leaving time to send the text fallback.
+          deadline(Date.now() - startedAt + (config.speech?.timeoutMs || 45000) + 3000)
+          try {
+            const audio = await this.synthesizeSpeech(text, speech, signal)
+            signal.throwIfAborted(); result.contents.push(audio); result.speechMode = 'voice'
+          } catch (error) {
+            signal.throwIfAborted()
+            result.speechError = redactError(error, config)
+            this.storage.log({ kind: 'speech', userId: String(input.userId), success: false, error: result.speechError })
+          }
+        }
+        const beforeSend = this.storage.state(key)
+        if (result.speechMode === 'voice' && speechRevision !== this.speechVersion()) {
+          result.contents = result.contents.filter(row => row.type !== 'audio'); delete result.speechMode
+          result.speechError = '语音设置已变更，本次返回文字'
+        }
+        if (!input.transient && (beforeSend.revision || 0) !== revision) throw new Error('角色、会话或语音设置已变更')
         if (send) { const receipt = await abortable(() => send(result), signal); if (receipt === false || receipt?.discarded || receipt?.error || receipt?.delivered === false || receipt?.status === 'failed' || (receipt?.retcode !== undefined && receipt.retcode !== 0)) throw new Error('回复未成功发送') }
         signal.throwIfAborted()
-        const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning') }; persisted.push(assistant)
+        const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning' && row.type !== 'audio') }; persisted.push(assistant)
         if (!input.proactive && !input.transient && !this.storage.commitTurn({ userId: key, revision, conversationId: state.current.conversationId, parentId: state.current.messageId, messages: persisted })) throw new Error('会话已变更，未保存过期回答')
         if (input.proactive) for (const message of persisted) this.storage.db.prepare('INSERT INTO history VALUES(?,?,?,?,?,?)').run(randomUUID(), null, 'bym:' + String(input.groupId) + ':' + randomUUID(), message.role, JSON.stringify(message), new Date().toISOString())
         this.storage.log({ kind: 'chat', model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, ...(searchAnalysis ? {searchAnalysis} : {}), success: true })
@@ -375,6 +460,6 @@ export class AIClient {
     const daily = () => { try { checkDailyCleanup(this) } catch (error) { this.host.log?.('每日聊天清理失败：' + error.message) } }
     daily(); this.dailyCleanupTimer = setInterval(daily, 30000); this.dailyCleanupTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.0.9', ready: true, searchConfigured: this.searchConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
-  close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); this.storage.close() }
+  health() { return { name: 'AI-Plugin', version: '1.1.0', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); for (const controller of this.speechControllers) controller.abort(); this.speech.close?.(); this.storage.close() }
 }

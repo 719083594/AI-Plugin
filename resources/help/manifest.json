@@ -6,9 +6,9 @@
     "ai-public": [
       {
         "file": "resources/help/ai-public-1.jpg",
-        "sha256": "704e54b2b97c0f912ea9015f297a9f71e25d9d1f0d6328574c2fa8bdf06e5b5c",
+        "sha256": "65b4c863c45438893a50994c5953857427104a384c723b72fefd29595f0aa05e",
         "width": 1080,
-        "height": 931
+        "height": 1422
       }
     ],
     "ai-master": [
@@ -23,7 +23,7 @@
   "sources": [
     {
       "file": "src/rendering/help-content.mjs",
-      "sha256": "bf4c13cc7ae0bbd70fd1152e2c69998f08321d95987d92a7f255a44fdfca6e2f"
+      "sha256": "513ffb7fdc24f197b3be2afb4b8b456defbaf30a0e2d2558d7f7d3149c8c3b7e"
     }
   ]
 }

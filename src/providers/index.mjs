@@ -12,7 +12,7 @@ export const providerCapabilities = Object.freeze({
   openai: { chat: true, vision: true, tools: true, streaming: true, nativeImageGeneration: false },
   gemini: { chat: true, vision: true, tools: true, streaming: true, nativeImageGeneration: 'model-dependent' },
   claude: { chat: true, vision: true, tools: true, streaming: true, nativeImageGeneration: false },
-  planned: ['responses-api', 'speech-to-text', 'text-to-speech', 'video', 'mcp', 'workflow']
+  planned: ['responses-api', 'speech-to-text', 'video', 'mcp', 'workflow']
 });
 
 /** One model request only. The caller owns history, retries, and tool execution. */

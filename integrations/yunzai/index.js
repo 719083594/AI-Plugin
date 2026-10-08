@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { getCommandCatalog } from './command-knowledge.mjs'
+import { handleVoiceCommand, VOICE_HELP } from './voice-commands.mjs'
 import { AIClient } from '../../src/core/client.mjs'
 import { startManagement } from '../../src/management/server.mjs'
 import { pluginRoot } from '../../src/core/config.mjs'
@@ -71,20 +72,45 @@ async function enrich(e, input) {
   input.getAvatar = qq => `https://q1.qlogo.cn/g?b=qq&nk=${encodeURIComponent(qq)}&s=640`
   return input
 }
+const sendFailed = receipt => receipt === false || receipt?.error || receipt?.discarded || receipt?.delivered === false || receipt?.status === 'failed' || (receipt?.retcode !== undefined && Number(receipt.retcode) !== 0)
+const sourceText = result => (result.sources || []).filter(row => /^https?:\/\//i.test(row.url || '')).map((row, index) => `${index + 1}. ${row.title || '来源'}\n${row.url}`).join('\n')
 export async function sendResult(e, result, proactive = false) {
-  const parts = []
-  for (const part of result.contents) {
-    if (part.type === 'text' && part.text) parts.push(part.text)
+  const parts = [], audioFiles = []
+  const audio = (result.contents || []).filter(part => part.type === 'audio' && typeof part.data === 'string' && part.data.length)
+  const voice = result.speechMode === 'voice' && audio.length > 0 && !result.speechError
+  for (const part of result.contents || []) {
+    if (part.type === 'text' && part.text && (!voice || part.keepInVoice)) parts.push(part.text)
     if (part.type === 'reasoning' && part.text) parts.push('模型返回的思考内容：\n' + part.text)
     if (part.type === 'image') {
       const image = part.data ? 'base64://' + part.data : part.url
       if (image) parts.push(globalThis.segment?.image ? globalThis.segment.image(image) : { type: 'image', file: image })
     }
+    if (part.type === 'audio' && audio.includes(part) && !result.speechError) {
+      audioFiles.push('base64://' + part.data)
+    }
   }
-  if (!parts.length) return false
-  const receipt = await e.reply(parts, Boolean(e.isGroup), proactive ? { recallMsg: client.config().group.recallSeconds } : {})
-  if (receipt === false || receipt?.error || receipt?.retcode > 0 || receipt?.discarded) return false
-  return receipt || { delivered: true }
+  if (voice) { const sources = sourceText(result); if (sources) parts.push('来源：\n' + sources) }
+  if (result.speechError) parts.push('语音合成暂不可用，已改为文字。')
+  if (!parts.length && !audioFiles.length) return false
+  const options = proactive ? { recallMsg: client.config().group.recallSeconds } : {}
+  const deliver = async (message, quote = Boolean(e.isGroup)) => { const receipt = await e.reply(message, quote, options); return sendFailed(receipt) ? false : receipt || { delivered: true } }
+  if (!audioFiles.length) return deliver(parts)
+  try {
+    // NapCat/QQ voice messages must not contain quoted replies, text or images.
+    const records = audioFiles.map(file => globalThis.segment?.record ? globalThis.segment.record(file) : { type: 'record', file, data: { file } })
+    const receipt = await deliver(records, false)
+    if (receipt !== false) {
+      if (parts.length) {
+        try { if (await deliver(parts) === false) globalThis.logger?.warn?.('[AI-Plugin] 语音已送达，附加来源或图片发送失败') }
+        catch { globalThis.logger?.warn?.('[AI-Plugin] 语音已送达，附加来源或图片发送失败') }
+      }
+      return receipt
+    }
+  } catch { /* Transport/segment errors use the same safe text fallback. */ }
+  // QQ transports can reject audio even when synthesis succeeds. Keep the answer
+  // visible and let the core commit the delivered text, without exposing audio data.
+  const text = result.text || (result.contents || []).filter(part => part.type === 'text').map(part => part.text || '').join('\n')
+  return deliver([text || '语音内容未能发送。', '语音发送失败，已改为文字。'].filter(Boolean))
 }
 export class AIChat extends Base {
   constructor() { super({ name: 'AI-Plugin', dsc: '通用AI聊天、工具与中文管理', event: 'message', priority: 1200, rule: [{ reg: '.*', fnc: 'handle', log: false }] }) }
@@ -112,7 +138,8 @@ export class AIChat extends Base {
     }
   }
   async command(e, input, text) {
-    if (/^(?:帮助|help)?$/i.test(text)) { await e.reply('AI-Plugin\n私聊或群聊 @ 提问\n#AI预设列表 / #AI切换预设 名称 / #AI当前预设\n#AI结束对话 / #AI记忆 列表 / #AI记忆 添加 内容\n主人：#AI登录 / #AI状态 / #AI备份 / #AI清理\n主人：#AI主动接话 开或关 / #AI结束全部对话\n复杂扩展的进度见工作台“功能状态”。', Boolean(e.isGroup)); return true }
+    if (await handleVoiceCommand({ client, input, text, reply: message => e.reply(message, Boolean(e.isGroup)), send: result => sendResult(e, result) })) return true
+    if (/^(?:帮助|help)?$/i.test(text)) { await e.reply('AI-Plugin\n私聊或群聊 @ 提问\n#AI预设列表 / #AI切换预设 名称 / #AI当前预设\n#AI结束对话 / #AI记忆 列表 / #AI记忆 添加 内容\n' + VOICE_HELP + '\n主人：#AI登录 / #AI状态 / #AI备份 / #AI清理\n主人：#AI主动接话 开或关 / #AI结束全部对话\n复杂扩展的进度见工作台“功能状态”。', Boolean(e.isGroup)); return true }
     if (/^(?:预设列表|角色列表)$/.test(text)) { await e.reply(client.config().presets.filter(row => row.enabled !== false).map(row => `${row.name}（${row.id}）`).join('\n'), Boolean(e.isGroup)); return true }
     if (/^(?:切换预设|切换角色)/.test(text)) { const name = text.replace(/^(?:切换预设|切换角色)\s*/, ''); const preset = client.switchPreset(input, name); await e.reply(`已切换为「${preset.name}」，开始新会话；原历史保留。`, Boolean(e.isGroup)); return true }
     if (/^(?:当前预设|当前角色)$/.test(text)) { await e.reply('当前角色：' + client.preset(input).name, Boolean(e.isGroup)); return true }
