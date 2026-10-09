@@ -13,7 +13,7 @@
 | `cf-nemotron-3-120b` | `@cf/nvidia/nemotron-3-120b-a12b` | 文字、工具调用、结构化回答、SSE |
 | `cf-flux-2-klein-4b` | `@cf/black-forest-labs/flux-2-klein-4b` | `/v1/images/generations`、`/v1/images/edits` |
 | `cf-whisper-large-v3-turbo` | `@cf/openai/whisper-large-v3-turbo` | `/v1/audio/transcriptions`、`/v1/audio/translations` |
-| `cf-melotts` | `@cf/myshell-ai/melotts` | `/v1/audio/speech` |
+| `cf-melotts` | `@cf/myshell-ai/melotts` | `/v1/audio/speech`，原生 WAV |
 | `cf-bge-m3` | `@cf/baai/bge-m3` | `/v1/embeddings`；多语言语义向量 |
 | `cf-qwen3-embedding-0.6b` | `@cf/qwen/qwen3-embedding-0.6b` | `/v1/embeddings` |
 | `cf-bge-reranker-base` | `@cf/baai/bge-reranker-base` | `/v1/rerank`；文档相关性重排 |
@@ -55,7 +55,7 @@ HF 服务需使用 Gradio 5.33 的 `api_name="moderate"`、`queue=False` 和单�
 }
 ```
 
-默认关闭长思考，最大输出 1,024 tokens，可显式调整为 1–4,096。`reasoning_effort` 支持 `none/minimal/low/medium/high`，映射到模型提供的开关；该参数不会产生并不存在的精确思考预算。支持 `tools`、`tool_choice`、多轮 `tool` 消息、`response_format` 和流式工具分片，工具由调用方执行。SSE 收到上游显式结束标记才报告完成；断流和超时会发错误分片，不把部分回答标成完整结果。
+默认关闭长思考，最大输出 1,024 tokens，可显式调整为 1–4,096。`reasoning_effort` 支持 `none/minimal/low/medium/high`，映射到模型提供的开关；该参数不会产生并不存在的精确思考预算。支持 `tools`、`tool_choice`、多轮 `tool` 消息、`response_format` 和流式工具分片，工具由调用方执行。原生 assistant 回复可直接加入下一轮 messages：允许有界的 `reasoning_content`、`refusal` 字符串及空输出字段，不因此开启旧式 function_call 或聊天音频接口；非空的不支持字段仍明确拒绝。SSE 收到上游显式结束标记才报告完成；断流和超时会发错误分片，不把部分回答标成完整结果。
 
 识图使用 `cf-gemma-4-26b`，`content` 中的图片采用 OpenAI `image_url` 格式，URL 必须是内联 `data:image/png;base64,...`（也支持 JPEG/WebP）。每次最多 4 张、每张最多 4 MiB；不接受外部 URL。只检查编码、容器头尾和尺寸等基本条件，完整图片解码由上游模型执行。
 
@@ -82,12 +82,11 @@ HF 服务需使用 Gradio 5.33 的 `api_name="moderate"`、`queue=False` 和单�
   "model": "cf-melotts",
   "input": "你好，今天也要开心。",
   "voice": "default",
-  "language": "zh",
-  "response_format": "mp3"
+  "language": "zh"
 }
 ```
 
-MeloTTS 仅提供本模型默认音色，返回 MP3；不冒充 alloy 等 OpenAI 音色，不支持变速或声音克隆。`language` 是本服务扩展，支持 `zh/en/ja/ko/es/fr`，默认中文，输入最多 1,500 字符。
+MeloTTS 仅提供本模型默认音色，不冒充 alloy 等 OpenAI 音色，不支持变速或声音克隆。官方 schema 声明 MP3，但实际 Workers AI 绑定返回 RIFF/WAVE，故本适配器默认并仅支持 `response_format: "wav"`，省略时也返回 `audio/wav`；MP3 及其他格式在推理前拒绝，不伪装容器、不自动转码或再次推理。返回前校验 RIFF 声明长度、fmt/data 块边界及 PCM/IEEE float 音频参数。调用方应以 WAV 保存文件，`/v1/models` 也列出真实格式。`language` 是本服务扩展，支持 `zh/en/ja/ko/es/fr`，默认中文，输入最多 1,500 字符。
 
 向量接口接受字符串或最多 16 个字符串，不接受 token ID 数组和自定义 dimensions，支持 `encoding_format=float/base64`，不编造上游未返回的 token 用量。重排接口接受 `query/documents/top_n/return_documents`；`relevance_score` 保留模型的原始分值，是排序信号，不保证是 0–1 概率。
 

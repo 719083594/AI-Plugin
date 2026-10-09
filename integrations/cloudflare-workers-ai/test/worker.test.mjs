@@ -6,6 +6,7 @@ const KEY = 'test-relay-key-not-a-real-secret-123456789';
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl1sAAAAASUVORK5CYII=';
 const IMAGE = `data:image/png;base64,${PNG}`;
 const MP3 = new Uint8Array([255, 251, 144, 100, 0, 0, 0]);
+const WAV = (() => { const bytes = Buffer.alloc(48); bytes.write('RIFF'); bytes.writeUInt32LE(40, 4); bytes.write('WAVEfmt ', 8); bytes.writeUInt32LE(16, 16); bytes.writeUInt16LE(1, 20); bytes.writeUInt16LE(1, 22); bytes.writeUInt32LE(24000, 24); bytes.writeUInt32LE(48000, 28); bytes.writeUInt16LE(2, 32); bytes.writeUInt16LE(16, 34); bytes.write('data', 36); bytes.writeUInt32LE(4, 40); return new Uint8Array(bytes); })();
 const CHAT = { model: 'cf-glm-4.7-flash', messages: [{ role: 'user', content: '你好' }] };
 function harness(output = { response: '你好' }, overrides = {}) {
   const calls = [];
@@ -70,6 +71,33 @@ test('multi-turn tools and JSON mode pass through to the provider', async () => 
   const h = harness(); const body = { ...CHAT, max_completion_tokens: 32, response_format: { type: 'json_object' }, tools: [{ type: 'function', function: { name: 'lookup', parameters: { type: 'object' }, strict: true } }], tool_choice: { type: 'function', function: { name: 'lookup' } }, parallel_tool_calls: false, messages: [{ role: 'developer', content: 'Answer briefly' }, CHAT.messages[0], { role: 'assistant', content: null, tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'lookup', arguments: '{}' } }] }, { role: 'tool', content: 'ok', tool_call_id: 'call_1' }] };
   assert.equal((await call(h, '/v1/chat/completions', body)).status, 200); assert.equal(h.calls[0].input.messages[0].role, 'system'); assert.equal(h.calls[0].input.max_tokens, 32); assert.deepEqual(h.calls[0].input.tools, body.tools); assert.deepEqual(h.calls[0].input.tool_choice, body.tool_choice);
 });
+
+test('a native-shaped assistant reply can be echoed unchanged in a complete tool round trip', async () => {
+  const message = { role: 'assistant', content: null, reasoning_content: '先取得工具结果。', refusal: null, audio: null, annotations: [], function_call: null, tool_calls: [{ id: 'call_native', type: 'function', function: { name: 'lookup', arguments: '{"city":"上海"}' } }] };
+  const h = harness((_, input) => input.messages.some(item => item.role === 'tool') ? { response: '上海，晴。' } : { choices: [{ index: 0, message, finish_reason: 'tool_calls' }] });
+  const first = await call(h, '/v1/chat/completions', CHAT); assert.equal(first.status, 200); const received = (await first.json()).choices[0].message;
+  const second = await call(h, '/v1/chat/completions', { ...CHAT, messages: [...CHAT.messages, received, { role: 'tool', tool_call_id: 'call_native', content: '晴' }] });
+  assert.equal(second.status, 200); assert.equal((await second.json()).choices[0].message.content, '上海，晴。'); assert.equal(h.calls.length, 2);
+  assert.deepEqual(h.calls[1].input.messages[1], { role: 'assistant', content: null, reasoning_content: '先取得工具结果。', tool_calls: message.tool_calls });
+});
+
+test('assistant metadata stays role-restricted and bounded without enabling unsupported audio or legacy calls', async () => {
+  const good = harness();
+  assert.equal((await call(good, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: null, refusal: '无法回答。', tool_calls: null }, ...CHAT.messages] })).status, 200);
+  assert.equal((await call(good, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: '旧回答', reasoning_content: null, refusal: null, tool_calls: [] }, ...CHAT.messages] })).status, 200);
+  const h = harness();
+  for (const item of [
+    { role: 'user', content: 'hi', reasoning_content: 'fake assistant' },
+    { role: 'assistant', content: 'hi', reasoning_content: 'x'.repeat(32001) },
+    { role: 'assistant', content: 'hi', refusal: { text: 'not a string' } },
+    { role: 'assistant', content: 'hi', audio: { id: 'unsupported' } },
+    { role: 'assistant', content: 'hi', function_call: { name: 'lookup', arguments: '{}' } },
+    { role: 'assistant', content: 'hi', annotations: [{ arbitrary: 'not supported' }] },
+    { role: 'assistant', content: 'hi', arbitrary_provider_field: null }
+  ]) assert.equal((await call(h, '/v1/chat/completions', { ...CHAT, messages: [item] })).status, 400);
+  assert.equal((await call(h, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: 'x'.repeat(32000), reasoning_content: 'x'.repeat(32000), refusal: 'x' }] })).status, 400);
+  assert.equal(h.calls.length, 0);
+});
 test('Gemma accepts inline vision, other models and all remote URLs are rejected', async () => {
   const h = harness(); const body = { ...CHAT, model: 'cf-gemma-4-26b', messages: [{ role: 'user', content: [{ type: 'text', text: '颜色？' }, { type: 'image_url', image_url: { url: IMAGE, detail: 'low' } }] }] };
   assert.equal((await call(h, '/v1/chat/completions', body)).status, 200); assert.equal(h.calls[0].input.messages[0].content[1].image_url.url, IMAGE);
@@ -132,13 +160,40 @@ test('Whisper translation maps task to translate and rejects unimplemented optio
   const h = harness({ text: 'Hello' }); assert.equal((await call(h, '/v1/audio/translations', audioForm())).status, 200); assert.equal(h.calls[0].input.task, 'translate');
   assert.equal((await call(h, '/v1/audio/translations', audioForm({ language: 'zh' }))).status, 400); assert.equal((await call(h, '/v1/audio/transcriptions', audioForm({ response_format: 'srt' }))).status, 400); assert.equal((await call(h, '/v1/audio/transcriptions', audioForm({ temperature: '0.7' }))).status, 400); assert.equal(h.calls.length, 1);
 });
-test('MeloTTS accepts only genuine supported language/default voice/MP3 controls', async () => {
-  const h = harness({ audio: Buffer.from(MP3).toString('base64') }); const body = { model: 'cf-melotts', input: '你好', voice: 'default', response_format: 'mp3', language: 'zh', speed: 1 }; const response = await call(h, '/v1/audio/speech', body); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/mpeg'); assert.deepEqual(new Uint8Array(await response.arrayBuffer()), MP3); assert.deepEqual(h.calls[0].input, { prompt: '你好', lang: 'zh' });
-  for (const extra of [{ voice: 'alloy' }, { response_format: 'wav' }, { speed: 2 }, { language: 'xx' }, { instructions: 'whisper' }]) assert.equal((await call(h, '/v1/audio/speech', { ...body, ...extra })).status, 400); assert.equal(h.calls.length, 1);
+test('MeloTTS accepts genuine language/default voice controls and only native WAV format', async () => {
+  const h = harness({ audio: Buffer.from(WAV).toString('base64') }); const body = { model: 'cf-melotts', input: '你好', voice: 'default', response_format: 'wav', language: 'zh', speed: 1 }; const response = await call(h, '/v1/audio/speech', body); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/wav'); assert.deepEqual(new Uint8Array(await response.arrayBuffer()), WAV); assert.deepEqual(h.calls[0].input, { prompt: '你好', lang: 'zh' });
+  for (const extra of [{ voice: 'alloy' }, { response_format: 'mp3' }, { response_format: 'flac' }, { speed: 2 }, { language: 'xx' }, { instructions: 'whisper' }]) assert.equal((await call(h, '/v1/audio/speech', { ...body, ...extra })).status, 400); assert.equal(h.calls.length, 1);
+  const models = await (await call(h, '/v1/models')).json(); const info = models.data.find(item => item.id === 'cf-melotts'); assert.deepEqual(info.capabilities.response_formats, ['wav']); assert.equal(info.capabilities.default_response_format, 'wav');
 });
-test('MeloTTS binary streams are bounded and malformed MP3 is rejected', async () => {
-  assert.equal((await call(harness(new Response(MP3, { headers: { 'content-type': 'audio/mpeg' } })), '/v1/audio/speech', { model: 'cf-melotts', input: 'hello' })).status, 200);
-  for (const output of [new Uint8Array([1, 2, 3]), { audio: 'AQID' }, { audio: 'not-base64' }, new Uint8Array(2048)]) assert.equal((await call(harness(output, { MAX_RESULT_BYTES: '1024' }), '/v1/audio/speech', { model: 'cf-melotts', input: 'hello' })).status, 502);
+test('MeloTTS binary streams are bounded and unsupported or malformed audio is rejected', async () => {
+  assert.equal((await call(harness(new Response(WAV, { headers: { 'content-type': 'audio/wav' } })), '/v1/audio/speech', { model: 'cf-melotts', input: 'hello' })).status, 200);
+  for (const output of [MP3, new Uint8Array([1, 2, 3]), { audio: 'AQID' }, { audio: 'not-base64' }, new Uint8Array(2048)]) assert.equal((await call(harness(output, { MAX_RESULT_BYTES: '1024' }), '/v1/audio/speech', { model: 'cf-melotts', input: 'hello' })).status, 502);
+});
+
+test('native WAV is detected across binding return types and never labelled or silently converted as MP3', async () => {
+  for (const output of [{ audio: Buffer.from(WAV).toString('base64') }, WAV, WAV.buffer, new Response(WAV, { headers: { 'content-type': 'audio/wav' } }), new Response(WAV, { headers: { 'content-type': 'audio/mpeg' } }), new ReadableStream({ start(controller) { controller.enqueue(WAV); controller.close(); } })]) {
+    const h = harness(output); const response = await call(h, '/v1/audio/speech', { model: 'cf-melotts', input: '你好' });
+    assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/wav'); assert.deepEqual(new Uint8Array(await response.arrayBuffer()), WAV); assert.equal(h.calls.length, 1);
+  }
+  const forbidden = harness(WAV); const rejected = await call(forbidden, '/v1/audio/speech', { model: 'cf-melotts', input: '你好', response_format: 'mp3' }); assert.equal(rejected.status, 400); assert.equal(forbidden.calls.length, 0); assert.match((await rejected.json()).error.message, /WAV/);
+  const response = await call(harness(WAV), '/v1/audio/speech', { model: 'cf-melotts', input: '你好', response_format: 'wav' }); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/wav');
+});
+
+test('WAV validation accepts native-style long PCM and float files with fact and padded metadata chunks', async () => {
+  const longPcm = Buffer.alloc(104806); longPcm.set(WAV.subarray(0, 44)); longPcm.writeUInt32LE(longPcm.length - 8, 4); longPcm.writeUInt32LE(longPcm.length - 44, 40);
+  assert.equal(longPcm.subarray(0, 16).toString('hex'), '524946465e99010057415645666d7420');
+  const float = Buffer.alloc(76); float.write('RIFF'); float.writeUInt32LE(68, 4); float.write('WAVEfmt ', 8); float.writeUInt32LE(18, 16); float.writeUInt16LE(3, 20); float.writeUInt16LE(1, 22); float.writeUInt32LE(24000, 24); float.writeUInt32LE(96000, 28); float.writeUInt16LE(4, 32); float.writeUInt16LE(32, 34); float.write('fact', 38); float.writeUInt32LE(4, 42); float.writeUInt32LE(2, 46); float.write('JUNK', 50); float.writeUInt32LE(1, 54); float.write('data', 60); float.writeUInt32LE(8, 64);
+  for (const bytes of [longPcm, float]) {
+    const response = await call(harness({ audio: bytes.toString('base64') }), '/v1/audio/speech', { model: 'cf-melotts', input: '你好' }); assert.equal(response.status, 200); assert.equal(response.headers.get('content-type'), 'audio/wav'); assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes);
+  }
+});
+
+test('truncated, inconsistent or non-audio WAV responses fail closed rather than serving a forged container', async () => {
+  const malformed = [WAV.slice(0, 12), WAV.slice(0, -1)];
+  for (const [offset, value, width] of [[4, 1, 4], [16, 9000, 4], [20, 7, 2], [22, 0, 2], [28, 1, 4], [32, 0, 2], [40, 0, 4], [40, 3, 4]]) { const bytes = Buffer.from(WAV); if (width === 2) bytes.writeUInt16LE(value, offset); else bytes.writeUInt32LE(value, offset); malformed.push(bytes); }
+  for (const output of [...malformed, new Response(WAV, { headers: { 'content-type': 'application/json' } }), new Response(WAV, { status: 500, headers: { 'content-type': 'audio/wav' } })]) {
+    const h = harness(output); const response = await call(h, '/v1/audio/speech', { model: 'cf-melotts', input: '你好' }); assert.equal(response.status, 502); assert.match(response.headers.get('content-type'), /application\/json/); assert.equal(h.calls.length, 1);
+  }
 });
 test('embeddings accept string arrays, encode real Float32 base64 and do not invent usage', async () => {
   const h = harness({ data: [[1, 0.5], [-1, 0]], shape: [2, 2] }); const response = await call(h, '/v1/embeddings', { model: 'cf-bge-m3', input: ['你好', 'world'] }); const body = await response.json(); assert.equal(response.status, 200); assert.deepEqual(h.calls[0].input, { text: ['你好', 'world'] }); assert.deepEqual(body.data[1].embedding, [-1, 0]); assert.ok(!('usage' in body));

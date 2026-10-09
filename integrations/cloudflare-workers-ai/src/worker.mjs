@@ -224,11 +224,20 @@ function chatInput(body, model) {
   if (!Array.isArray(body.messages) || !body.messages.length || body.messages.length > 64) fail('messages 必须含 1–64 条消息。', 'messages');
   let imageCount = 0; let totalText = 0;
   const messages = body.messages.map(item => {
-    record(item, 'messages'); keys(item, ['role', 'content', 'name', 'tool_calls', 'tool_call_id']);
+    record(item, 'messages'); keys(item, ['role', 'content', 'name', 'tool_calls', 'tool_call_id', 'reasoning_content', 'refusal', 'annotations', 'audio', 'function_call']);
     if (!['system', 'developer', 'user', 'assistant', 'tool'].includes(item.role)) fail('消息角色无效。', 'messages');
     const result = { role: item.role === 'developer' ? 'system' : item.role };
+    for (const name of ['reasoning_content', 'refusal']) if (item[name] !== undefined) {
+      if (item.role !== 'assistant') fail(`仅 assistant 可提供 ${name}。`, 'messages');
+      if (item[name] !== null) { result[name] = text(item[name], 'messages', 32000, true); totalText += item[name].length; }
+    }
+    // Native OpenAI replies can contain unused output fields. Accept their empty
+    // placeholders when echoed in history without enabling unsupported features.
+    for (const name of ['audio', 'function_call', 'annotations']) if (item[name] !== undefined) {
+      if (item.role !== 'assistant' || !(item[name] === null || name === 'annotations' && Array.isArray(item[name]) && item[name].length === 0)) fail(`暂不支持非空 ${name} 消息字段。`, 'messages');
+    }
     if (typeof item.content === 'string') { result.content = text(item.content, 'messages', 32000, true); totalText += item.content.length; }
-    else if (item.content === null && item.role === 'assistant' && item.tool_calls) result.content = null;
+    else if (item.role === 'assistant' && (item.content === null || item.content === undefined && (item.tool_calls || item.refusal))) result.content = null;
     else if (Array.isArray(item.content) && item.content.length > 0 && item.content.length <= 16) {
       result.content = item.content.map(part => {
         record(part, 'messages');
@@ -243,7 +252,7 @@ function chatInput(body, model) {
       });
     } else fail('消息 content 格式无效。', 'messages');
     if (item.name !== undefined) result.name = functionName(item.name);
-    if (item.tool_calls !== undefined) { if (item.role !== 'assistant') fail('仅 assistant 可提供 tool_calls。', 'messages'); result.tool_calls = toolCalls(item.tool_calls, 'messages'); }
+    if (item.tool_calls !== undefined) { if (item.role !== 'assistant') fail('仅 assistant 可提供 tool_calls。', 'messages'); if (item.tool_calls !== null && !(Array.isArray(item.tool_calls) && item.tool_calls.length === 0)) result.tool_calls = toolCalls(item.tool_calls, 'messages'); }
     if (item.role === 'tool') result.tool_call_id = text(item.tool_call_id, 'messages', 128);
     else if (item.tool_call_id !== undefined) fail('仅 tool 消息可提供 tool_call_id。', 'messages');
     return result;
@@ -445,29 +454,51 @@ async function transcription(form, env, limit, translate = false) {
   if (format === 'verbose_json') return json({ task: input.task, ...(output.transcription_info?.language ? { language: output.transcription_info.language } : {}), ...(Number.isFinite(output.transcription_info?.duration) ? { duration: output.transcription_info.duration } : {}), text: output.text, ...(Array.isArray(output.segments) ? { segments: output.segments } : {}) });
   return json({ text: output.text });
 }
+function validateSpeechWav(bytes) {
+  const invalid = () => { throw new ApiError(502, 'invalid_upstream_response', '模型返回的音频不是有效 WAV。'); };
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (bytes.length >= 12 && view.getUint32(0) === 0x52494646 && view.getUint32(8) === 0x57415645) {
+    if (view.getUint32(4, true) + 8 !== bytes.length) invalid();
+    let offset = 12; let format; let dataLength; let chunks = 0;
+    while (offset + 8 <= bytes.length) {
+      if (++chunks > 128) invalid();
+      const kind = view.getUint32(offset); const size = view.getUint32(offset + 4, true); const start = offset + 8;
+      if (size > bytes.length - start) invalid();
+      if (kind === 0x666d7420) {
+        if (format || size < 16) invalid();
+        const tag = view.getUint16(start, true); const channels = view.getUint16(start + 2, true); const rate = view.getUint32(start + 4, true);
+        const byteRate = view.getUint32(start + 8, true); const align = view.getUint16(start + 12, true); const bits = view.getUint16(start + 14, true);
+        if (![1, 3].includes(tag) || channels < 1 || channels > 8 || rate < 8000 || rate > 192000 || !(tag === 1 ? [8, 16, 24, 32] : [32, 64]).includes(bits) || align !== channels * bits / 8 || byteRate !== rate * align) invalid();
+        format = { align };
+      } else if (kind === 0x64617461) { if (dataLength !== undefined || !size) invalid(); dataLength = size; }
+      offset = start + size + (size & 1);
+    }
+    if (offset !== bytes.length || !format || dataLength === undefined || dataLength % format.align) invalid();
+    return;
+  }
+  invalid();
+}
 async function speech(body, env, limit) {
   keys(body, ['model', 'input', 'voice', 'response_format', 'speed', 'language']); const model = modelFor(body.model, 'speech');
   const prompt = text(body.input, 'input', 1500);
   if (body.voice !== undefined && body.voice !== 'default') fail('MeloTTS 只提供 default 音色。', 'voice');
-  if (body.response_format !== undefined && body.response_format !== 'mp3') fail('MeloTTS 仅支持 MP3。', 'response_format');
+  if (body.response_format !== undefined && body.response_format !== 'wav') fail('MeloTTS 原生返回 WAV；仅支持 response_format=wav，不提供 MP3 转码。', 'response_format');
   if (body.speed !== undefined && body.speed !== 1) fail('MeloTTS 当前接口不支持调整语速。', 'speed');
   const lang = body.language || 'zh'; if (!['zh', 'en', 'ja', 'ko', 'es', 'fr'].includes(lang)) fail('不支持该语言。', 'language');
   const output = await run(env, model, { prompt, lang }, limit);
   let bytes;
   if (typeof output?.audio === 'string') { try { bytes = fromBase64(output.audio, 'upstream_audio', Math.min(limit.result, 8 * 1024 * 1024)); } catch { throw new ApiError(502, 'invalid_upstream_response', '模型返回的语音编码无效或过大。'); } }
-  else if (output instanceof Response) { if (!/^audio\/mpeg(?:;|$)/i.test(output.headers.get('content-type') || '')) throw new ApiError(502, 'invalid_upstream_response', '语音 MIME 类型无效。'); bytes = await bytesFrom(output.body, Math.min(limit.result, 8 * 1024 * 1024), remaining(limit), true); }
+  else if (output instanceof Response) {
+    if (!output.ok || !/^(?:audio\/(?:mpeg|mp3|wav|x-wav|wave)|application\/octet-stream)(?:\s*;|$)/i.test(output.headers.get('content-type') || 'application/octet-stream')) { output.body?.cancel().catch(() => {}); throw new ApiError(502, 'invalid_upstream_response', '语音响应状态或 MIME 类型无效。'); }
+    bytes = await bytesFrom(output.body, Math.min(limit.result, 8 * 1024 * 1024), remaining(limit), true);
+  }
   else if (output instanceof ReadableStream) bytes = await bytesFrom(output, Math.min(limit.result, 8 * 1024 * 1024), remaining(limit), true);
   else if (output instanceof Uint8Array) bytes = output;
   else if (output instanceof ArrayBuffer) bytes = new Uint8Array(output);
   else throw new ApiError(502, 'invalid_upstream_response', '模型未返回语音。');
   if (!bytes.length || bytes.length > Math.min(limit.result, 8 * 1024 * 1024)) throw new ApiError(502, 'invalid_upstream_response', '语音数据为空或过大。');
-  let frameOffset = 0;
-  if (bytes.length >= 10 && bytes[0] === 73 && bytes[1] === 68 && bytes[2] === 51) {
-    if (bytes.subarray(6, 10).some(value => value & 128)) throw new ApiError(502, 'invalid_upstream_response', 'MP3 标签无效。');
-    frameOffset = 10 + (bytes[6] << 21) + (bytes[7] << 14) + (bytes[8] << 7) + bytes[9] + ((bytes[5] & 16) ? 10 : 0);
-  }
-  if (frameOffset + 4 > bytes.length || bytes[frameOffset] !== 255 || (bytes[frameOffset + 1] & 224) !== 224 || ((bytes[frameOffset + 1] >> 3) & 3) === 1 || ((bytes[frameOffset + 1] >> 1) & 3) === 0 || ((bytes[frameOffset + 2] >> 4) & 15) === 15 || ((bytes[frameOffset + 2] >> 2) & 3) === 3) throw new ApiError(502, 'invalid_upstream_response', '模型返回的音频不是有效 MP3。');
-  return new Response(bytes, { headers: { ...HEADERS, 'content-type': 'audio/mpeg' } });
+  validateSpeechWav(bytes);
+  return new Response(bytes, { headers: { ...HEADERS, 'content-type': 'audio/wav' } });
 }
 async function embeddings(body, env, limit) {
   keys(body, ['model', 'input', 'encoding_format', 'user']); const model = modelFor(body.model, 'embedding');
@@ -614,7 +645,7 @@ export default {
       if (url.pathname === '/health' && request.method === 'GET' && !url.search) return json({ ok: true });
       await authenticate(request, env);
       if (url.search || url.pathname.includes('%') || url.pathname.includes('\\') || url.pathname.includes('//')) fail('不支持查询参数或转义路径。');
-      if (request.method === 'GET' && url.pathname === '/v1/models') return json({ object: 'list', data: Object.entries(MODELS).map(([id, model]) => ({ id, object: 'model', created: 0, owned_by: 'cloudflare', ...(id === 'cf-content-safety' ? safetyMetadata(env) : {}), capabilities: { task: model.kind, vision: Boolean(model.vision), function_calling: Boolean(model.tools) } })) });
+      if (request.method === 'GET' && url.pathname === '/v1/models') return json({ object: 'list', data: Object.entries(MODELS).map(([id, model]) => ({ id, object: 'model', created: 0, owned_by: 'cloudflare', ...(id === 'cf-content-safety' ? safetyMetadata(env) : {}), capabilities: { task: model.kind, vision: Boolean(model.vision), function_calling: Boolean(model.tools), ...(model.kind === 'speech' ? { response_formats: ['wav'], default_response_format: 'wav', voices: ['default'] } : {}) } })) });
       if (/^\/v1\/(?:videos|responses)(?:\/|$)/.test(url.pathname)) throw new ApiError(400, 'unsupported_endpoint', '本服务没有 Cloudflare 免费视频生成或通用 Responses API；视频请使用已配置的 Hugging Face 服务。');
       const supported = ['/v1/chat/completions', '/v1/images/generations', '/v1/images/edits', '/v1/audio/transcriptions', '/v1/audio/translations', '/v1/audio/speech', '/v1/embeddings', '/v1/rerank', '/v1/moderations'];
       if (!supported.includes(url.pathname)) throw new ApiError(404, 'not_found', '接口不存在。');
