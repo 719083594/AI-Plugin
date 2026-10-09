@@ -6,12 +6,13 @@ export const pluginRoot = fileURLToPath(new URL('../../', import.meta.url))
 export const defaults = {
   basic: { enabled: true, debug: false, commandPrefix: '#AI', defaultPresetId: 'default', triggerMode: 'at', triggerPrefix: '#chat' },
   channels: [],
-  presets: [{ id: 'default', name: '默认助手', prefix: '', model: '', channelId: '', systemPrompt: '你是一个可靠的中文助手。需要时使用工具；搜索答案附真实来源链接，不编造事实。', temperature: 0.7, maxTokens: 2048, historyLength: 20, tools: ['web_search', 'ask_about_image', 'look_at_image', 'resolve_image_ref', 'GetQQAvatar'], showReasoning: false, stream: false, enabled: true }],
+  presets: [{ id: 'default', name: '默认助手', prefix: '', model: '', channelId: '', systemPrompt: '你是一个可靠的中文助手。需要时使用工具；搜索答案附真实来源链接，不编造事实。', temperature: 0.7, maxTokens: 2048, historyLength: 20, tools: ['web_search', 'ask_about_image', 'look_at_image', 'resolve_image_ref', 'GetQQAvatar', 'generate_image', 'generate_video'], showReasoning: false, stream: false, enabled: true }],
   chat: { privateEnabled: true, groupEnabled: true, enableRoleSwitch: true, userRoleWhitelist: [], userRoleBlacklist: [], maxConcurrent: 1, maxQueue: 3, timeoutMs: 10000, toolTimeoutMs: 30000, maxToolRounds: 4, maxReplyLength: 12000 },
   group: { enableContext: true, contextLength: 20, contextImages: true, proactiveEnabled: false, probability: 0.03, keywords: [], keywordPresets: [], defaultPresetId: '', prompt: '结合最近的群聊，自然简短地接话。没有必要时返回 [不回复]，不要重复他人或打断指令。', maxTokens: 256, cooldownMs: 60000, recallSeconds: 0 },
   memory: { userEnabled: false, groupEnabled: false, maxItems: 5, autoExtract: false, knowledgeEnabled: false, knowledgeLimit: 3, commandKnowledgeEnabled: true },
   tools: { searchEnabled: true, searchEndpoint: '', searchToken: '', searchModule: '', searchConfigFile: '', searchTimeoutMs: 26000, maxSearchResults: 5, customDirectory: './data/tools', skillsDirectory: './data/skills' },
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
+  generation: { enabled: false, endpoint: '', token: '', timeoutMs: 180000, maxImageBytes: 10485760, maxVideoBytes: 52428800, maxPromptCharacters: 2000, defaultModel: 'flux', defaultDuration: 3, defaultEffects: true, subtitles: true },
   speech: { enabled: false, endpoint: '', token: '', defaultVoice: '纳西妲（草神）', language: 'zh', timeoutMs: 45000, maxCharacters: 500, maxAudioBytes: 10485760, noiseScale: 0.6, noiseScaleW: 0.668, lengthScale: 1.2 },
   security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },
   management: { enabled: true, host: '127.0.0.1', port: 48371, publicUrl: 'http://127.0.0.1:48371', apiToken: '', ticketSeconds: 180, sessionSeconds: 3600, webChatEnabled: true },
@@ -37,6 +38,20 @@ export function validateConfig(config) {
   int(config.chat.maxToolRounds, 0, 12, '工具轮数')
   int(config.group.contextLength, 0, 100, '群上下文条数')
   int(config.security.maxRequestsPerWindow, 1, 10000, '频率限制')
+  const generation = config.generation
+  for (const key of ['enabled', 'defaultEffects', 'subtitles']) if (typeof generation[key] !== 'boolean') throw new Error('绘图视频开关无效')
+  if (typeof generation.endpoint !== 'string' || typeof generation.token !== 'string' || generation.token.length > 4096) throw new Error('绘图视频服务配置无效')
+  if (generation.endpoint) {
+    let url
+    try { url = new URL(generation.endpoint) } catch { throw new Error('绘图视频服务地址无效') }
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error('绘图视频地址须使用不含凭证、参数的 HTTPS 根地址')
+  }
+  int(generation.timeoutMs, 1000, 600000, '绘图视频等待上限')
+  int(generation.maxImageBytes, 65536, 10485760, '生成图片大小上限')
+  int(generation.maxVideoBytes, 65536, 52428800, '生成视频大小上限')
+  int(generation.maxPromptCharacters, 1, 2000, '绘图视频描述字数上限')
+  if (!['flux', 'anima'].includes(generation.defaultModel)) throw new Error('默认绘图模型无效')
+  if (![3, 5].includes(generation.defaultDuration)) throw new Error('视频时长须为3秒或5秒')
   if (typeof config.speech.enabled !== 'boolean') throw new Error('语音开关无效')
   if (typeof config.speech.endpoint !== 'string' || typeof config.speech.token !== 'string' || config.speech.token.length > 4096) throw new Error('语音服务配置无效')
   if (config.speech.endpoint) {

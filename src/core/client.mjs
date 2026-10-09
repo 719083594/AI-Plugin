@@ -14,11 +14,13 @@ import { selectVision, checkImageScope, storedImage, imageNote, visionError } fr
 import { buildPersonaPrompt, buildPersonaIdentity, buildPersonaContinuity, needsPersonaRepair, stripServiceTail } from './persona.mjs'
 import { checkDailyCleanup } from './daily-cleanup.mjs'
 import { SpeechService, LEGACY_VOICE_CATALOG } from '../speech/index.mjs'
+import { GenerationService } from '../generation/service.mjs'
+import { createGenerationTools } from '../generation/tools.mjs'
 
 export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning|answer)>/gi, '').trim()
 export function redactError(error, config) {
   let text = String(error?.message || error)
-  for (const secret of [...config.channels.map(channel => channel.apiKey), config.tools.searchToken, config.management.apiToken, config.speech?.token]) if (secret && String(secret).length > 5) text = text.split(secret).join('[已隐藏]')
+  for (const secret of [...config.channels.map(channel => channel.apiKey), config.tools.searchToken, config.management.apiToken, config.speech?.token, config.generation?.token]) if (secret && String(secret).length > 5) text = text.split(secret).join('[已隐藏]')
   return text.replace(/Bearer\s+[\w.-]+/gi, 'Bearer [已隐藏]').slice(0, 400)
 }
 async function abortable(operation, signal) {
@@ -59,7 +61,7 @@ const sourcesFrom = value => {
   return Array.isArray(raw) ? raw.filter(row => row && /^https?:\/\//i.test(row.url || row.link || '')).slice(0, 8).map(row => ({ title: String(row.title || '来源').slice(0, 200), url: row.url || row.link })) : []
 }
 export class AIClient {
-  constructor({ root = pluginRoot, configFile, config, storage, provider = complete, search, host = {}, imageStore, tools, speechService } = {}) {
+  constructor({ root = pluginRoot, configFile, config, storage, provider = complete, search, host = {}, imageStore, tools, speechService, generationService } = {}) {
     this.root = root; this.configFile = configFile || path.join(root, 'config/local.json'); this.configProvider = config || (() => readConfig(this.configFile))
     this.storage = storage || new Storage(path.join(root, 'data/ai.db')); this.provider = provider; this.host = host; this.searchCallback = search
     this.images = imageStore || new ImageStore({ directory: path.join(root, 'data/images'), maxBytes: this.config().media.maxImageBytes, ttlMs: this.config().media.imageRetentionHours * 3600000 })
@@ -70,6 +72,8 @@ export class AIClient {
     this.startedAt = Date.now(); this.maintenanceTimer = null; this.speechControllers = new Set()
     this.commandKnowledge = new CommandKnowledge(this)
     this.speech = speechService || new SpeechService({ config: () => this.config().speech || { enabled: false } })
+    this.generation = generationService || new GenerationService({ config: () => this.config().generation || { enabled: false } })
+    for (const tool of createGenerationTools(this)) this.tools.register(tool)
   }
   config() { return this.configProvider() }
   searchConfigured(config = this.config()) {
@@ -81,6 +85,61 @@ export class AIClient {
   userKey(input) { return input.botId ? `${input.botId}:${input.userId}` : String(input.userId) }
   groupKey(input) { return input.botId ? `${input.botId}:${input.groupId}` : String(input.groupId) }
   speechConfigured(config = this.config()) { return Boolean(config.speech?.enabled && config.speech.endpoint) }
+  generationConfigured(config = this.config()) { return Boolean(config.generation?.enabled && config.generation.endpoint) }
+  generateImage(input, options = {}) { return this.runGeneration('image', input, options) }
+  generateVideo(input, options = {}) { return this.runGeneration('video', input, options) }
+  async runGeneration(kind, input, options = {}, { fromTool = false } = {}) {
+    this.checkSpeechAccess(input)
+    const config = this.config()
+    if (!this.generationConfigured(config)) throw new Error('绘图和视频服务尚未配置，请联系机器人主人')
+    if (!fromTool && !this.rateAllowed(input)) throw new Error('请求过于频繁，请稍后再试')
+    const prompt = cleanText(options.prompt), script = cleanText(options.script), effectsPrompt = cleanText(options.effectsPrompt)
+    if (!prompt) throw new Error('请填写画面或动作描述')
+    for (const value of [prompt, script, effectsPrompt]) if (config.security.inputBlockedWords.some(word => word && value.includes(word))) throw new Error('消息包含已屏蔽内容')
+    const controller = new AbortController(), key = this.userKey(input), revision = this.storage.state(key).revision || 0
+    const externalSignal = options.signal || input.signal
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(config.generation.timeoutMs), ...(externalSignal ? [externalSignal] : [])])
+    const controllers = this.inflight.get(key) || new Set(); controllers.add(controller); this.inflight.set(key, controllers)
+    const startedAt = Date.now()
+    try {
+      let sources = options.imageRef ? [{ type: 'image', ref: options.imageRef }] : input.images || []
+      if (sources.length > 1) throw new Error('每次生成请只提供一张参考图片')
+      if (!sources.length && kind === 'video') {
+        const saved = this.storage.maintenance('generation-image:' + key)
+        if (saved && saved.revision === revision && saved.groupId === String(input.groupId || '') && saved.botId === String(input.botId || '')) sources = [{ type: 'image', ref: saved.ref }]
+      }
+      if (!sources.length && kind === 'video') throw new Error('请附带或引用一张图片，也可以先用 #AI画图 生成')
+      const prepared = await this.prepareImages(sources, input, signal)
+      let media
+      if (kind === 'image') {
+        media = await abortable(() => this.generation.image({ prompt, model: options.model || config.generation.defaultModel, reference: prepared[0], signal }), signal)
+        const mime = media.mime || media.mimeType
+        const ref = await this.images.save({ data: media.data, mime }, { signal, userId: input.userId, groupId: input.groupId, origin: input.botId, source: 'ai-generation' })
+        media = { ...media, mime, ref }
+        signal.throwIfAborted()
+        if ((this.storage.state(key).revision || 0) !== revision) throw new Error('会话已变更，请重新生成')
+        this.storage.setMaintenance('generation-image:' + key, { ref, revision, groupId: String(input.groupId || ''), botId: String(input.botId || '') })
+      } else {
+        let voice = 'zf_001'
+        if (script) {
+          const catalog = await this.speechCatalog({ signal }), current = this.speechSettings()
+          const selected = catalog.resolveVoice(current.voice, { language: current.language })
+          if (!catalog.modern || !selected) throw new Error('视频配音需要当前语音服务的有效音色，请先用 #AI音色列表 选择')
+          voice = selected.id
+        }
+        media = await abortable(() => this.generation.video({ image: prepared[0], prompt, duration: options.duration ?? config.generation.defaultDuration, script, voice, effectsPrompt, effectsEnabled: options.effectsEnabled ?? config.generation.defaultEffects, subtitles: options.subtitles ?? config.generation.subtitles, signal }), signal)
+        media = { ...media, mime: media.mime || media.mimeType }
+      }
+      signal.throwIfAborted()
+      if ((this.storage.state(key).revision || 0) !== revision) throw new Error('会话已变更，请重新生成')
+      this.storage.log({ kind: 'generation-' + kind, userId: String(input.userId), durationMs: Date.now() - startedAt, success: true })
+      return { text: '', contents: [media], sources: [] }
+    } catch (error) {
+      const message = redactError(signal.aborted ? signal.reason?.name === 'TimeoutError' ? new Error('绘图视频等待超时，请稍后重试') : new Error('绘图视频生成已取消') : error, config)
+      this.storage.log({ kind: 'generation-' + kind, userId: String(input.userId), durationMs: Date.now() - startedAt, success: false, error: message })
+      throw new Error(message)
+    } finally { controllers.delete(controller); if (!controllers.size && this.inflight.get(key) === controllers) this.inflight.delete(key) }
+  }
   speechVersion() { return this.storage.maintenance('speech-settings')?.revision || 0 }
   currentSpeechCatalog() { return this.speech.currentCatalog?.() || LEGACY_VOICE_CATALOG }
   async speechCatalog(options) { return this.speechConfigured() && this.speech.catalogue ? this.speech.catalogue(options) : this.currentSpeechCatalog() }
@@ -327,10 +386,10 @@ export class AIClient {
           if (current?.role !== 'user' || !Array.isArray(current.content)) throw new Error('识图提问必须以用户消息结束')
           current.content = [...current.content.filter(part => !(part.type === 'text' && part.text.startsWith('[此前的图片'))), ...visualImages]
         }
-        const names = (preset.tools || []).filter(name => name !== 'web_search' || this.searchConfigured(config))
+        const names = (preset.tools || []).filter(name => (name !== 'web_search' || this.searchConfigured(config)) && (!['generate_image', 'generate_video'].includes(name) || (!input.proactive && this.generationConfigured(config))))
         const definitions = this.tools.list({ names })
-        const pendingImages = []
-        const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: prepared.length ? prepared : input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); return { delivered: true, queued: true } } }
+        const pendingImages = [], pendingVideos = [], generatedKinds = new Set(), attemptedGenerationKinds = new Set()
+        const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: prepared.length ? prepared : input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); pendingVideos.push(...contents.filter(part => part.type === 'video')); return { delivered: true, queued: true } } }
         const persisted = [user]; let response, usage = {}, providerRounds = 0, responseTask = ''
         // Reserve delivery time when the search succeeded but the upstream stops responding.
         const analysisSignal = () => AbortSignal.any([signal,AbortSignal.timeout(Math.max(1,Math.min(config.chat.timeoutMs,startedAt+config.chat.toolTimeoutMs-Date.now()-1000)))])
@@ -356,7 +415,13 @@ export class AIClient {
             let result
             try {
               if (!names.includes(call.name)) throw new Error('此预设未允许调用该工具')
+              if (['generate_image', 'generate_video'].includes(call.name)) {
+                if (attemptedGenerationKinds.has(call.name)) throw new Error('本轮已经尝试过此类媒体生成，请稍后重新请求')
+                attemptedGenerationKinds.add(call.name)
+                deadline(Date.now() - startedAt + config.generation.timeoutMs + 3000)
+              }
               result = await abortable(() => this.tools.execute(call.name, call.arguments, toolContext), signal)
+              if (result?.generated && result.ok) generatedKinds.add(call.name)
               if (call.name === 'web_search') {
                 searchSources = sourcesFrom(result); searchPageRead += result.pageRead?.read || 0
                 const pages = result.pages || []
@@ -366,6 +431,9 @@ export class AIClient {
             const tool = { role: 'tool', toolCallId: call.id, name: call.name, content: [{ type: 'text', text: resultText(result).slice(0, 20000) }] }
             messages.push(tool); requestMessages.push(tool); persisted.push(tool)
           }
+          // A completed generation is already the answer; an extra model request
+          // must not delay or discard media when its upstream is unavailable.
+          if (generatedKinds.size) { response = { contents: [], toolCalls: [], usage: {} }; break }
           if (searchSources.length) responseTask = SEARCH_SUMMARY_PROMPT
         }
         signal.throwIfAborted()
@@ -422,15 +490,15 @@ export class AIClient {
         }
         text = text.slice(0, config.chat.maxReplyLength)
         const uniqueImages = new Map([...pendingImages, ...(response?.contents || []).filter(row => row.type === 'image')].map(image => [image.ref || image.url || image.data, image]))
-        const contents = [{ type: 'text', text }, ...uniqueImages.values()]
+        const contents = [{ type: 'text', text }, ...uniqueImages.values(), ...pendingVideos]
         const reasoning = (response?.contents || []).filter(row => row.type === 'reasoning').map(row => row.text).join('\n')
         if (preset.showReasoning && reasoning) contents.unshift({ type: 'reasoning', text: reasoning })
-        if (!text && !contents.some(row => row.type === 'image')) throw new Error('模型没有返回可发送的内容')
+        if (!text && !contents.some(row => row.type === 'image' || row.type === 'video')) throw new Error('模型没有返回可发送的内容')
         const latest = this.storage.state(key)
         if (!input.transient && (latest.revision || 0) !== revision) throw new Error('角色或会话已变更')
         const result = { text, contents, usage, model, presetId: preset.id, usedTools, sources: searchSources, ...(searchAnalysis ? {searchAnalysis} : {}) }
         const speech = this.speechSettings(input), speechRevision = this.speechVersion()
-        if (!input.proactive && !input.transient && speech.mode === 'voice') {
+        if (text && !generatedKinds.size && !input.proactive && !input.transient && speech.mode === 'voice') {
           // Give TTS its own bounded timeout, leaving time to send the text fallback.
           deadline(Date.now() - startedAt + (config.speech?.timeoutMs || 45000) + 3000)
           try {
@@ -450,7 +518,7 @@ export class AIClient {
         if (!input.transient && (beforeSend.revision || 0) !== revision) throw new Error('角色、会话或语音设置已变更')
         if (send) { const receipt = await abortable(() => send(result), signal); if (receipt === false || receipt?.discarded || receipt?.error || receipt?.delivered === false || receipt?.status === 'failed' || (receipt?.retcode !== undefined && receipt.retcode !== 0)) throw new Error('回复未成功发送') }
         signal.throwIfAborted()
-        const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning' && row.type !== 'audio') }; persisted.push(assistant)
+        const assistant = { role: 'assistant', content: contents.filter(row => row.type !== 'reasoning' && row.type !== 'audio').map(row => row.type === 'video' ? { type: 'text', text: '[已生成并发送视频]' } : row.type === 'image' && row.ref ? storedImage(row) : row) }; persisted.push(assistant)
         if (!input.proactive && !input.transient && !this.storage.commitTurn({ userId: key, revision, conversationId: state.current.conversationId, parentId: state.current.messageId, messages: persisted })) throw new Error('会话已变更，未保存过期回答')
         if (input.proactive) for (const message of persisted) this.storage.db.prepare('INSERT INTO history VALUES(?,?,?,?,?,?)').run(randomUUID(), null, 'bym:' + String(input.groupId) + ':' + randomUUID(), message.role, JSON.stringify(message), new Date().toISOString())
         this.storage.log({ kind: 'chat', model, channelId: channel.id, presetId: preset.id, userId: String(input.userId), proactive: Boolean(input.proactive), durationMs: Date.now() - startedAt, usage, usedTools, ...(searchAnalysis ? {searchAnalysis} : {}), success: true })
@@ -471,6 +539,6 @@ export class AIClient {
     const daily = () => { try { checkDailyCleanup(this) } catch (error) { this.host.log?.('每日聊天清理失败：' + error.message) } }
     daily(); this.dailyCleanupTimer = setInterval(daily, 30000); this.dailyCleanupTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.1.1', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
-  close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); for (const controller of this.speechControllers) controller.abort(); this.speech.close?.(); this.storage.close() }
+  health() { return { name: 'AI-Plugin', version: '1.2.0', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), generationConfigured: this.generationConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); for (const controller of this.speechControllers) controller.abort(); this.speech.close?.(); this.generation.close?.(); this.storage.close() }
 }

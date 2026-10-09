@@ -17,6 +17,7 @@ $('chat-form').addEventListener('submit', async event => {
   try {
     const result = await api('chat', 'POST', { text, presetId: $('preset').value }); const message = node('div', result.text, 'message')
     for (const part of result.contents || []) if (part.type === 'image') { const image = document.createElement('img'); image.alt = 'AI 返回的图片'; const src = part.url || (part.data ? `data:${part.mime || 'image/png'};base64,${part.data}` : ''); if (/^(https?:|data:image\/)/.test(src)) { image.src = src; message.append(image) } }
+    for (const part of result.contents || []) if (part.type === 'video' && (part.mime || part.mimeType) === 'video/mp4' && typeof part.data === 'string' && /^[A-Za-z0-9+/]+={0,2}$/.test(part.data)) { const video = document.createElement('video'); video.controls = true; video.preload = 'metadata'; video.style.maxWidth = '100%'; video.src = `data:video/mp4;base64,${part.data}`; message.append(video) }
     $('messages').append(message)
   } catch (value) { error(value) } finally { $('send').disabled = false }
 })

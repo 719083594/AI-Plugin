@@ -24,7 +24,9 @@
         "ask_about_image",
         "look_at_image",
         "resolve_image_ref",
-        "GetQQAvatar"
+        "GetQQAvatar",
+        "generate_image",
+        "generate_video"
       ],
       "showReasoning": false,
       "stream": false,
@@ -138,5 +140,18 @@
     "workflows": [],
     "processors": [],
     "pricing": []
+  },
+  "generation": {
+    "enabled": false,
+    "endpoint": "",
+    "token": "",
+    "timeoutMs": 180000,
+    "maxImageBytes": 10485760,
+    "maxVideoBytes": 52428800,
+    "maxPromptCharacters": 2000,
+    "defaultModel": "flux",
+    "defaultDuration": 3,
+    "defaultEffects": true,
+    "subtitles": true
   }
 }

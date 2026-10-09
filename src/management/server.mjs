@@ -27,7 +27,7 @@ export function startManagement(client, options = {}) {
   }
   const server = http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('X-Frame-Options', 'DENY')
-    res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
+    res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: https:; media-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
     try {
       const url = new URL(req.url, 'http://localhost')
       if (url.pathname === '/health' && req.method === 'GET') return json(res, 200, client.health())

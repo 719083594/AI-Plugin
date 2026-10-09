@@ -15,6 +15,11 @@ AI-Plugin 是新的独立实现。以下项目提供原有行为研究、适配�
 | [OrangeJuice-Plugin](https://github.com/719083594/OrangeJuice-Plugin) | 配套中文配置声明、权限、密钥遮罩与独立管理入口。 |
 | [WebSearch-Plugin](https://github.com/719083594/WebSearch-Plugin) | 可选联网搜索后端；其依赖、网络访问和搜索质量属于独立部署。 |
 | [VITS](https://github.com/jaywalnut310/vits) | 外部语音合成模型架构来源；AI-Plugin 不内置模型或训练权重。 |
-| [Gradio](https://www.gradio.app/) | 可选语音服务的配置读取、异步队列与音频接口。服务源码、音色和模型权重适用其各自许可证。 |
+| [Gradio](https://www.gradio.app/guides/querying-gradio-apps-with-curl) | 可选语音、绘图与视频服务的配置读取、文件上传、异步队列与媒体接口。 |
+| [FLUX.2](https://github.com/black-forest-labs/flux2) | 可选外部写实绘图与参考图编辑模型。 |
+| [Anima](https://huggingface.co/circlestone-labs/Anima) | 可选外部二次元绘图模型。 |
+| [Wan2.2](https://github.com/Wan-Video/Wan2.2) | 可选外部图片转视频模型。 |
+| [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) | 可选外部语音模型与音色目录。 |
+| [MMAudio](https://github.com/hkchengrex/MMAudio) | 可选外部视频环境音合成模型；音效只用于视频。 |
 
-本仓库没有引入上述插件的源码、前端资源或 npm 运行依赖。名称和工具 ID 用于兼容接口与来源标识，各原项目继续适用其许可证。AI-Plugin 自身采用 GPL-3.0-or-later，具体条款见仓库根目录 LICENSE。
+本仓库没有引入上述插件的源码、前端资源、模型权重或 npm 运行依赖。名称和工具 ID 用于兼容接口与来源标识；外部服务、模型和音色适用各自许可证。AI-Plugin 自身采用 GPL-3.0-or-later，具体条款见仓库根目录 LICENSE。

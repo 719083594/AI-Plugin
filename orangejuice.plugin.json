@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -19,6 +19,10 @@
     "#AI语音 中文女声001",
     "#AI语音游戏 分类",
     "#AI语音帮助",
+    "#AI画图 描述",
+    "#AI二次元 描述",
+    "#AI视频 动作描述",
+    "#AI媒体帮助",
     "#AI登录"
   ],
   "managementPanel": "ai-plugin",
@@ -120,7 +124,9 @@
               "ask_about_image",
               "look_at_image",
               "resolve_image_ref",
-              "GetQQAvatar"
+              "GetQQAvatar",
+              "generate_image",
+              "generate_video"
             ],
             "showReasoning": false,
             "stream": false,
@@ -438,6 +444,98 @@
           "label": "图片缓存保留小时数",
           "type": "integer",
           "description": "0 永久；运行时图片缓存参数，修改后重启。"
+        },
+        {
+          "path": "generation",
+          "label": "图片与视频生成",
+          "type": "object"
+        },
+        {
+          "path": "generation.enabled",
+          "label": "启用图片与视频生成",
+          "type": "boolean",
+          "description": "与识图设置独立；须配置兼容的 Gradio 生成服务。"
+        },
+        {
+          "path": "generation.endpoint",
+          "label": "图片与视频服务地址",
+          "type": "string",
+          "description": "填写服务 HTTPS 根地址，不填写生成路由；实例私有配置，公开示例留空。"
+        },
+        {
+          "path": "generation.token",
+          "label": "图片与视频认证密钥",
+          "type": "string",
+          "secret": true,
+          "description": "可选 Bearer 密钥；私有 Hugging Face Space 需有对应仓库读取权限。只发送到所配服务，保持圆点保留原密钥。"
+        },
+        {
+          "path": "generation.timeoutMs",
+          "label": "生成总等待上限（毫秒）",
+          "type": "integer",
+          "min": 1000,
+          "max": 600000,
+          "description": "默认180000；包括排队、生成和下载。"
+        },
+        {
+          "path": "generation.maxImageBytes",
+          "label": "生成图片最大字节数",
+          "type": "integer",
+          "min": 65536,
+          "max": 10485760,
+          "description": "默认10485760，即10 MiB。"
+        },
+        {
+          "path": "generation.maxVideoBytes",
+          "label": "生成视频最大字节数",
+          "type": "integer",
+          "min": 65536,
+          "max": 52428800,
+          "description": "默认52428800，即50 MiB；QQ 实际限制以协议端为准。"
+        },
+        {
+          "path": "generation.maxPromptCharacters",
+          "label": "生成提示词最多字符数",
+          "type": "integer",
+          "min": 1,
+          "max": 2000,
+          "description": "默认2000；超出后明确提示，不截断提示词。"
+        },
+        {
+          "path": "generation.defaultModel",
+          "label": "默认图片生成模型",
+          "type": "string",
+          "enum": [
+            "flux",
+            "anima"
+          ],
+          "enumLabels": {
+            "flux": "FLUX 写实",
+            "anima": "Anima 二次元"
+          },
+          "description": "用于核心 API 与 AI 工具；画图指令使用 FLUX，二次元指令使用 Anima。"
+        },
+        {
+          "path": "generation.defaultDuration",
+          "label": "默认视频时长（秒）",
+          "type": "integer",
+          "enum": [
+            3,
+            5
+          ],
+          "description": "默认3；支持3或5秒。配音较长时成片保留最后画面。"
+        },
+        {
+          "path": "generation.defaultEffects",
+          "label": "视频默认生成音效",
+          "type": "boolean",
+          "description": "音效只用于视频合成；可通过视频指令的“音效：关闭”临时关闭。"
+        },
+        {
+          "path": "generation.subtitles",
+          "label": "视频默认加入字幕",
+          "type": "boolean",
+          "description": "存在配音台词时生成字幕；可通过视频指令的“字幕：关闭”临时关闭。"
         },
         {
           "path": "speech",
@@ -934,7 +1032,7 @@
           "path": "presets.*.tools",
           "label": "可调用的工具标识",
           "type": "array",
-          "description": "本版五个内置 ID 保持兼容；空数组禁止调用工具。"
+          "description": "填写工具 ID；生成图片/视频可选 generate_image、generate_video，须配置生成服务。音效仅随视频合成。"
         },
         {
           "path": "presets.*.showReasoning",
@@ -1079,6 +1177,36 @@
       "title": "语音帮助",
       "command": "#AI语音帮助 / #AI语音",
       "description": "查看语音回复、音色和文字转语音指令。",
+      "permission": "all"
+    },
+    {
+      "title": "写实绘图与改图",
+      "command": "#AI画图 描述",
+      "description": "使用 FLUX 生成写实图片，也可附图或引用图片修改；须已配置生成服务。",
+      "permission": "all"
+    },
+    {
+      "title": "二次元图片生成",
+      "command": "#AI二次元 描述",
+      "description": "使用 Anima 生成二次元图片；须已配置生成服务。",
+      "permission": "all"
+    },
+    {
+      "title": "图片转视频",
+      "command": "#AI视频 动作描述",
+      "description": "附图、引用图片或接着自己刚生成的图片制作短片，默认 3 秒；可追加 | 时长：5秒。",
+      "permission": "all"
+    },
+    {
+      "title": "视频配音与音效",
+      "command": "#AI视频 动作描述 | 配音：台词 | 音效：环境声音",
+      "description": "配音沿用共用音色，字幕默认开启；音效随视频合成。可追加 | 字幕：关闭 或 | 音效：关闭。",
+      "permission": "all"
+    },
+    {
+      "title": "媒体帮助",
+      "command": "#AI媒体帮助",
+      "description": "公开查看图片、视频、配音、字幕及视频音效的用法。",
       "permission": "all"
     },
     {

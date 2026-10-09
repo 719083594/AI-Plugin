@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
@@ -429,14 +429,18 @@
     },
     {
       "id": "E4",
-      "name": "Gemini 生图与改图",
-      "title": "Gemini 生图与改图",
+      "name": "图片生成与改图",
+      "title": "图片生成与改图",
       "status": "implemented",
-      "description": "支持为 Gemini 请求文字/图片输出，并解析、转送模型返回的图片；当前或引用图片可作为编辑输入。依赖兼容生图模型，尚未对每个实际渠道完成生成验收。",
+      "description": "支持 Gemini 生图输出，以及配置的 Gradio 服务生成 FLUX 写实、Anima 二次元图片；当前或引用图片可用于 FLUX 修改。可用性取决于生成服务配置和上游配额。",
       "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
       "configPaths": [
         "presets.*.responseModalities",
-        "presets.*.model"
+        "presets.*.model",
+        "generation.enabled",
+        "generation.endpoint",
+        "generation.token",
+        "generation.defaultModel"
       ]
     },
     {
@@ -580,7 +584,7 @@
       "name": "QQ 内管理命令",
       "title": "QQ 内管理命令",
       "status": "implemented",
-      "description": "支持角色、会话、个人记忆、回复方式、音色选择、文字转语音、主人登录、状态、备份、清理及主动接话开关命令。依赖显式启用云崽适配。",
+      "description": "支持角色、会话、个人记忆、回复方式、音色选择、文字转语音、图片/视频生成、主人登录、状态、备份、清理及主动接话开关命令。依赖显式启用云崽适配。",
       "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
       "configPaths": []
     },
@@ -692,9 +696,16 @@
       "name": "视频理解与视频生成",
       "title": "视频理解与视频生成",
       "status": "planned",
-      "description": "视频输入、理解、生成和输出完整流程尚未实现。",
-      "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
-      "configPaths": []
+      "description": "已接入外部图片转视频服务并输出短片，可选配音、字幕及随视频生成的音效；视频理解、视频输入分析与实时视频对话尚未实现。",
+      "reason": "短片生成与输出已实现；视频理解与实时视频对话仍待完整实现。",
+      "configPaths": [
+        "generation.enabled",
+        "generation.endpoint",
+        "generation.token",
+        "generation.defaultDuration",
+        "generation.defaultEffects",
+        "generation.subtitles"
+      ]
     },
     {
       "id": "K4",
