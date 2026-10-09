@@ -81,13 +81,26 @@ test('a native-shaped assistant reply can be echoed unchanged in a complete tool
   assert.deepEqual(h.calls[1].input.messages[1], { role: 'assistant', content: null, reasoning_content: '先取得工具结果。', tool_calls: message.tool_calls });
 });
 
+test('observed native assistant null metadata round-trips unchanged with its actual tool result', async () => {
+  const message = { role: 'assistant', content: '', refusal: null, annotations: null, audio: null, function_call: null, tool_calls: [{ id: 'call_observed', type: 'function', function: { name: 'lookup', arguments: '{}' } }], reasoning: null, reasoning_content: null };
+  const h = harness((_, input) => input.messages.some(item => item.role === 'tool') ? { response: '工具结果已读取。' } : { choices: [{ index: 0, message, finish_reason: 'tool_calls' }] });
+  const first = await call(h, '/v1/chat/completions', CHAT); assert.equal(first.status, 200); const received = (await first.json()).choices[0].message; assert.deepEqual(received, message);
+  const second = await call(h, '/v1/chat/completions', { ...CHAT, messages: [...CHAT.messages, received, { role: 'tool', tool_call_id: 'call_observed', content: 'ok' }] });
+  assert.equal(second.status, 200); assert.equal((await second.json()).choices[0].message.content, '工具结果已读取。'); assert.equal(h.calls.length, 2);
+  assert.deepEqual(h.calls[1].input.messages[1], { role: 'assistant', content: '', tool_calls: message.tool_calls });
+});
+
 test('assistant metadata stays role-restricted and bounded without enabling unsupported audio or legacy calls', async () => {
   const good = harness();
   assert.equal((await call(good, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: null, refusal: '无法回答。', tool_calls: null }, ...CHAT.messages] })).status, 200);
   assert.equal((await call(good, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: '旧回答', reasoning_content: null, refusal: null, tool_calls: [] }, ...CHAT.messages] })).status, 200);
+  assert.equal((await call(good, '/v1/chat/completions', { ...CHAT, messages: [{ role: 'assistant', content: '旧回答', reasoning: '有界思考文本' }, ...CHAT.messages] })).status, 200);
   const h = harness();
   for (const item of [
     { role: 'user', content: 'hi', reasoning_content: 'fake assistant' },
+    { role: 'user', content: 'hi', reasoning: null },
+    { role: 'assistant', content: 'hi', reasoning: { arbitrary: 'not a string' } },
+    { role: 'assistant', content: 'hi', reasoning: 'x'.repeat(32001) },
     { role: 'assistant', content: 'hi', reasoning_content: 'x'.repeat(32001) },
     { role: 'assistant', content: 'hi', refusal: { text: 'not a string' } },
     { role: 'assistant', content: 'hi', audio: { id: 'unsupported' } },

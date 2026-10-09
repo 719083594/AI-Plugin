@@ -224,10 +224,10 @@ function chatInput(body, model) {
   if (!Array.isArray(body.messages) || !body.messages.length || body.messages.length > 64) fail('messages 必须含 1–64 条消息。', 'messages');
   let imageCount = 0; let totalText = 0;
   const messages = body.messages.map(item => {
-    record(item, 'messages'); keys(item, ['role', 'content', 'name', 'tool_calls', 'tool_call_id', 'reasoning_content', 'refusal', 'annotations', 'audio', 'function_call']);
+    record(item, 'messages'); keys(item, ['role', 'content', 'name', 'tool_calls', 'tool_call_id', 'reasoning', 'reasoning_content', 'refusal', 'annotations', 'audio', 'function_call']);
     if (!['system', 'developer', 'user', 'assistant', 'tool'].includes(item.role)) fail('消息角色无效。', 'messages');
     const result = { role: item.role === 'developer' ? 'system' : item.role };
-    for (const name of ['reasoning_content', 'refusal']) if (item[name] !== undefined) {
+    for (const name of ['reasoning', 'reasoning_content', 'refusal']) if (item[name] !== undefined) {
       if (item.role !== 'assistant') fail(`仅 assistant 可提供 ${name}。`, 'messages');
       if (item[name] !== null) { result[name] = text(item[name], 'messages', 32000, true); totalText += item[name].length; }
     }
