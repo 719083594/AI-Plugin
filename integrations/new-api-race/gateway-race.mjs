@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto'
 import {pathToFileURL} from 'node:url'
 
 export const candidatePattern=/^qqbot-race-(text|vision)-[a-z0-9-]+$/
+const reasoningEfforts=new Set(['none','minimal','low','medium','high'])
 const failure=(message,status=503,code='RACE_FAILED')=>Object.assign(new Error(message),{status,code})
 const positive=(value,fallback)=>Number.isFinite(Number(value))&&Number(value)>0?Number(value):fallback
 const aborted=signal=>signal?.reason instanceof Error?signal.reason:failure('Request cancelled',499,'CANCELLED')
@@ -34,6 +35,7 @@ function requirements(body){
 }
 
 function specifications(models,body,policy={}){
+  validateReasoningEfforts(policy)
   const inventory=new Set(models),need=requirements(body)
   if(!Array.isArray(policy.candidates)){
     // Existing deployments retain discovery behavior until a policy is supplied.
@@ -49,6 +51,12 @@ function specifications(models,body,policy={}){
     return !need.tools||capabilities.has('tools')
   }).map(candidate=>({...candidate,priority:Number(candidate.priority)||0,resourceGroup:candidate.resourceGroup||candidate.model}))
     .filter((candidate,index,rows)=>rows.findIndex(other=>other.model===candidate.model)===index)
+}
+
+function validateReasoningEfforts(policy){
+  for(const candidate of Array.isArray(policy.candidates)?policy.candidates:[]){
+    if(candidate?.reasoningEffort!==undefined&&!reasoningEfforts.has(candidate.reasoningEffort))throw failure('Invalid candidate reasoningEffort',500,'INVALID_REASONING_EFFORT')
+  }
 }
 
 export function candidatesFor(models,body,policy={}){return specifications(models,body,policy).map(candidate=>candidate.model)}
@@ -129,6 +137,7 @@ function restoreReasoning(payload,candidate,state){
 function payloadFor(body,candidate,resource,state){
   const payload=structuredClone(body)
   payload.model=candidate.model;payload.stream=false
+  if(candidate.reasoningEffort!==undefined)payload.reasoning_effort=candidate.reasoningEffort
   if(candidate.normalizeImageDetail)for(const message of payload.messages||[])if(Array.isArray(message.content))for(const part of message.content){
     if(part.type==='image_url'&&part.image_url&&typeof part.image_url==='object'&&part.image_url.detail==null)part.image_url.detail='auto'
   }
@@ -337,6 +346,7 @@ function readBody(req,signal,maxBytes){
 
 export function startServer(config){
   const base=config.base.replace(/\/$/,''),fetcher=config.fetcher||fetch,policy=config.race||{},state=createRaceState()
+  validateReasoningEfforts(policy)
   const totalMs=positive(config.timeoutMs,8000),inventoryMs=positive(config.inventoryTimeoutMs,1500)
   let inventory=[],lastInventory=0
   const stats={requests:0,winners:{},failures:0,attempts:0,skipped:0,fallbacks:0}

@@ -139,7 +139,7 @@ test('generated video remains delivered if supplementary text fails', async () =
 test('media commands are registered in public help and the automatic command knowledge source', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../orangejuice.plugin.json', import.meta.url), 'utf8'))
   const help = JSON.stringify(helpTopics['ai-public'])
-  for (const command of ['#AI画图', '#AI二次元', '#AI视频', '#AI媒体帮助']) {
+  for (const command of ['#AI画图', '#AI二次元', '#AI视频', '#AI媒体帮助', '#AI媒体模型']) {
     assert.ok(manifest.commandTable.some(row => row.command.includes(command) && row.permission === 'all'))
     assert.ok(manifest.commands.some(row => row.includes(command)))
     assert.ok(help.includes(command))

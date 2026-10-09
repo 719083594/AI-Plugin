@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "orangejuice-gemini-relay",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "ratelimits": [{ "name": "RELAY_RATE_LIMITER", "namespace_id": "91020261", "simple": { "limit": 30, "period": 60 } }],
+  "vars": {
+    "MAX_BODY_BYTES": "8388608",
+    "MAX_JSON_BYTES": "16777216",
+    "MAX_DOWNLOAD_BYTES": "67108864",
+    "REQUEST_TIMEOUT_MS": "180000"
+  }
+  // Secrets: RELAY_API_KEY (client key), GEMINI_API_KEY (Google upstream key).
+  // A dedicated namespace enforces 30 authenticated requests per minute per Cloudflare location.
+}

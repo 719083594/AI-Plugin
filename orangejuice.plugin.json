@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -23,6 +23,9 @@
     "#AI二次元 描述",
     "#AI视频 动作描述",
     "#AI媒体帮助",
+    "#AI媒体模型",
+    "#AI画图 描述 | 模型：模型编号",
+    "#AI视频 描述 | 模型：模型编号",
     "#AI登录"
   ],
   "managementPanel": "ai-plugin",
@@ -454,7 +457,7 @@
           "path": "generation.enabled",
           "label": "启用图片与视频生成",
           "type": "boolean",
-          "description": "与识图设置独立；须配置兼容的 Gradio 生成服务。"
+          "description": "与识图设置独立；支持兼容的 Gradio 生成服务或已配置的 New API 生成模型。"
         },
         {
           "path": "generation.endpoint",
@@ -536,6 +539,44 @@
           "label": "视频默认加入字幕",
           "type": "boolean",
           "description": "存在配音台词时生成字幕；可通过视频指令的“字幕：关闭”临时关闭。"
+        },
+        {
+          "path": "generation.newApi",
+          "label": "New API 图片与视频模型",
+          "type": "object",
+          "description": "可选模型入口，复用已有 OpenAI 兼容渠道的地址和令牌；与默认 Gradio 服务共存。"
+        },
+        {
+          "path": "generation.newApi.enabled",
+          "label": "启用 New API 生成模型",
+          "type": "boolean",
+          "description": "默认关闭。仅在模型已实测可用、允许使用对应上游额度后启用。"
+        },
+        {
+          "path": "generation.newApi.channelId",
+          "label": "New API 已有渠道标识",
+          "type": "string",
+          "description": "填写 channels 中已启用的 OpenAI 兼容渠道 ID；使用该渠道现有 baseUrl 和 apiKey，不另填 Google 密钥。"
+        },
+        {
+          "path": "generation.newApi.imageModels",
+          "label": "已验证的 New API 图片模型",
+          "type": "array",
+          "description": "模型编号字符串；仅列入实际具备生成权限的 Gemini 图片模型，通过 | 模型：编号 按次选择。"
+        },
+        {
+          "path": "generation.newApi.videoModels",
+          "label": "已验证的 New API 视频模型",
+          "type": "array",
+          "description": "模型编号字符串；仅列入已验证的 Veo 文生视频模型。默认4秒，不接收图片或HF配音、字幕、独立音效选项。"
+        },
+        {
+          "path": "generation.newApi.pollIntervalMs",
+          "label": "New API 视频轮询间隔（毫秒）",
+          "type": "integer",
+          "min": 250,
+          "max": 10000,
+          "description": "默认2000；只轮询原任务，超时或失败不会重复提交计费任务。"
         },
         {
           "path": "speech",
@@ -1201,6 +1242,24 @@
       "title": "视频配音与音效",
       "command": "#AI视频 动作描述 | 配音：台词 | 音效：环境声音",
       "description": "配音沿用共用音色，字幕默认开启；音效随视频合成。可追加 | 字幕：关闭 或 | 音效：关闭。",
+      "permission": "all"
+    },
+    {
+      "title": "生成模型列表",
+      "command": "#AI媒体模型 / #AI媒体模型列表",
+      "description": "公开查看当前已启用的图片与视频模型，不显示渠道地址或密钥。",
+      "permission": "all"
+    },
+    {
+      "title": "选择图片模型",
+      "command": "#AI画图 描述 | 模型：模型编号",
+      "description": "从媒体模型列表按次选择已启用的 Gemini 图片模型；不改变默认 FLUX 或 Anima。",
+      "permission": "all"
+    },
+    {
+      "title": "选择视频模型",
+      "command": "#AI视频 描述 | 模型：模型编号 | 时长：4秒",
+      "description": "选择已启用的 Veo 文生视频模型，默认4秒，可选6/8秒；不接收图片、指定配音、独立音效或字幕。",
       "permission": "all"
     },
     {

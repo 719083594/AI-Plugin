@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { newApiDefaults, validateNewApiConfig, newApiTarget } from '../generation/new-api.mjs'
 
 export const pluginRoot = fileURLToPath(new URL('../../', import.meta.url))
 export const defaults = {
@@ -12,7 +13,7 @@ export const defaults = {
   memory: { userEnabled: false, groupEnabled: false, maxItems: 5, autoExtract: false, knowledgeEnabled: false, knowledgeLimit: 3, commandKnowledgeEnabled: true },
   tools: { searchEnabled: true, searchEndpoint: '', searchToken: '', searchModule: '', searchConfigFile: '', searchTimeoutMs: 26000, maxSearchResults: 5, customDirectory: './data/tools', skillsDirectory: './data/skills' },
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
-  generation: { enabled: false, endpoint: '', token: '', timeoutMs: 180000, maxImageBytes: 10485760, maxVideoBytes: 52428800, maxPromptCharacters: 2000, defaultModel: 'flux', defaultDuration: 3, defaultEffects: true, subtitles: true },
+  generation: { enabled: false, endpoint: '', token: '', timeoutMs: 180000, maxImageBytes: 10485760, maxVideoBytes: 52428800, maxPromptCharacters: 2000, defaultModel: 'flux', defaultDuration: 3, defaultEffects: true, subtitles: true, newApi: newApiDefaults },
   speech: { enabled: false, endpoint: '', token: '', defaultVoice: '纳西妲（草神）', language: 'zh', timeoutMs: 45000, maxCharacters: 500, maxAudioBytes: 10485760, noiseScale: 0.6, noiseScaleW: 0.668, lengthScale: 1.2 },
   security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },
   management: { enabled: true, host: '127.0.0.1', port: 48371, publicUrl: 'http://127.0.0.1:48371', apiToken: '', ticketSeconds: 180, sessionSeconds: 3600, webChatEnabled: true },
@@ -52,6 +53,8 @@ export function validateConfig(config) {
   int(generation.maxPromptCharacters, 1, 2000, '绘图视频描述字数上限')
   if (!['flux', 'anima'].includes(generation.defaultModel)) throw new Error('默认绘图模型无效')
   if (![3, 5].includes(generation.defaultDuration)) throw new Error('视频时长须为3秒或5秒')
+  validateNewApiConfig({ ...newApiDefaults, ...generation.newApi })
+  if (generation.newApi?.enabled) newApiTarget(generation, config.channels)
   if (typeof config.speech.enabled !== 'boolean') throw new Error('语音开关无效')
   if (typeof config.speech.endpoint !== 'string' || typeof config.speech.token !== 'string' || config.speech.token.length > 4096) throw new Error('语音服务配置无效')
   if (config.speech.endpoint) {

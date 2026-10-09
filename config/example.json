@@ -152,6 +152,13 @@
     "defaultModel": "flux",
     "defaultDuration": 3,
     "defaultEffects": true,
-    "subtitles": true
+    "subtitles": true,
+    "newApi": {
+      "enabled": false,
+      "channelId": "",
+      "imageModels": [],
+      "videoModels": [],
+      "pollIntervalMs": 2000
+    }
   }
 }

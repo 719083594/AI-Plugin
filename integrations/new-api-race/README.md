@@ -29,15 +29,18 @@ node gateway-race.mjs /path/to/private-gateway.json
 
 ## 策略示例
 
-`policy.json` 是 2026-10-07 实测后的公开示例，使用前须按自己的 New API 目录修改别名和能力：
+`policy.json` 是 2026-10-09 实测后的公开示例，使用前须按自己的 New API 目录修改别名和能力：
 
 - 文本首组选 Kimi、Qwen；失败后才尝试 DeepSeek Flash、GLM 5.3，再回退旧 GLM。
 - 识图首组选 DeepSeek Flash Vision、Qwen；带工具的识图请求只使用已经验证支持两者的候选。
+- Gemini 3.5、3.1 Flash-Lite 的文字、识图与工具能力已验证，加入首组轮转。它们共享并发 1、RPM 10、估算 TPM 8 万和输出上限 2048；单路超时 12 秒。3.8 Flash 因上游繁忙，仅作为文字后备，不参与工具调用。
 - 每组同时最多两路。Intern 资源组共享并发 2、RPM 40、估算 TPM 180 万及单次输出上限 4096，避免把整个模型目录一次发出。
 - 主请求总时限 30 秒，为最终故障回退保留 6 秒。AI 实例示例时限为普通聊天 35 秒、工具任务 90 秒、渠道请求 35 秒；按实际网络和工具耗时调整。
 - 工具后续轮次优先保持在同一赢家。缓存以调用方、当前用户消息、助手工具参数的摘要隔离；默认不缓存 reasoning 原文。
 
 `aiInstanceTiming`、`manualOnlyModels`、`notes` 是部署参考字段，网关自身不读取。模型支持、速度、风格与限额会变化，需要自己验证；结构有效的回答不等于事实或角色风格一定正确。
+
+候选可设置可选的 `reasoningEffort`，例如 `{"model":"qqbot-race-text-gemini","capabilities":["text","tools"],"reasoningEffort":"low"}`。仅允许 `none`、`minimal`、`low`、`medium`、`high`，非法值会在启动或调用前报配置错误。网关只对该候选的请求副本设置 OpenAI `reasoning_effort`，再交给 New API 转换为上游协议；其他候选与原始消息、工具字段不受影响。未配置时不额外注入此字段，调用方已有的值照常保留。各模型实际接受的档位仍需单独验证，尤其图像与不同 Gemini 版本；不要把 OpenAI 参数作为 New API 渠道的顶层原生 Gemini body 覆盖字段。
 
 New API 内部配额与供应商账单是两层配置。自用转发设内部倍率 0，并不会取消供应商的墨点扣费；不要把墨点换算成虚构的货币价格。已经启动的输家请求即使取消，也可能消耗上游额度。
 
@@ -49,6 +52,6 @@ New API 内部配额与供应商账单是两层配置。自用转发设内部倍
 node --test --test-timeout=60000 gateway-race.test.mjs
 ```
 
-31 个合成测试覆盖能力筛选、有限并发、配额暂停、回退预算、工具链隔离、取消传播、HTTP 鉴权与超时。测试不调用真实模型或读取运行凭据。详细边界见 [GATEWAY-VALIDATION.md](GATEWAY-VALIDATION.md)。
+34 个合成测试覆盖能力筛选、有限并发、候选推理档位隔离与校验、配额暂停、回退预算、工具链隔离、取消传播、HTTP 鉴权与超时。测试不调用真实模型或读取运行凭据。详细边界见 [GATEWAY-VALIDATION.md](GATEWAY-VALIDATION.md)。
 
 墨点费用与限制以官方文档为准：[模型与计费](https://cdn-static.openxlab.org.cn/magic-maker/action-static/tokenplan-doc/quick-start/04-model-limits-and-pricing.md)、[速率限制](https://cdn-static.openxlab.org.cn/magic-maker/action-static/tokenplan-doc/quick-start/05-rate-limits.md)。

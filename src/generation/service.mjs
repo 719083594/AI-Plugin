@@ -1,5 +1,6 @@
 import {randomInt} from 'node:crypto'
 import {publicImageUrl} from '../media/remote.mjs'
+import {newApiModelEnabled,newApiTarget} from './new-api.mjs'
 
 const DEFAULTS={enabled:false,endpoint:'',token:'',timeoutMs:180000,maxImageBytes:10485760,maxVideoBytes:52428800,maxPromptCharacters:2000,defaultModel:'flux',defaultDuration:3,defaultEffects:true,subtitles:true}
 const IMAGE_EXTENSIONS={ 'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif' }
@@ -18,6 +19,15 @@ async function abortable(operation,signal){
   const interrupted=new Promise((_,reject)=>{cancel=()=>reject(cancelled(signal));signal.addEventListener('abort',cancel,{once:true})})
   try{return await Promise.race([Promise.resolve().then(operation),interrupted])}
   finally{signal.removeEventListener('abort',cancel)}
+}
+async function pause(ms,signal){
+  check(signal)
+  await new Promise((resolve,reject)=>{
+    const finish=()=>{signal.removeEventListener('abort',cancel);resolve()}
+    const timer=setTimeout(finish,ms)
+    const cancel=()=>{clearTimeout(timer);signal.removeEventListener('abort',cancel);reject(cancelled(signal))}
+    signal.addEventListener('abort',cancel,{once:true})
+  })
 }
 const boundedNumber=(value,fallback,min,max)=>Number.isFinite(Number(value))?Math.min(max,Math.max(min,Number(value))):fallback
 function endpointUrl(value){
@@ -186,7 +196,7 @@ async function queueResult(response,signal,state){
 
 /** One visual job at a time. Audio effects are composed into videos by /story. */
 export class GenerationService {
-  constructor({config=()=>DEFAULTS,fetchImpl=fetch}={}){this.config=config;this.fetchImpl=fetchImpl;this.closed=new AbortController();this.active=false;this.waiters=[];this.cached=null}
+  constructor({config=()=>DEFAULTS,channels=()=>[],fetchImpl=fetch}={}){this.config=config;this.channels=channels;this.fetchImpl=fetchImpl;this.closed=new AbortController();this.active=false;this.waiters=[];this.cached=null}
   close(){this.closed.abort();this.cached=null}
   async acquire(signal){
     check(signal)
@@ -199,7 +209,7 @@ export class GenerationService {
     })
   }
   release(){const next=this.waiters.shift();if(next)next.resolve();else this.active=false}
-  async request(url,{base,config,signal,method='GET',body,json=false,mediaExtensions,allowMissing=false}){
+  async request(url,{base,config,signal,method='GET',body,json=false,mediaExtensions,allowMissing=false,strictRoute=false}){
     for(let redirects=0;redirects<=3;redirects++){
       check(signal)
       if(url.origin!==base.origin)throw failure('GENERATION_PROTOCOL','生成服务跳转到了不受信任的位置。')
@@ -207,6 +217,7 @@ export class GenerationService {
       const response=await abortable(()=>this.fetchImpl(url,{method,body,headers,signal,redirect:'manual'}),signal)
       if(response.status>=300&&response.status<400){
         const location=response.headers.get('location');cancelBody(response.body)
+        if(strictRoute)throw failure('GENERATION_PROTOCOL','New API 生成接口不允许重定向，请检查渠道地址。')
         if(!location||redirects===3||(method!=='GET'&&![307,308].includes(response.status)))throw failure('GENERATION_PROTOCOL','生成服务重定向异常，请检查配置地址。')
         let next
         try{next=new URL(location,url)}catch{throw failure('GENERATION_PROTOCOL','生成服务重定向地址无效。')}
@@ -282,6 +293,68 @@ export class GenerationService {
       cancelBody(response?.body)
     }catch{/* Cancellation is best effort; never repeat a generation request. */}
   }
+  async executeNewApi(kind,options){
+    const settings={...DEFAULTS,...this.config()}
+    if(!newApiModelEnabled(settings,kind,options.model))throw failure('GENERATION_INPUT','该生成模型未启用，请查看 #AI媒体模型。')
+    let target
+    try{target=newApiTarget(settings,this.channels())}catch(error){throw failure('GENERATION_ENDPOINT',error.message)}
+    const config={...target.config,maxImageBytes:boundedNumber(settings.maxImageBytes,DEFAULTS.maxImageBytes,1,DEFAULTS.maxImageBytes),maxVideoBytes:boundedNumber(settings.maxVideoBytes,DEFAULTS.maxVideoBytes,32,DEFAULTS.maxVideoBytes),maxPromptCharacters:Math.floor(boundedNumber(settings.maxPromptCharacters,DEFAULTS.maxPromptCharacters,1,2000))}
+    const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(new DOMException('Timed out','TimeoutError')),boundedNumber(config.timeoutMs,DEFAULTS.timeoutMs,1,600000))
+    const signal=AbortSignal.any([timeout.signal,this.closed.signal,...(options.signal?[options.signal]:[])])
+    const context={base:target.base,config,signal,strictRoute:true};let acquired=false
+    try{
+      const prompt=text(options.prompt,kind==='image'?'画面描述':'动作与镜头描述',config.maxPromptCharacters)
+      if(options.seed!==undefined||options.width!==undefined||options.height!==undefined)throw failure('GENERATION_INPUT','New API 生成暂不支持指定随机种子或图片宽高。')
+      if(kind==='image'){
+        const reference=options.reference?preparedImage(options.reference,config.maxImageBytes):null
+        await this.acquire(signal);acquired=true
+        const parts=[{text:prompt},...(reference?[{inlineData:{mimeType:reference.mime,data:reference.bytes.toString('base64')}}]:[])]
+        const response=await this.request(route(context.base,'v1beta/models/'+encodeURIComponent(options.model)+':generateContent'),{...context,method:'POST',json:true,body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseModalities:['TEXT','IMAGE']}})})
+        const result=await boundedJson(response,Math.ceil(config.maxImageBytes/3)*4+262144,signal)
+        if(result.error)throw remoteFailure(result.error)
+        const candidate=result.candidates?.[0]
+        if(result.promptFeedback?.blockReason||['SAFETY','BLOCKLIST','PROHIBITED_CONTENT','IMAGE_SAFETY','RECITATION'].includes(candidate?.finishReason))throw failure('GENERATION_BLOCKED','生成请求被模型安全规则拦截，请修改描述。')
+        const inline=candidate?.content?.parts?.find(part=>part.inlineData||part.inline_data)
+        const value=inline?.inlineData||inline?.inline_data
+        if(!value)throw failure('GENERATION_PROTOCOL','模型没有返回图片，请检查该模型是否具有图像生成权限。')
+        const image=preparedImage({data:value.data,mimeType:value.mimeType||value.mime_type},config.maxImageBytes)
+        check(signal)
+        return {type:'image',data:image.bytes.toString('base64'),mimeType:image.mime,model:options.model}
+      }
+      // HF story composition is separate from the upstream model's native audio.
+      // Never silently discard a user's requested narration or subtitles.
+      if(options.image)throw failure('GENERATION_INPUT','New API 视频当前只开放文生视频；图片转视频请使用默认模型。')
+      if(options.script||options.effectsPrompt||options.effectsEnabled===true||options.effects===true||options.subtitles===true)throw failure('GENERATION_INPUT','New API 视频暂不支持指定配音、独立音效或字幕；这些选项请使用默认视频模型。')
+      const duration=options.duration??4
+      if(![4,6,8].includes(duration))throw failure('GENERATION_INPUT','New API 视频时长可选 4 秒、6 秒或 8 秒。')
+      await this.acquire(signal);acquired=true
+      const response=await this.request(route(context.base,'v1/videos'),{...context,method:'POST',json:true,body:JSON.stringify({model:options.model,prompt,duration,size:'1280x720',metadata:{durationSeconds:duration,resolution:'720p',aspectRatio:'16:9'}})})
+      let task=await boundedJson(response,262144,signal)
+      if(task.error)throw remoteFailure(task.error)
+      const id=task.id
+      if(typeof id!=='string'||!/^[-_a-zA-Z0-9]{1,200}$/.test(id))throw failure('GENERATION_PROTOCOL','New API 没有返回有效的视频任务编号。')
+      for(;;){
+        if(['completed','succeeded'].includes(task.status))break
+        if(['failed','cancelled','canceled','expired'].includes(task.status))throw failure('GENERATION_UNAVAILABLE','视频任务失败或已取消，请稍后重试。')
+        if(!['queued','pending','in_progress','processing','running','submitted'].includes(task.status))throw failure('GENERATION_PROTOCOL','New API 返回了无法识别的视频任务状态。')
+        await pause(config.newApi.pollIntervalMs,signal)
+        const poll=await this.request(route(context.base,'v1/videos/'+encodeURIComponent(id)),context)
+        task=await boundedJson(poll,262144,signal)
+        if(task.error)throw remoteFailure(task.error)
+        if(task.id!==undefined&&task.id!==id)throw failure('GENERATION_PROTOCOL','New API 返回了不匹配的视频任务编号。')
+      }
+      // Do not follow arbitrary result URLs or forward a token to a media CDN.
+      const video=await this.request(route(context.base,'v1/videos/'+encodeURIComponent(id)+'/content'),context)
+      const claimed=video.headers.get('content-type')?.split(';')[0].trim().toLowerCase()
+      if(claimed&&claimed!=='application/octet-stream'&&claimed!=='video/mp4'){cancelBody(video.body);throw failure('GENERATION_FILE_INVALID','New API 没有返回 MP4 视频内容。')}
+      const bytes=await boundedBytes(video,config.maxVideoBytes,signal,'GENERATION_VIDEO_TOO_LARGE');validateMp4(bytes);check(signal)
+      return {type:'video',data:bytes.toString('base64'),mimeType:'video/mp4',model:options.model,durationSeconds:duration}
+    }catch(error){
+      if(signal.aborted)throw cancelled(signal)
+      if(error instanceof GenerationError)throw error
+      throw failure('GENERATION_UNAVAILABLE','无法连接 New API 生成服务，请稍后重试。')
+    }finally{clearTimeout(timer);if(acquired)this.release()}
+  }
   async execute(api,options,prepare){
     const config={...DEFAULTS,...this.config()}
     if(!config.enabled)throw failure('GENERATION_DISABLED','AI 图片与视频生成尚未启用。')
@@ -315,6 +388,7 @@ export class GenerationService {
     }
   }
   image(options={}){
+    if(options.model&&!['flux','anima'].includes(options.model))return this.executeNewApi('image',options)
     return this.execute('image',options,config=>{
       const prompt=text(options.prompt,'画面描述',config.maxPromptCharacters),model=options.model??config.defaultModel
       if(!['flux','anima'].includes(model))throw failure('GENERATION_INPUT','画风仅支持写实 / 通用（flux）或二次元（anima）。')
@@ -325,6 +399,7 @@ export class GenerationService {
     })
   }
   video(options={}){
+    if(options.model&&options.model!=='hf-story')return this.executeNewApi('video',options)
     return this.execute('story',options,config=>{
       const prompt=text(options.prompt,'动作与镜头描述',config.maxPromptCharacters),script=text(options.script,'配音文字',200,{empty:true}),effectsPrompt=text(options.effectsPrompt,'环境音效描述',config.maxPromptCharacters,{empty:true})
       const voice=options.voice??'zf_001'

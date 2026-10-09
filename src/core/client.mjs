@@ -16,6 +16,7 @@ import { checkDailyCleanup } from './daily-cleanup.mjs'
 import { SpeechService, LEGACY_VOICE_CATALOG } from '../speech/index.mjs'
 import { GenerationService } from '../generation/service.mjs'
 import { createGenerationTools } from '../generation/tools.mjs'
+import { generationModels, newApiModelEnabled } from '../generation/new-api.mjs'
 
 export const cleanText = value => String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<\/?(?:think|analysis|reasoning|answer)>/gi, '').trim()
 export function redactError(error, config) {
@@ -72,7 +73,7 @@ export class AIClient {
     this.startedAt = Date.now(); this.maintenanceTimer = null; this.speechControllers = new Set()
     this.commandKnowledge = new CommandKnowledge(this)
     this.speech = speechService || new SpeechService({ config: () => this.config().speech || { enabled: false } })
-    this.generation = generationService || new GenerationService({ config: () => this.config().generation || { enabled: false } })
+    this.generation = generationService || new GenerationService({ config: () => this.config().generation || { enabled: false }, channels: () => this.config().channels })
     for (const tool of createGenerationTools(this)) this.tools.register(tool)
   }
   config() { return this.configProvider() }
@@ -85,13 +86,16 @@ export class AIClient {
   userKey(input) { return input.botId ? `${input.botId}:${input.userId}` : String(input.userId) }
   groupKey(input) { return input.botId ? `${input.botId}:${input.groupId}` : String(input.groupId) }
   speechConfigured(config = this.config()) { return Boolean(config.speech?.enabled && config.speech.endpoint) }
-  generationConfigured(config = this.config()) { return Boolean(config.generation?.enabled && config.generation.endpoint) }
+  generationModels(config = this.config()) { return generationModels(config.generation, config.channels) }
+  generationConfigured(config = this.config()) { const models = this.generationModels(config); return Boolean(models.image.length || models.video.length) }
   generateImage(input, options = {}) { return this.runGeneration('image', input, options) }
   generateVideo(input, options = {}) { return this.runGeneration('video', input, options) }
   async runGeneration(kind, input, options = {}, { fromTool = false } = {}) {
     this.checkSpeechAccess(input)
     const config = this.config()
     if (!this.generationConfigured(config)) throw new Error('绘图和视频服务尚未配置，请联系机器人主人')
+    const newApiVideo = kind === 'video' && options.model && options.model !== 'hf-story'
+    if (newApiVideo && !newApiModelEnabled(config.generation, 'video', options.model)) throw new Error('该视频模型未启用，请查看 #AI媒体模型')
     if (!fromTool && !this.rateAllowed(input)) throw new Error('请求过于频繁，请稍后再试')
     const prompt = cleanText(options.prompt), script = cleanText(options.script), effectsPrompt = cleanText(options.effectsPrompt)
     if (!prompt) throw new Error('请填写画面或动作描述')
@@ -104,11 +108,12 @@ export class AIClient {
     try {
       let sources = options.imageRef ? [{ type: 'image', ref: options.imageRef }] : input.images || []
       if (sources.length > 1) throw new Error('每次生成请只提供一张参考图片')
-      if (!sources.length && kind === 'video') {
+      if (!sources.length && kind === 'video' && !newApiVideo) {
         const saved = this.storage.maintenance('generation-image:' + key)
         if (saved && saved.revision === revision && saved.groupId === String(input.groupId || '') && saved.botId === String(input.botId || '')) sources = [{ type: 'image', ref: saved.ref }]
       }
-      if (!sources.length && kind === 'video') throw new Error('请附带或引用一张图片，也可以先用 #AI画图 生成')
+      if (!sources.length && kind === 'video' && !newApiVideo) throw new Error('请附带或引用一张图片，也可以先用 #AI画图 生成')
+      if (newApiVideo && sources.length) throw new Error('New API 视频当前只开放文生视频；图片转视频请使用默认模型')
       const prepared = await this.prepareImages(sources, input, signal)
       let media
       if (kind === 'image') {
@@ -121,13 +126,13 @@ export class AIClient {
         this.storage.setMaintenance('generation-image:' + key, { ref, revision, groupId: String(input.groupId || ''), botId: String(input.botId || '') })
       } else {
         let voice = 'zf_001'
-        if (script) {
+        if (script && !newApiVideo) {
           const catalog = await this.speechCatalog({ signal }), current = this.speechSettings()
           const selected = catalog.resolveVoice(current.voice, { language: current.language })
           if (!catalog.modern || !selected) throw new Error('视频配音需要当前语音服务的有效音色，请先用 #AI音色列表 选择')
           voice = selected.id
         }
-        media = await abortable(() => this.generation.video({ image: prepared[0], prompt, duration: options.duration ?? config.generation.defaultDuration, script, voice, effectsPrompt, effectsEnabled: options.effectsEnabled ?? config.generation.defaultEffects, subtitles: options.subtitles ?? config.generation.subtitles, signal }), signal)
+        media = await abortable(() => this.generation.video({ image: prepared[0], prompt, model: options.model, duration: options.duration ?? (newApiVideo ? 4 : config.generation.defaultDuration), script, voice, effectsPrompt, effectsEnabled: options.effectsEnabled ?? (newApiVideo ? false : config.generation.defaultEffects), subtitles: options.subtitles ?? (newApiVideo ? false : config.generation.subtitles), signal }), signal)
         media = { ...media, mime: media.mime || media.mimeType }
       }
       signal.throwIfAborted()
@@ -386,8 +391,15 @@ export class AIClient {
           if (current?.role !== 'user' || !Array.isArray(current.content)) throw new Error('识图提问必须以用户消息结束')
           current.content = [...current.content.filter(part => !(part.type === 'text' && part.text.startsWith('[此前的图片'))), ...visualImages]
         }
-        const names = (preset.tools || []).filter(name => (name !== 'web_search' || this.searchConfigured(config)) && (!['generate_image', 'generate_video'].includes(name) || (!input.proactive && this.generationConfigured(config))))
+        const availableGeneration = this.generationModels(config)
+        const names = (preset.tools || []).filter(name => (name !== 'web_search' || this.searchConfigured(config)) && (!['generate_image', 'generate_video'].includes(name) || (!input.proactive && availableGeneration[name === 'generate_image' ? 'image' : 'video'].length)))
         const definitions = this.tools.list({ names })
+        for (const tool of definitions) {
+          if (!['generate_image', 'generate_video'].includes(tool.name)) continue
+          const models = availableGeneration[tool.name === 'generate_image' ? 'image' : 'video']
+          tool.inputSchema.properties.model = { type: 'string', enum: models }
+          tool.description += ' 当前可选模型：' + models.join('、') + '。省略 model 使用原有默认服务。'
+        }
         const pendingImages = [], pendingVideos = [], generatedKinds = new Set(), attemptedGenerationKinds = new Set()
         const toolContext = { ...input, signal, userId: String(input.userId), host: this.host, getAvatar: input.getAvatar || this.host.getAvatar, images: prepared.length ? prepared : input.images || [], messages, imageStore: this.images, send: async contents => { signal.throwIfAborted(); pendingImages.push(...contents.filter(part => part.type === 'image')); pendingVideos.push(...contents.filter(part => part.type === 'video')); return { delivered: true, queued: true } } }
         const persisted = [user]; let response, usage = {}, providerRounds = 0, responseTask = ''
@@ -539,6 +551,6 @@ export class AIClient {
     const daily = () => { try { checkDailyCleanup(this) } catch (error) { this.host.log?.('每日聊天清理失败：' + error.message) } }
     daily(); this.dailyCleanupTimer = setInterval(daily, 30000); this.dailyCleanupTimer.unref?.()
   }
-  health() { return { name: 'AI-Plugin', version: '1.2.0', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), generationConfigured: this.generationConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
+  health() { return { name: 'AI-Plugin', version: '1.2.1', ready: true, searchConfigured: this.searchConfigured(), speechConfigured: this.speechConfigured(), generationConfigured: this.generationConfigured(), uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), active: this.queue.active, queued: this.queue.pending.length, channelsEnabled: this.config().channels.filter(channel => channel.enabled !== false).length, presets: this.config().presets.length, tools: this.tools.list().map(tool => tool.name), storage: this.storage.stats() } }
   close() { this.commandKnowledge.close(); clearInterval(this.maintenanceTimer); clearInterval(this.dailyCleanupTimer); for (const controllers of this.inflight.values()) for (const controller of controllers) controller.abort(); for (const controller of this.speechControllers) controller.abort(); this.speech.close?.(); this.generation.close?.(); this.storage.close() }
 }

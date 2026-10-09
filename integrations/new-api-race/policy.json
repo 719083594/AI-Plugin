@@ -21,6 +21,12 @@
         "maxConcurrent": 2,
         "requestsPerMinute": 40,
         "maxOutputTokens": 4096
+      },
+      "gemini": {
+        "maxConcurrent": 1,
+        "requestsPerMinute": 10,
+        "tokensPerMinute": 80000,
+        "maxOutputTokens": 2048
       }
     },
     "candidates": [
@@ -190,6 +196,75 @@
         "normalizeImageDetail": false,
         "rejectTruncated": false,
         "enabled": true
+      },
+      {
+        "model": "qqbot-race-text-gemini35-lite",
+        "priority": 300,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "gemini",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true,
+        "reasoningEffort": "minimal"
+      },
+      {
+        "model": "qqbot-race-vision-gemini35-lite",
+        "priority": 300,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "gemini",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true,
+        "reasoningEffort": "minimal"
+      },
+      {
+        "model": "qqbot-race-text-gemini31-lite",
+        "priority": 300,
+        "capabilities": [
+          "text",
+          "tools"
+        ],
+        "resourceGroup": "gemini",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true,
+        "reasoningEffort": "minimal"
+      },
+      {
+        "model": "qqbot-race-vision-gemini31-lite",
+        "priority": 300,
+        "capabilities": [
+          "vision",
+          "tools"
+        ],
+        "resourceGroup": "gemini",
+        "timeoutMs": 12000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true,
+        "reasoningEffort": "minimal"
+      },
+      {
+        "model": "qqbot-race-text-gemini38",
+        "priority": 100,
+        "capabilities": [
+          "text"
+        ],
+        "resourceGroup": "gemini",
+        "timeoutMs": 18000,
+        "normalizeImageDetail": true,
+        "rejectTruncated": true,
+        "enabled": true,
+        "reasoningEffort": "low"
       }
     ]
   },
@@ -210,6 +285,8 @@
     "Only tested capabilities enter automatic racing.",
     "At most two upstream attempts run in a priority group; losing requests may still cost upstream points.",
     "Estimated TPM guard is conservative and is not an account points balance.",
-    "No global thinking parameter is injected."
+    "No global thinking parameter is injected.",
+    "Gemini 3.5 and 3.1 Flash-Lite share a bounded resource and rotate with the existing primary candidates.",
+    "Gemini 3.8 Flash is a text-only backup after intermittent upstream overload; tool calls are not enabled for it."
   ]
 }

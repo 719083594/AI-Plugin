@@ -191,6 +191,43 @@ test('candidate-only image normalization and output limits leave the original pr
   assert.equal(payload.max_tokens,512);assert(!Object.hasOwn(payload,'thinking'))
 })
 
+test('candidate reasoning effort is isolated across racing peers and fallback while preserving messages and tools',async()=>{
+  const original={...toolBody(),tool_choice:'auto',temperature:0.2,user:'synthetic-caller'},snapshot=structuredClone(original)
+  const mock=mockFetcher(model=>({status:model===old?200:500}))
+  const configured=policy({candidates:[spec(high,100,{reasoningEffort:'low'}),spec(peer,100,{reasoningEffort:'minimal'}),spec(old,0)]})
+  assert.equal((await run(mock,{body:original,policy:configured})).winner,old)
+  assert.equal(mock.calls.find(call=>call.payload.model===high).payload.reasoning_effort,'low')
+  assert.equal(mock.calls.find(call=>call.payload.model===peer).payload.reasoning_effort,'minimal')
+  assert(!Object.hasOwn(mock.calls.find(call=>call.payload.model===old).payload,'reasoning_effort'))
+  for(const call of mock.calls){
+    const expected={...snapshot,model:call.payload.model,stream:false}
+    if(call.payload.model===high)expected.reasoning_effort='low'
+    if(call.payload.model===peer)expected.reasoning_effort='minimal'
+    assert.deepEqual(call.payload,expected)
+  }
+  assert.deepEqual(original,snapshot,'candidate configuration must not mutate the caller payload')
+})
+
+test('reasoning effort accepts every documented value and only configured candidates override a caller value',async()=>{
+  for(const effort of ['none','minimal','low','medium','high']){
+    const original={...body(),reasoning_effort:'high'},mock=mockFetcher(model=>({status:model===old?200:500}))
+    await run(mock,{body:original,models:[high,old],policy:policy({candidates:[spec(high,100,{reasoningEffort:effort}),spec(old,0)]})})
+    assert.equal(mock.calls.find(call=>call.payload.model===high).payload.reasoning_effort,effort)
+    assert.equal(mock.calls.find(call=>call.payload.model===old).payload.reasoning_effort,'high')
+    assert.equal(original.reasoning_effort,'high')
+  }
+})
+
+test('invalid candidate reasoning effort fails validation before any inventory or model request',async()=>{
+  for(const effort of ['',null,false,0,'LOW','disabled','xhigh',{},['low']]){
+    const mock=mockFetcher(()=>({})),configured=policy({candidates:[spec(high,100,{reasoningEffort:effort})]})
+    assert.throws(()=>candidatesFor([high],body(),configured),error=>error.code==='INVALID_REASONING_EFFORT')
+    await assert.rejects(run(mock,{models:[high],policy:configured}),error=>error.code==='INVALID_REASONING_EFFORT')
+    assert.throws(()=>startServer({base:'https://upstream.invalid/v1',race:configured,fetcher:mock.fetcher}),error=>error.code==='INVALID_REASONING_EFFORT')
+    assert.equal(mock.calls.length,0)
+  }
+})
+
 test('large image DataURLs use an image allowance instead of millions of text tokens, without decoding',async()=>{
   const largeImage='data:image/png;base64,'+'A'.repeat(3*1024*1024)
   const imageBody={...body(),model:'qqbot-vision',messages:[{role:'user',content:[{type:'text',text:'合成图片问题'},{type:'image_url',image_url:{url:largeImage}}]}]}
@@ -409,21 +446,30 @@ test('unauthorized or invalid HTTP requests never invoke inventory or a model',a
   assert.equal(calls,0)
 })
 
-test('actual rollout policy keeps eight tested Intern aliases separated by text, tools and vision',()=>{
+test('actual rollout policy separates tested Intern and Gemini capabilities with bounded shared resources',()=>{
   const p=JSON.parse(readFileSync(new URL('./policy.json',import.meta.url),'utf8'))
   const models=p.race.candidates.map(candidate=>candidate.model)
-  assert.equal(models.length,13)
+  assert.equal(models.length,18)
   const text=candidatesFor(models,body(),p.race),tools=candidatesFor(models,toolBody(),p.race)
   const images=candidatesFor(models,{...body(),model:'qqbot-vision'},p.race)
   const imageTools=candidatesFor(models,{...toolBody(),model:'qqbot-vision'},p.race)
   assert.equal(text.filter(model=>model.includes('-intern-')).length,4)
-  assert.deepEqual(text,tools)
+  assert.deepEqual(text.filter(model=>model!=='qqbot-race-text-gemini38'),tools)
   assert.equal(images.filter(model=>model.includes('-intern-')).length,4)
   assert(!imageTools.some(model=>model.includes('deepseek-v4-flash-vision')||model.includes('agents-a1')))
   assert(imageTools.some(model=>model.includes('qwen3-8-27b')))
   assert(imageTools.some(model=>model.includes('kimi-k2-6')))
   assert.equal(p.race.resources.intern.maxConcurrent,2)
   assert.equal(p.race.resources.intern.requestsPerMinute,40)
+  assert.equal(p.race.maxParallel,2)
+  assert.equal(p.race.resources.gemini.maxConcurrent,1)
+  assert.equal(p.race.resources.gemini.requestsPerMinute,10)
+  assert.equal(text.filter(model=>model.includes('-gemini')).length,3)
+  assert.equal(imageTools.filter(model=>model.includes('-gemini')).length,2)
+  for(const candidate of p.race.candidates.filter(candidate=>candidate.resourceGroup==='gemini')){
+    assert(candidate.rejectTruncated)
+    assert.equal(candidate.reasoningEffort,candidate.model.endsWith('gemini38')?'low':'minimal')
+  }
   assert(!p.race.candidates.some(candidate=>candidate.restoreToolReasoning))
   assert(p.timeoutMs<p.aiInstanceTiming.timeoutMs)
   assert(p.timeoutMs<p.requestTimeoutMs)

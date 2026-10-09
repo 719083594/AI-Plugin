@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
@@ -432,7 +432,7 @@
       "name": "图片生成与改图",
       "title": "图片生成与改图",
       "status": "implemented",
-      "description": "支持 Gemini 生图输出，以及配置的 Gradio 服务生成 FLUX 写实、Anima 二次元图片；当前或引用图片可用于 FLUX 修改。可用性取决于生成服务配置和上游配额。",
+      "description": "支持已启用 New API Gemini 模型生成与修改图片，以及配置的 Gradio 服务生成 FLUX 写实、Anima 二次元图片；通过 AI 指令按次选模型。可用性取决于配置、模型权限和上游配额。",
       "reason": "已实现说明中的范围；实际模型能力和宿主适配仍需对应配置。",
       "configPaths": [
         "presets.*.responseModalities",
@@ -440,7 +440,10 @@
         "generation.enabled",
         "generation.endpoint",
         "generation.token",
-        "generation.defaultModel"
+        "generation.defaultModel",
+        "generation.newApi.enabled",
+        "generation.newApi.channelId",
+        "generation.newApi.imageModels"
       ]
     },
     {
@@ -696,7 +699,7 @@
       "name": "视频理解与视频生成",
       "title": "视频理解与视频生成",
       "status": "planned",
-      "description": "已接入外部图片转视频服务并输出短片，可选配音、字幕及随视频生成的音效；视频理解、视频输入分析与实时视频对话尚未实现。",
+      "description": "已接入外部图片转视频服务并输出短片，可选配音、字幕及随视频生成的音效；可选 New API Veo 文生视频，不支持 HF 的配音、字幕或独立音效选项。视频理解、视频输入分析与实时视频对话尚未实现。",
       "reason": "短片生成与输出已实现；视频理解与实时视频对话仍待完整实现。",
       "configPaths": [
         "generation.enabled",
@@ -704,7 +707,11 @@
         "generation.token",
         "generation.defaultDuration",
         "generation.defaultEffects",
-        "generation.subtitles"
+        "generation.subtitles",
+        "generation.newApi.enabled",
+        "generation.newApi.channelId",
+        "generation.newApi.videoModels",
+        "generation.newApi.pollIntervalMs"
       ]
     },
     {
