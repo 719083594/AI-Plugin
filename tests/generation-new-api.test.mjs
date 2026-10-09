@@ -1,10 +1,11 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { GenerationService } from '../src/generation/service.mjs'
-import { generationModels, newApiTarget, newApiDefaults } from '../src/generation/new-api.mjs'
+import { generationModels, newApiTarget, newApiDefaults, newApiImageProtocol } from '../src/generation/new-api.mjs'
 import { defaults, merge, validateConfig } from '../src/core/config.mjs'
 import { AIClient } from '../src/core/client.mjs'
 import { Storage } from '../src/core/storage.mjs'
@@ -12,6 +13,7 @@ import { parseMediaCommand, handleMediaCommand } from '../integrations/yunzai/me
 import { createStaticHelpReader } from '../src/rendering/index.mjs'
 
 const imageModel = 'gemini-tested-image', videoModel = 'veo-tested-video'
+const openAiModel = 'cf-flux-2-klein-4b'
 const channel = { id: 'local-new-api', type: 'openai', baseUrl: 'http://new-api:3000/v1', apiKey: 'fixture-new-api-token', enabled: true }
 const settings = { enabled: true, endpoint: 'https://hf.example', token: 'fixture-hf-token', timeoutMs: 2000, newApi: { ...newApiDefaults, enabled: true, channelId: channel.id, imageModels: [imageModel], videoModels: [videoModel], pollIntervalMs: 250 } }
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS2kAAAAASUVORK5CYII=', 'base64')
@@ -34,6 +36,9 @@ function fixture(handler, overrides = {}) {
   } })
   return { calls, service }
 }
+function openAiFixture(handler, overrides = {}) {
+  return fixture(async (...args) => await handler?.(...args) || (args[0].pathname.startsWith('/v1/images/') ? json({ data: [{ b64_json: image.data }] }) : null), { ...overrides, newApi: { ...settings.newApi, imageModels: [imageModel, openAiModel], imageProtocols: { [openAiModel]: 'openai' }, ...overrides.newApi } })
+}
 
 test('New API generation is opt-in, keeps HF defaults and accepts only existing authenticated channels', () => {
   assert.equal(defaults.generation.newApi.enabled, false)
@@ -45,9 +50,15 @@ test('New API generation is opt-in, keeps HF defaults and accepts only existing 
     assert.throws(() => newApiTarget(settings, channels))
     assert.deepEqual(generationModels({ ...settings, endpoint: '' }, channels), { image: [], video: [] })
   }
-  const config = merge(defaults, { channels: [channel], generation: settings })
+  const config = unmoderatedTestConfig( { channels: [channel], generation: settings })
   assert.equal(validateConfig(config), config)
   for (const patch of [{ imageModels: ['../bad'] }, { videoModels: ['https://evil.example'] }, { imageModels: [imageModel, imageModel] }, { imageModels: ['flux'] }, { pollIntervalMs: 0 }, { channelId: 'missing' }]) assert.throws(() => validateConfig(merge(config, { generation: { newApi: patch } })))
+  assert.equal(newApiImageProtocol(settings.newApi, imageModel), 'gemini')
+  const legacy = structuredClone(config); delete legacy.generation.newApi.imageProtocols
+  assert.equal(validateConfig(legacy), legacy)
+  const protocols = { [imageModel]: 'gemini', [openAiModel]: 'openai' }
+  assert.equal(validateConfig(merge(config, { generation: { newApi: { imageModels: [imageModel, openAiModel], imageProtocols: protocols } } })).generation.newApi.imageProtocols[openAiModel], 'openai')
+  for (const imageProtocols of [null, [], { unknown: 'openai' }, { [imageModel]: 'https://evil.example' }, { [imageModel]: 'unsupported' }, JSON.parse('{"__proto__":"openai"}')]) assert.throws(() => validateConfig(merge(config, { generation: { newApi: { imageProtocols } } })))
 })
 
 test('Gemini images use native New API routes and validated inline bytes with only the existing token', async () => {
@@ -63,6 +74,96 @@ test('Gemini images use native New API routes and validated inline bytes with on
   assert.equal(call.options.redirect, 'manual')
   assert.deepEqual(JSON.parse(call.options.body), { contents: [{ role: 'user', parts: [{ text: '一只橘猫' }, { inlineData: { mimeType: 'image/png', data: image.data } }] }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } })
   assert.doesNotMatch(JSON.stringify(output), /fixture-|https?:|Bearer/)
+})
+
+test('OpenAI image models coexist with Gemini and request one inline image through New API', async () => {
+  const f = openAiFixture()
+  const output = await f.service.image({ model: openAiModel, prompt: '窗边的一只橘猫' })
+  assert.deepEqual(output, { type: 'image', data: image.data, mimeType: 'image/png', model: openAiModel })
+  assert.equal(f.calls.length, 1)
+  const call = f.calls[0]
+  assert.equal(call.url, 'http://new-api:3000/v1/images/generations')
+  assert.deepEqual(JSON.parse(call.options.body), { model: openAiModel, prompt: '窗边的一只橘猫', n: 1, size: '1024x1024', response_format: 'b64_json' })
+  assert.equal(call.options.headers.Authorization, 'Bearer fixture-new-api-token')
+  assert.equal(call.options.redirect, 'manual')
+  await f.service.image({ model: imageModel, prompt: '猫' })
+  assert.equal(new URL(f.calls[1].url).pathname, '/v1beta/models/gemini-tested-image:generateContent')
+})
+
+test('OpenAI image editing submits a validated reference as multipart without exposing its token or following URLs', async () => {
+  const f = openAiFixture()
+  const output = await f.service.image({ model: openAiModel, prompt: '换成蓝色背景', reference: image })
+  assert.equal(output.mimeType, 'image/png')
+  const call = f.calls[0], form = call.options.body
+  assert.equal(call.url, 'http://new-api:3000/v1/images/edits')
+  assert.ok(form instanceof FormData)
+  assert.deepEqual(Object.fromEntries([...form].filter(([key]) => key !== 'image')), { model: openAiModel, prompt: '换成蓝色背景', n: '1', size: '1024x1024', response_format: 'b64_json' })
+  const reference = form.get('image')
+  assert.equal(reference.name, 'reference.png')
+  assert.equal(reference.type, 'image/png')
+  assert.deepEqual(Buffer.from(await reference.arrayBuffer()), png)
+  assert.equal(call.options.headers['Content-Type'], undefined)
+  assert.equal(f.calls.length, 1)
+  assert.doesNotMatch(JSON.stringify(output), /fixture-|https?:|Bearer/)
+  await assert.rejects(f.service.image({ model: openAiModel, prompt: '猫', reference: { data: image.data, mime: 'image/jpeg' } }), { code: 'GENERATION_IMAGE_INVALID' })
+  assert.equal(f.calls.length, 1)
+})
+
+test('OpenAI image response URLs, multiple outputs, malformed bytes and oversized results never trigger another request', async () => {
+  for (const [body, code] of [
+    [{ data: [{ url: 'https://untrusted.example/private.png' }] }, 'GENERATION_PROTOCOL'],
+    [{ data: [{ b64_json: image.data }, { b64_json: image.data }] }, 'GENERATION_PROTOCOL'],
+    [{ data: [{ b64_json: '!!!!' }] }, 'GENERATION_IMAGE_INVALID'],
+    [{ data: [{ b64_json: Buffer.from('<html>not an image</html>').toString('base64') }] }, 'GENERATION_IMAGE_INVALID'],
+    [{ error: { message: 'quota exceeded fixture-new-api-token' } }, 'GENERATION_QUOTA']
+  ]) {
+    const f = openAiFixture(() => json(body))
+    await assert.rejects(f.service.image({ model: openAiModel, prompt: '猫' }), error => error.code === code && !/fixture-|https?:/.test(error.message))
+    assert.equal(f.calls.length, 1)
+    assert.equal(f.service.active, false)
+  }
+  const excessive = openAiFixture(() => new Response('{}', { headers: { 'content-length': '15000000' } }))
+  await assert.rejects(excessive.service.image({ model: openAiModel, prompt: '猫' }), { code: 'GENERATION_PROTOCOL' })
+  assert.equal(excessive.calls.length, 1)
+  const decoded = openAiFixture(null, { maxImageBytes: 64 })
+  await assert.rejects(decoded.service.image({ model: openAiModel, prompt: '猫' }), { code: 'GENERATION_IMAGE_INVALID' })
+  assert.equal(decoded.calls.length, 1)
+})
+
+test('OpenAI image quota failures and redirects do not fall back, while cancellation releases the shared queue', async () => {
+  for (const response of [
+    () => new Response('{}', { status: 429 }),
+    () => new Response(null, { status: 307, headers: { location: 'https://untrusted.example/private.png' } })
+  ]) {
+    const f = openAiFixture(response)
+    await assert.rejects(f.service.image({ model: openAiModel, prompt: '猫' }), error => error.code.startsWith('GENERATION_'))
+    assert.equal(f.calls.length, 1)
+  }
+  let complete, started
+  const ready = new Promise(resolve => { started = resolve })
+  const f = openAiFixture(() => new Promise(resolve => { complete = () => resolve(json({ data: [{ b64_json: image.data }] })); started() }))
+  const active = f.service.image({ model: openAiModel, prompt: '猫' })
+  await ready
+  const controller = new AbortController(), waiting = f.service.image({ model: openAiModel, prompt: '狗', signal: controller.signal })
+  await new Promise(resolve => setImmediate(resolve)); controller.abort()
+  await assert.rejects(waiting, { code: 'GENERATION_ABORTED' })
+  assert.equal(f.calls.length, 1)
+  assert.equal(f.service.waiters.length, 0)
+  complete(); await active
+  assert.equal(f.service.active, false)
+  const timed = openAiFixture(() => new Promise(() => {}), { timeoutMs: 20 })
+  await assert.rejects(timed.service.image({ model: openAiModel, prompt: '猫' }), { code: 'GENERATION_TIMEOUT' })
+  assert.equal(timed.calls.length, 1)
+  assert.equal(timed.service.active, false)
+})
+
+test('New API invalid generation input errors identify model constraints without leaking response bodies', async () => {
+  for (const status of [400, 422]) {
+    const f = openAiFixture(() => new Response(JSON.stringify({ error: { message: 'private description fixture-new-api-token https://internal.example model rejected width' } }), { status }))
+    await assert.rejects(f.service.image({ model: openAiModel, prompt: '换背景', reference: image }), error => error.code === 'GENERATION_INPUT' && /参考图尺寸和参数限制/.test(error.message) && !/private|fixture-|https?:/.test(error.message))
+    assert.equal(f.calls.length, 1)
+    assert.equal(f.service.active, false)
+  }
 })
 
 test('unlisted models and unsupported options fail before network access or spending generation quota', async () => {
@@ -153,7 +254,7 @@ test('local cancellation stops polling with no repeat submission and releases th
 test('AI core allows New API text video without reusing a cached image, retaining access and explicit option checks', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ai-newapi-test-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  const config = merge(defaults, { channels: [channel], generation: settings, management: { enabled: false } })
+  const config = unmoderatedTestConfig( { channels: [channel], generation: settings, management: { enabled: false } })
   const calls = []
   const client = new AIClient({ root, config: () => config, storage: new Storage(), generationService: { async image() { return { ...image, type: 'image' } }, async video(args) { calls.push(args); return { type: 'video', data: mp4.toString('base64'), mimeType: 'video/mp4' } } } })
   t.after(() => client.close())

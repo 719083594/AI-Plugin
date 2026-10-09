@@ -1,15 +1,21 @@
 const MODEL = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/
 
-export const newApiDefaults = { enabled: false, channelId: '', imageModels: [], videoModels: [], pollIntervalMs: 2000 }
+export const newApiDefaults = { enabled: false, channelId: '', imageModels: [], imageProtocols: {}, videoModels: [], pollIntervalMs: 2000 }
 
 export function validateNewApiConfig(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || typeof value.enabled !== 'boolean' || typeof value.channelId !== 'string') throw new Error('New API 生成配置无效')
   for (const key of ['imageModels', 'videoModels']) {
     if (!Array.isArray(value[key]) || value[key].length > 20 || value[key].some(model => typeof model !== 'string' || !MODEL.test(model) || ['flux', 'anima', 'hf-story'].includes(model)) || new Set(value[key]).size !== value[key].length) throw new Error('New API 生成模型名单无效')
   }
+  const protocols = value.imageProtocols === undefined ? {} : value.imageProtocols
+  if (!protocols || typeof protocols !== 'object' || Array.isArray(protocols) || ![Object.prototype, null].includes(Object.getPrototypeOf(protocols)) || Object.entries(protocols).some(([model, protocol]) => !value.imageModels.includes(model) || ['__proto__', 'constructor', 'prototype'].includes(model) || !['gemini', 'openai'].includes(protocol))) throw new Error('New API 图片协议须对应已启用的图片模型，且为 gemini 或 openai')
   if (!Number.isInteger(value.pollIntervalMs) || value.pollIntervalMs < 250 || value.pollIntervalMs > 10000) throw new Error('New API 视频轮询间隔无效')
   if (value.enabled && (!/^[\w.-]{1,80}$/.test(value.channelId) || !value.imageModels.length && !value.videoModels.length)) throw new Error('请为 New API 生成选择已有渠道和已验证的模型')
   return value
+}
+
+export function newApiImageProtocol(config, model) {
+  return Object.hasOwn(config.imageProtocols ?? {}, model) ? config.imageProtocols[model] : 'gemini'
 }
 
 export function newApiModelEnabled(generation, kind, model) {

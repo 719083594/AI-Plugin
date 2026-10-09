@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "statusMeaning": {
     "implemented": "代码已完成说明中的范围，不代表模型或渠道已配置、所有子功能都存在。",
     "planned": "保留路线；包含仅部分完成的复合功能，未完成范围已明确。",
@@ -80,7 +80,8 @@
       "ids": [
         "G1",
         "G2",
-        "G3"
+        "G3",
+        "G4"
       ]
     },
     {
@@ -776,6 +777,23 @@
       "reason": "保留功能路线；当前尚未完整实现，不提供可生效开关。",
       "configPaths": [
         "management.apiToken"
+      ]
+    },
+    {
+      "id": "G4",
+      "name": "文字输入内容审查",
+      "title": "文字输入内容审查",
+      "status": "implemented",
+      "description": "默认开启，通过已有New API渠道审核本次聊天、直接朗读与生成指令的文字；不发送历史或图片。主人可即时切换全局持久开关，服务异常默认停止，分类策略可配置。分类器不授予任何操作权限。",
+      "reason": "接口已实现，中文分类模型与实例渠道需单独验收。",
+      "configPaths": [
+        "security.inputModeration",
+        "security.inputModeration.enabled",
+        "security.inputModeration.channelId",
+        "security.inputModeration.model",
+        "security.inputModeration.timeoutMs",
+        "security.inputModeration.failurePolicy",
+        "security.inputModeration.blockedCategories"
       ]
     }
   ]

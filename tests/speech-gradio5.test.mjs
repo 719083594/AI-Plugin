@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {SpeechService,createVoiceCatalog} from '../src/speech/index.mjs'
@@ -100,7 +101,7 @@ test('obsolete persisted voices fall back through the remote catalogue without d
   storage.setMaintenance('speech-settings',saved)
   let spoken
   const speech={currentCatalog:()=>catalogue,catalogue:async()=>catalogue,synthesize:async(text,options)=>{spoken=options;return {type:'audio',data:Buffer.from(wav()).toString('base64'),mime:'audio/wav'}}}
-  const configuration=merge(defaults,{speech:{...settings},management:{enabled:false}})
+  const configuration=unmoderatedTestConfig({speech:{...settings},management:{enabled:false}})
   const client=new AIClient({config:()=>configuration,storage,speechService:speech,imageStore:{}})
   t.after(()=>client.close())
   assert.deepEqual(client.speechSettings(),{mode:'voice',voice:'中文女声001',game:'中文女声',language:'zh'})

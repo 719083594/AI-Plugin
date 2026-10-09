@@ -1,6 +1,6 @@
 import {randomInt} from 'node:crypto'
 import {publicImageUrl} from '../media/remote.mjs'
-import {newApiModelEnabled,newApiTarget} from './new-api.mjs'
+import {newApiModelEnabled,newApiTarget,newApiImageProtocol} from './new-api.mjs'
 
 const DEFAULTS={enabled:false,endpoint:'',token:'',timeoutMs:180000,maxImageBytes:10485760,maxVideoBytes:52428800,maxPromptCharacters:2000,defaultModel:'flux',defaultDuration:3,defaultEffects:true,subtitles:true}
 const IMAGE_EXTENSIONS={ 'image/png':'png','image/jpeg':'jpg','image/webp':'webp','image/gif':'gif' }
@@ -233,6 +233,7 @@ export class GenerationService {
         try{message=(await boundedBytes(response,16384,signal)).toString('utf8')}catch(error){if(signal.aborted)throw error}
         const classified=remoteFailure(message)
         if(classified.code!=='GENERATION_UNAVAILABLE')throw classified
+        if(strictRoute&&[400,422].includes(response.status))throw failure('GENERATION_INPUT','New API 未接受生成请求，请检查该模型的输入、参考图尺寸和参数限制。')
         throw failure('GENERATION_UNAVAILABLE',`图片与视频服务暂时不可用（HTTP ${response.status}），请稍后重试。`)
       }
       return response
@@ -308,6 +309,22 @@ export class GenerationService {
       if(kind==='image'){
         const reference=options.reference?preparedImage(options.reference,config.maxImageBytes):null
         await this.acquire(signal);acquired=true
+        if(newApiImageProtocol(config.newApi,options.model)==='openai'){
+          let body,json=true,path='v1/images/generations'
+          if(reference){
+            body=new FormData();json=false;path='v1/images/edits'
+            for(const [key,value] of Object.entries({model:options.model,prompt,n:'1',size:'1024x1024',response_format:'b64_json'}))body.append(key,value)
+            body.append('image',new Blob([reference.bytes],{type:reference.mime}),reference.name)
+          }else body=JSON.stringify({model:options.model,prompt,n:1,size:'1024x1024',response_format:'b64_json'})
+          const response=await this.request(route(context.base,path),{...context,method:'POST',json,body})
+          const result=await boundedJson(response,Math.ceil(config.maxImageBytes/3)*4+262144,signal)
+          if(result.error)throw remoteFailure(result.error)
+          // Require inline bytes: never send credentials to an upstream result URL.
+          if(!Array.isArray(result.data)||result.data.length!==1||typeof result.data[0]?.b64_json!=='string')throw failure('GENERATION_PROTOCOL','New API 没有返回单张内嵌图片，请检查图片模型与协议。')
+          const image=preparedImage({data:result.data[0].b64_json},config.maxImageBytes)
+          check(signal)
+          return {type:'image',data:image.bytes.toString('base64'),mimeType:image.mime,model:options.model}
+        }
         const parts=[{text:prompt},...(reference?[{inlineData:{mimeType:reference.mime,data:reference.bytes.toString('base64')}}]:[])]
         const response=await this.request(route(context.base,'v1beta/models/'+encodeURIComponent(options.model)+':generateContent'),{...context,method:'POST',json:true,body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseModalities:['TEXT','IMAGE']}})})
         const result=await boundedJson(response,Math.ceil(config.maxImageBytes/3)*4+262144,signal)

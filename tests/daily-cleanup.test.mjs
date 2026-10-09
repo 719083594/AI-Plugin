@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
@@ -9,7 +10,7 @@ import { defaults, merge, validateConfig } from '../src/core/config.mjs'
 import { checkDailyCleanup } from '../src/core/daily-cleanup.mjs'
 
 function fixture(t, storage = new Storage()) {
-  const config = merge(defaults, { channels: [{ id: 'mock', type: 'openai' }], presets: [{ id: 'default', model: 'mock', tools: [] }] })
+  const config = unmoderatedTestConfig( { channels: [{ id: 'mock', type: 'openai' }], presets: [{ id: 'default', model: 'mock', tools: [] }] })
   const client = new AIClient({ config: () => config, storage, imageStore: {}, provider: async () => ({ contents: [{ type: 'text', text: '回复' }], toolCalls: [] }) })
   t.after(() => client.close()); return { client, storage, config }
 }
@@ -53,7 +54,7 @@ test('clearing while the provider is waiting cancels late output and never repop
   assert.equal(sent,0);assert.equal(storage.stats().history,0)
 })
 test('invalid daily time, timezone and switch are rejected', () => {
-  for(const retention of [{dailyCleanupTime:'25:30'},{dailyCleanupTime:'3.30'},{dailyCleanupTimezone:'invalid/place'},{dailyCleanupEnabled:'yes'}]) assert.throws(()=>validateConfig(merge(defaults,{retention})),/清理/)
+  for(const retention of [{dailyCleanupTime:'25:30'},{dailyCleanupTime:'3.30'},{dailyCleanupTimezone:'invalid/place'},{dailyCleanupEnabled:'yes'}]) assert.throws(()=>validateConfig(unmoderatedTestConfig({retention})),/清理/)
 })
 
 test('changing to a future time arms today without repeating a cleanup that already ran today', async t => {

@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "orangejuice-workers-ai",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "ai": { "binding": "AI" },
+  "ratelimits": [{ "name": "RELAY_RATE_LIMITER", "namespace_id": "91020262", "simple": { "limit": 20, "period": 60 } }],
+  "vars": {
+    "MAX_BODY_BYTES": "8388608",
+    "MAX_RESULT_BYTES": "8388608",
+    "REQUEST_TIMEOUT_MS": "120000"
+  }
+  // Secret: RELAY_API_KEY. Generate a dedicated random key with at least 32 characters.
+  // Optional private vars: SAFETY_PROVIDER=hf-qwen and HF_SAFETY_ORIGIN (HTTPS *.hf.space origin only).
+  // HF_SAFETY_TOKEN is optional: set a read-only secret only for a private CPU Space.
+  // This namespace must be unused in your account. Rate limits apply per Cloudflare location.
+  // Keep the account on Workers Free for the platform's free quota hard stop.
+}

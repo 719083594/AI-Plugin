@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -16,7 +17,7 @@ const input = extra => ({ userId: '10001', botId: '20001', text: '你好', ...ex
 const answer = (text = '回复', extra = {}) => ({ contents: [{ type: 'text', text }], toolCalls: [], usage: { inputTokens: 2, outputTokens: 3, totalTokens: 5 }, ...extra });
 const toolCall = (name, args, id = 'call-1') => ({ id, name, arguments: args });
 const clone = value => structuredClone(value);
-const makeConfig = extra => merge(defaults, merge({
+const makeConfig = extra => unmoderatedTestConfig( merge({
   channels: [{ id: 'test', type: 'openai', baseUrl: 'https://provider.invalid/v1', apiKey: 'test-model-secret', models: ['fake-model'], enabled: true }],
   presets: [{ ...clone(defaults.presets[0]), model: 'fake-model', systemPrompt: '测试系统规则', tools: [] }],
   management: { enabled: false }
@@ -487,7 +488,7 @@ test('masked config can be edited and reordered without revealing or overwriting
   assert.equal(restored.channels[0].id, 'b'); assert.equal(restored.channels[0].apiKey, 'secret-b');
   assert.equal(restored.channels[1].apiKey, 'secret-a'); assert.equal(restored.tools.searchToken, 'search-token');
   writeJson(file, restored); assert.equal(readConfig(file).channels[0].apiKey, 'secret-b');
-  assert.throws(() => merge(defaults, JSON.parse('{"__proto__":{"polluted":true}}')), /不允许/);
+  assert.throws(() => unmoderatedTestConfig( JSON.parse('{"__proto__":{"polluted":true}}')), /不允许/);
   assert.throws(() => restoreSecrets({ channels: [{ id: 'new', apiKey: '••••••••' }] }, config), /重新填写/);
 });
 

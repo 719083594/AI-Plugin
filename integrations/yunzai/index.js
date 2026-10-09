@@ -2,6 +2,7 @@ import path from 'node:path'
 import { getCommandCatalog } from './command-knowledge.mjs'
 import { handleVoiceCommand, VOICE_HELP } from './voice-commands.mjs'
 import { handleMediaCommand, parseMediaCommand, MEDIA_HELP } from './media-commands.mjs'
+import { handleModerationCommand, MODERATION_HELP } from './moderation-commands.mjs'
 import { AIClient } from '../../src/core/client.mjs'
 import { startManagement } from '../../src/management/server.mjs'
 import { pluginRoot } from '../../src/core/config.mjs'
@@ -65,14 +66,14 @@ export async function enrichReferences(e, input, { includeText = true } = {}) {
 async function enrich(e, input) {
   if (input.groupId && typeof e.bot?.sendApi === 'function') input.getGroupMember = () => e.bot.sendApi('get_group_member_info',{group_id:Number(input.groupId),user_id:Number(input.userId),no_cache:true})
   await enrichReferences(e, input)
-  if (input.groupId && client.config().group.enableContext && !client.storage.group(client.groupKey(input)).length) {
+  if (input.groupId && client.config().group.enableContext && !client.inputModerationSettings().enabled && !client.storage.group(client.groupKey(input)).length) {
     try {
       const group = e.group || e.bot?.pickGroup?.(input.groupId)
       const rows = await group?.getChatHistory?.(0, client.config().group.contextLength)
       if (Array.isArray(rows)) for (const row of [...rows].reverse()) client.observeGroup({ ...input, userId: String(row.sender?.user_id || ''), nickname: row.sender?.card || row.sender?.nickname || '', messageId: String(row.message_id || row.seq || ''), text: (row.message || []).filter(part => part.type === 'text').map(part => part.text).join(''), images: messageImages(row.message || []) })
     } catch { /* 适配器未提供群历史时使用已收集上下文。 */ }
   }
-  if (!input.images.length && input.groupId && client.config().group.contextImages && /(?:图|照片|头像|image|picture)/i.test(input.text)) input.images = client.storage.group(client.groupKey(input)).flatMap(row => row.images || []).slice(-3)
+  if (!input.images.length && input.groupId && client.config().group.contextImages && /(?:图|照片|头像|image|picture)/i.test(input.text)) input.images = client.storage.group(client.groupKey(input)).filter(row => !client.inputModerationSettings().enabled || row.inputModerated === true).flatMap(row => row.images || []).slice(-3)
   // The core downloads and validates images inside the chat deadline.
   input.getAvatar = qq => `https://q1.qlogo.cn/g?b=qq&nk=${encodeURIComponent(qq)}&s=640`
   return input
@@ -164,16 +165,18 @@ export class AIChat extends Base {
       return Boolean(e.isPrivate || e.atBot)
     }
   }
-  async command(e, input, text) {
+  async command(e, input, text, commandClient = client) {
+    const client = commandClient
+    if (await handleModerationCommand({ client, input, text, reply: message => e.reply(message, Boolean(e.isGroup)) })) return true
     if (await handleMediaCommand({ client, input, text, reply: message => e.reply(message, Boolean(e.isGroup)), send: result => sendResult(e, result) })) return true
     if (await handleVoiceCommand({ client, input, text, reply: message => e.reply(message, Boolean(e.isGroup)), send: result => sendResult(e, result) })) return true
-    if (/^(?:帮助|help)?$/i.test(text)) { await e.reply('AI-Plugin\n私聊或群聊 @ 提问\n#AI预设列表 / #AI切换预设 名称 / #AI当前预设\n#AI结束对话 / #AI记忆 列表 / #AI记忆 添加 内容\n' + VOICE_HELP + '\n' + MEDIA_HELP + '\n主人：#AI登录 / #AI状态 / #AI备份 / #AI清理\n主人：#AI主动接话 开或关 / #AI结束全部对话\n复杂扩展的进度见工作台“功能状态”。', Boolean(e.isGroup)); return true }
+    if (/^(?:帮助|help)?$/i.test(text)) { await e.reply('AI-Plugin\n私聊或群聊 @ 提问\n#AI预设列表 / #AI切换预设 名称 / #AI当前预设\n#AI结束对话 / #AI记忆 列表 / #AI记忆 添加 内容\n' + VOICE_HELP + '\n' + MEDIA_HELP + '\n' + MODERATION_HELP + '\n主人：#AI登录 / #AI状态 / #AI备份 / #AI清理\n主人：#AI主动接话 开或关 / #AI结束全部对话\n复杂扩展的进度见工作台“功能状态”。', Boolean(e.isGroup)); return true }
     if (/^(?:预设列表|角色列表)$/.test(text)) { await e.reply(client.config().presets.filter(row => row.enabled !== false).map(row => `${row.name}（${row.id}）`).join('\n'), Boolean(e.isGroup)); return true }
     if (/^(?:切换预设|切换角色)/.test(text)) { const name = text.replace(/^(?:切换预设|切换角色)\s*/, ''); const preset = client.switchPreset(input, name); await e.reply(`已切换为「${preset.name}」，开始新会话；原历史保留。`, Boolean(e.isGroup)); return true }
     if (/^(?:当前预设|当前角色)$/.test(text)) { await e.reply('当前角色：' + client.preset(input).name, Boolean(e.isGroup)); return true }
     if (/^(?:结束对话|重置会话)$/.test(text)) { client.end(input); await e.reply('已开始新会话，原历史保留。', Boolean(e.isGroup)); return true }
     if (/^记忆\s*列表$/.test(text)) { await e.reply(client.storage.memories('user', input.userId, 50).map(row => `${row.id}: ${row.text}`).join('\n') || '暂无个人记忆。', Boolean(e.isGroup)); return true }
-    if (/^记忆\s*添加\s+/.test(text)) { client.storage.addMemory('user', input.userId, text.replace(/^记忆\s*添加\s+/, '')); await e.reply('已添加个人记忆；启用长期记忆后用于回答。', Boolean(e.isGroup)); return true }
+    if (/^记忆\s*添加\s+/.test(text)) { await client.addUserMemory(input, text.replace(/^记忆\s*添加\s+/, '')); await e.reply('已添加个人记忆；启用长期记忆后用于回答。', Boolean(e.isGroup)); return true }
     if (/^记忆\s*删除\s+/.test(text)) { const id = text.replace(/^记忆\s*删除\s+/, '').trim(); await e.reply(client.storage.deleteMemory(id, 'user', input.userId) ? '已删除记忆。' : '记忆不存在或不属于你。', Boolean(e.isGroup)); return true }
     if (/^(?:登录|后台|状态|备份|清理|清空聊天历史|结束全部对话|主动接话)/.test(text)) {
       if (!input.isMaster) { await e.reply('此操作仅主人可用。', Boolean(e.isGroup)); return true }

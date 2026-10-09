@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { newApiDefaults, validateNewApiConfig, newApiTarget } from '../generation/new-api.mjs'
+import { inputModerationDefaults, validateInputModeration } from './input-moderation.mjs'
 
 export const pluginRoot = fileURLToPath(new URL('../../', import.meta.url))
 export const defaults = {
@@ -15,7 +16,7 @@ export const defaults = {
   media: { imagesEnabled: true, maxImageBytes: 10485760, visionChannelId: '', visionModel: '', imageRetentionHours: 0 },
   generation: { enabled: false, endpoint: '', token: '', timeoutMs: 180000, maxImageBytes: 10485760, maxVideoBytes: 52428800, maxPromptCharacters: 2000, defaultModel: 'flux', defaultDuration: 3, defaultEffects: true, subtitles: true, newApi: newApiDefaults },
   speech: { enabled: false, endpoint: '', token: '', defaultVoice: '纳西妲（草神）', language: 'zh', timeoutMs: 45000, maxCharacters: 500, maxAudioBytes: 10485760, noiseScale: 0.6, noiseScaleW: 0.668, lengthScale: 1.2 },
-  security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6 },
+  security: { userWhitelist: [], userBlacklist: [], groupWhitelist: [], groupBlacklist: [], inputBlockedWords: [], outputBlockedWords: [], blockStrategy: 'full', replacement: '***', rateWindowMs: 60000, maxRequestsPerWindow: 6, inputModeration: inputModerationDefaults },
   management: { enabled: true, host: '127.0.0.1', port: 48371, publicUrl: 'http://127.0.0.1:48371', apiToken: '', ticketSeconds: 180, sessionSeconds: 3600, webChatEnabled: true },
   retention: { historyDays: 30, proactiveHistoryDays: 30, logLimit: 5000, cleanupIntervalHours: 1, backupCount: 5, dailyCleanupEnabled: true, dailyCleanupTime: '03:30', dailyCleanupTimezone: 'Asia/Shanghai' },
   extensions: { mcp: [], schedules: [], workflows: [], processors: [], pricing: [] }
@@ -39,6 +40,7 @@ export function validateConfig(config) {
   int(config.chat.maxToolRounds, 0, 12, '工具轮数')
   int(config.group.contextLength, 0, 100, '群上下文条数')
   int(config.security.maxRequestsPerWindow, 1, 10000, '频率限制')
+  validateInputModeration({ ...inputModerationDefaults, ...config.security.inputModeration })
   const generation = config.generation
   for (const key of ['enabled', 'defaultEffects', 'subtitles']) if (typeof generation[key] !== 'boolean') throw new Error('绘图视频开关无效')
   if (typeof generation.endpoint !== 'string' || typeof generation.token !== 'string' || generation.token.length > 4096) throw new Error('绘图视频服务配置无效')

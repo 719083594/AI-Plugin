@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
@@ -11,7 +12,7 @@ import { selectVision } from '../src/core/vision.mjs'
 
 const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S2sAAAAASUVORK5CYII='
 const who={userId:'10001',botId:'20001',text:'请看图'}
-const config=()=>merge(defaults,{management:{enabled:false},security:{maxRequestsPerWindow:100},channels:[{id:'gateway',type:'openai',enabled:true,models:[{name:'chat',features:['chat','tool']},{name:'eye',features:['visual','chat','tool']}]}],presets:[{...defaults.presets[0],model:'chat',systemPrompt:'你是星，保留角色风格。',tools:[]}]})
+const config=()=>unmoderatedTestConfig({management:{enabled:false},security:{maxRequestsPerWindow:100},channels:[{id:'gateway',type:'openai',enabled:true,models:[{name:'chat',features:['chat','tool']},{name:'eye',features:['visual','chat','tool']}]}],presets:[{...defaults.presets[0],model:'chat',systemPrompt:'你是星，保留角色风格。',tools:[]}]})
 const answer=text=>({contents:[{type:'text',text}],toolCalls:[],usage:{totalTokens:1}})
 async function fixture(t,provider){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'ai-vision-test-')),c=config(),storage=new Storage(),images=new ImageStore({directory:path.join(root,'images')})

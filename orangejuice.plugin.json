@@ -3,7 +3,7 @@
   "title": "AI-Plugin",
   "description": "独立 AI 聊天核心、中文工作台、模型与搜索工具，以及可选机器人适配。功能状态明确区分已实现与计划项目。",
   "author": "719083594",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "repository": "https://github.com/719083594/AI-Plugin",
   "homepage": "https://github.com/719083594/AI-Plugin",
   "commands": [
@@ -26,7 +26,10 @@
     "#AI媒体模型",
     "#AI画图 描述 | 模型：模型编号",
     "#AI视频 描述 | 模型：模型编号",
-    "#AI登录"
+    "#AI登录",
+    "#AI开启审查",
+    "#AI关闭审查",
+    "#AI审查状态"
   ],
   "managementPanel": "ai-plugin",
   "capabilities": "capabilities.json",
@@ -1132,6 +1135,57 @@
           "label": "Gemini 返回内容类型",
           "type": "array",
           "description": "如 [\"TEXT\"] 或支持生图模型的 [\"TEXT\",\"IMAGE\"]。生成与编辑效果必须由对应模型提供，不能仅靠设置得到能力。"
+        },
+        {
+          "path": "security.inputModeration",
+          "label": "文字输入审查",
+          "type": "object",
+          "description": "默认开启，只审核当前AI输入文字，不发送历史或图片；全局开关命令持久保存在数据库并优先于初始enabled。"
+        },
+        {
+          "path": "security.inputModeration.enabled",
+          "label": "审查初始开关",
+          "type": "boolean",
+          "description": "默认开启。#AI开启审查/#AI关闭审查 的实例持久状态优先，修改配置不会覆盖已有命令开关。"
+        },
+        {
+          "path": "security.inputModeration.channelId",
+          "label": "审查渠道",
+          "type": "string",
+          "description": "填写已有OpenAI兼容New API渠道ID，复用其地址和令牌。"
+        },
+        {
+          "path": "security.inputModeration.model",
+          "label": "审查模型",
+          "type": "string",
+          "description": "默认cf-content-safety；实际中文效果需验证。"
+        },
+        {
+          "path": "security.inputModeration.timeoutMs",
+          "label": "审查等待上限（毫秒）",
+          "type": "integer",
+          "min": 1000,
+          "max": 10000
+        },
+        {
+          "path": "security.inputModeration.failurePolicy",
+          "label": "审查服务故障策略",
+          "type": "string",
+          "enum": [
+            "block",
+            "allow"
+          ],
+          "enumLabels": {
+            "block": "停止本次请求（默认）",
+            "allow": "服务异常时允许继续"
+          },
+          "description": "明确命中拦截分类始终停止；只有服务故障按此设置处理。"
+        },
+        {
+          "path": "security.inputModeration.blockedCategories",
+          "label": "审查拦截分类",
+          "type": "array",
+          "description": "使用审查服务返回的分类名；默认拦截色情、仇恨、威胁、暴力违法、自伤指导、血腥与人肉隐私，普通感叹不按关键词判断。"
         }
       ]
     }
@@ -1292,6 +1346,24 @@
       "title": "结束全部对话",
       "command": "#AI结束全部对话",
       "description": "仅主人；中止请求并重置会话，历史保留。"
+    },
+    {
+      "title": "开启内容审查",
+      "command": "#AI开启审查",
+      "description": "主人开启全局文字输入审查，立即生效并持久保存；不改变角色与历史。",
+      "permission": "master"
+    },
+    {
+      "title": "关闭内容审查",
+      "command": "#AI关闭审查",
+      "description": "主人关闭全局文字输入审查，立即生效并持久保存；不改变角色与历史。",
+      "permission": "master"
+    },
+    {
+      "title": "内容审查状态",
+      "command": "#AI审查状态",
+      "description": "查看文字输入审查开关，默认开启；不审核图片，也不执行群管操作。",
+      "permission": "all"
     }
   ]
 }

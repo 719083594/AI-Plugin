@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
@@ -12,7 +13,7 @@ const input = extra => ({ userId: 'voice-user-a', botId: 'voice-bot', text: '今
 const answer = (text = '今天吃番茄鸡蛋面。') => ({ contents: [{ type: 'text', text }], toolCalls: [], usage: {} })
 const audioData = 'c2Vuc2l0aXZlLWZha2UtYXVkaW8='
 const audio = text => ({ type: 'audio', data: audioData, mime: 'audio/wav', text })
-const makeConfig = extra => merge(defaults, merge({
+const makeConfig = extra => unmoderatedTestConfig( merge({
   channels: [{ id: 'voice-test', type: 'openai', apiKey: 'test-model-secret', models: ['test-model'] }],
   presets: [{ ...structuredClone(defaults.presets[0]), model: 'test-model', tools: [] }],
   speech: { enabled: true, endpoint: 'https://speech.invalid', token: 'test-private-speech-token' },

@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
@@ -19,7 +20,7 @@ async function fixture(t, extra = {}) {
     assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep) && path.basename(resolved).startsWith('ai-generation-test-'))
     await fs.rm(resolved, { recursive: true, force: true })
   })
-  const config = merge(defaults, { management: { enabled: false }, generation: { enabled: true, endpoint: 'https://media.invalid', token: 'test-private-media-token' }, ...extra.config })
+  const config = unmoderatedTestConfig( { management: { enabled: false }, generation: { enabled: true, endpoint: 'https://media.invalid', token: 'test-private-media-token' }, ...extra.config })
   const calls = [], service = extra.generationService || { async image(args) { calls.push(['image', args]); return image }, async video(args) { calls.push(['video', args]); return video } }
   const client = new AIClient({ root, config: () => config, storage: new Storage(), generationService: service, ...extra.client })
   t.after(() => client.close())

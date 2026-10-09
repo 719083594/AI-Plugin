@@ -112,7 +112,28 @@
     "blockStrategy": "full",
     "replacement": "***",
     "rateWindowMs": 60000,
-    "maxRequestsPerWindow": 6
+    "maxRequestsPerWindow": 6,
+    "inputModeration": {
+      "enabled": true,
+      "channelId": "",
+      "model": "cf-content-safety",
+      "timeoutMs": 4000,
+      "failurePolicy": "block",
+      "blockedCategories": [
+        "sexual",
+        "sexual/minors",
+        "hate",
+        "hate/threatening",
+        "harassment/threatening",
+        "illicit",
+        "illicit/violent",
+        "self-harm",
+        "self-harm/instructions",
+        "violence",
+        "violence/graphic",
+        "privacy/doxxing"
+      ]
+    }
   },
   "management": {
     "enabled": true,
@@ -157,6 +178,7 @@
       "enabled": false,
       "channelId": "",
       "imageModels": [],
+      "imageProtocols": {},
       "videoModels": [],
       "pollIntervalMs": 2000
     }

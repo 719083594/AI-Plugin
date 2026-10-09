@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {AIClient} from '../src/core/client.mjs'
@@ -45,7 +46,7 @@ test('验证页面、超大正文与取消有准确状态；最多读取3个唯�
 })
 function fixture(t,provider){
   const storage=new Storage(),calls=[],searches=[]
-  const config=merge(defaults,{channels:[{id:'test',type:'openai',baseUrl:'https://provider.invalid',apiKey:'test',models:['fake']}],presets:[{...defaults.presets[0],model:'fake',tools:['web_search']}],security:{maxRequestsPerWindow:100}})
+  const config=unmoderatedTestConfig({channels:[{id:'test',type:'openai',baseUrl:'https://provider.invalid',apiKey:'test',models:['fake']}],presets:[{...defaults.presets[0],model:'fake',tools:['web_search']}],security:{maxRequestsPerWindow:100}})
   const client=new AIClient({storage,imageStore:{},config:()=>config,search:async args=>{searches.push(args);return {ok:true,query:args.query,results:[{title:'实际测试资料',url:'https://source.invalid/article',snippet:'搜索摘要'}]}},host:{readSearchPages:async result=>({...result,pages:[{title:'实际测试资料',sourceUrl:result.results[0].url,url:'https://source.invalid/final',status:'read',content:'新型号实测提升约百分之十；基础频率更高。'}],pageRead:{attempted:1,read:1}})},provider:async request=>{calls.push(structuredClone({...request,signal:undefined}));return provider(calls.length,request)}})
   t.after(()=>client.close());return {client,calls,searches,storage,config}
 }

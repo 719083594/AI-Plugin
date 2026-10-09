@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildPersonaPrompt, buildPersonaIdentity, buildPersonaContinuity, needsPersonaRepair, stripServiceTail } from '../src/core/persona.mjs'
@@ -11,7 +12,7 @@ test('legacy presets retain their original system prompt without opting in', () 
 })
 
 test('preset style and examples reach every tool round, stay isolated and never enter stored history', async t => {
-  const config = merge(defaults, {
+  const config = unmoderatedTestConfig( {
     channels: [{ id: 'mock', type: 'openai', models: ['mock-model'] }],
     presets: [
       { id: 'star', model: 'mock-model', systemPrompt: '星的身份', chatStyle: 'natural', replyDetail: 'balanced', dialogueExamples: '用户：在吗\n星：在。喊两遍是有大事吗？', tools: ['web_search'], maxTokens: 3072 },
@@ -42,9 +43,9 @@ test('preset style and examples reach every tool round, stay isolated and never 
 })
 
 test('persona settings reject malformed values while allowing older config', () => {
-  assert.doesNotThrow(() => validateConfig(merge(defaults, {})))
+  assert.doesNotThrow(() => validateConfig(unmoderatedTestConfig( {})))
   for (const invalid of [{ chatStyle: 'typo' }, { replyDetail: 'typo' }, { dialogueExamples: [] }, { dialogueExamples: '长'.repeat(20001) }]) {
-    assert.throws(() => validateConfig(merge(defaults, { presets: [{ ...defaults.presets[0], ...invalid }] })), /聊天风格|展开程度|对话示例/)
+    assert.throws(() => validateConfig(unmoderatedTestConfig( { presets: [{ ...defaults.presets[0], ...invalid }] })), /聊天风格|展开程度|对话示例/)
   }
 })
 
@@ -153,7 +154,7 @@ test('an invitation after quoted code is removed without editing the quote or co
 })
 
 test('natural preset repairs a service reply before one final send and stores only the repaired text', async t => {
-  const config=merge(defaults,{channels:[{id:'mock',type:'openai'}],presets:[{id:'default',model:'mock',tools:[],chatStyle:'natural'}]})
+  const config=unmoderatedTestConfig({channels:[{id:'mock',type:'openai'}],presets:[{id:'default',model:'mock',tools:[],chatStyle:'natural'}]})
   let rounds=0,sends=0
   const storage=new Storage(),client=new AIClient({config:()=>config,storage,imageStore:{},provider:async request=>{
     rounds++; if(rounds===2){assert.equal(request.tools.length,0);assert.equal(request.messages.filter(row=>row.role==='system').length,1);assert.match(request.messages[0].content.map(row=>row.text).join('\n'),/改写/)}

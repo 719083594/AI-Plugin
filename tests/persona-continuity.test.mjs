@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { AIClient } from '../src/core/client.mjs'
@@ -30,7 +31,7 @@ const searchCall = () => ({ contents: [], toolCalls: [{ id: 'lookup-once', name:
 
 function fixture(t, respond, options = {}) {
   const storage = new Storage(), requests = [], searches = [], deliveries = []
-  const config = merge(defaults, {
+  const config = unmoderatedTestConfig( {
     channels: [{ id: 'test', type: 'openai', baseUrl: 'https://provider.invalid', models: ['fake'] }],
     presets: [star, firefly, legacy], basic: { defaultPresetId: options.defaultPresetId || 'star' },
     memory: { commandKnowledgeEnabled: false }, security: { maxRequestsPerWindow: 100 }

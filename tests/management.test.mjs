@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,7 +16,7 @@ import { withBudget, closeHttpServer } from './helpers/resources.mjs';
 const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
 const ownerToken = 'owner-test-token';
 const reply = text => ({ contents: [{ type: 'text', text }], toolCalls: [], usage: { inputTokens: 2, outputTokens: 3, totalTokens: 5 } });
-const makeConfig = extra => merge(defaults, merge({
+const makeConfig = extra => unmoderatedTestConfig( merge({
   channels: [{ id: 'model-a', type: 'openai', baseUrl: 'https://model.invalid/v1', apiKey: 'model-test-secret', models: ['fake-model'], enabled: true }],
   presets: [{ ...structuredClone(defaults.presets[0]), model: 'fake-model', tools: [], systemPrompt: '测试助手的系统规则' }],
   management: { apiToken: ownerToken }, tools: { searchToken: 'search-test-secret' }

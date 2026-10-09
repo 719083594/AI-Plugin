@@ -1,3 +1,4 @@
+import { unmoderatedTestConfig } from './helpers/config.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
@@ -10,7 +11,7 @@ const row=(title,command,permission='all',category='群聊与消息')=>({title,c
 const rows=[row('帮助','#指令表'),row('联网搜索','#搜索 内容','all','搜索与资料'),row('群卫帮助','#群管帮助'),row('禁言','#群管禁言 @成员 10分钟','admin'),row('群开关','#群管开启','owner'),row('重启系统','#秘密重启','master','维护与更新')]
 function setup(t,role='member') {
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'ai-command-knowledge-'));const storage=new Storage();let current=structuredClone(rows),available=true;const captured=[]
- const config=merge(defaults,{channels:[{id:'test',type:'openai',baseUrl:'https://example.invalid',apiKey:'test',models:['fake']}],presets:[{...defaults.presets[0],model:'fake',tools:[]}],memory:{knowledgeEnabled:true},security:{maxRequestsPerWindow:100}})
+ const config=unmoderatedTestConfig({channels:[{id:'test',type:'openai',baseUrl:'https://example.invalid',apiKey:'test',models:['fake']}],presets:[{...defaults.presets[0],model:'fake',tools:[]}],memory:{knowledgeEnabled:true},security:{maxRequestsPerWindow:100}})
  const client=new AIClient({root,storage,config:()=>config,imageStore:{},host:{getCommandCatalog:async input=>available?{rows:current.filter(row=>!input||row.permission!=='master'||input.isMaster&&!input.groupId),pluginCount:1,memberRole:role}:null},provider:async request=>{captured.push(request.messages.find(row=>row.role==='system').content);return {contents:[{type:'text',text:'请使用 #搜索 内容'}],usage:{}}}})
  t.after(()=>{client.close();fs.rmSync(root,{recursive:true,force:true})});return {client,storage,config,captured,setRows:value=>current=value,disable:()=>available=false,root}
 }
